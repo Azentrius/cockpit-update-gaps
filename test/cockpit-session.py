@@ -36,6 +36,7 @@ E = os.environ
 OUT = sys.argv[1] if len(sys.argv) > 1 else "cockpit-session"
 FRAME = 'iframe[name$="/update-gaps"]'
 STATE = "/var/lib/update-gaps/scan.json"
+STATUS = "/var/lib/update-gaps/status.json"
 os.makedirs(OUT, exist_ok=True)
 
 report = {"environment": {}, "steps": [], "errors": [], "addon_files": []}
@@ -221,6 +222,23 @@ def main():
         note("the reboot flag of the setup in its card", restart.count() == 1 and "linux-base" in (restart.text_content() or ""))
         shot(page, "first-check")
 
+        # 2b. The status of the add-on (status contract): the command its manifest names, as a user
+        # without sudo, from the file the service wrote.
+        mode = root("stat", "-c", "%a %U", STATUS)
+        manifest = json.loads(root("cat", "/usr/share/cockpit/update-gaps/manifest.json"))
+        verb = manifest.get("azentrius", {}).get("status") or ["false"]
+        out = root("runuser", "-u", E["PLAIN_USER"], "--", *verb, "--lang", "de", check=False)
+        try:
+            st = json.loads(out)
+        except ValueError:
+            st = {}
+        items = {i.get("id"): i.get("state") for i in st.get("items", [])}
+        note("the status for the Status Board: written by the service (0644), read without root, in German",
+             mode == "644 root" and st.get("schema") == 1 and st.get("version") == E["NEW_VERSION"]
+             and items.get("restart") == "warning" and st.get("state") in ("warning", "danger")
+             and "Neustart" in json.dumps(st, ensure_ascii=False),
+             f"{mode}; {st.get('state')}: {st.get('summary')}; {items}"[:400])
+
         # 3. Refresh: a new check.
         time.sleep(1.5)
         frame.locator("#ug-refresh").click()
@@ -251,6 +269,15 @@ def main():
              and frame.locator("#ug-card-held").count() == 1 and frame.locator("#ug-timer-setup").count() == 0,
              (frame.locator("#ug-status").text_content() or "")[:160])
         shot(page, "no-admin")
+
+        # 6. A link of the status (#/restart, as the Status Board jumps) opens the page at its card.
+        page.goto(URL + "/update-gaps#/restart")
+        frame = page.frame_locator(FRAME)
+        frame.locator("#ug-card-restart").wait_for()
+        at = poll(page, lambda: frame.locator("#ug-card-restart").evaluate(
+            "e => e.getBoundingClientRect().top < 150 || scrollY + innerHeight >= document.documentElement.scrollHeight - 2"), 30)
+        note("a link of the status (#/restart) opens the page at its card", bool(at))
+        shot(page, "linked-card")
         ctx.close()
         browser.close()
 

@@ -9,9 +9,10 @@ document together; the page tolerates fields it does not know and checks without
 | Path | Content | Owner / mode |
 |---|---|---|
 | `/usr/share/cockpit/update-gaps/` | the page (package `cockpit-update-gaps`) | root, 644 |
-| `/usr/lib/cockpit-update-gaps/` | helpers: `gaps-scan.py`, `gaps-ctl.sh` (755), `gapscheck.py`, `gapslib.py`, `gapsproc.py` (644) | root |
+| `/usr/lib/cockpit-update-gaps/` | helpers: `gaps-scan.py`, `gaps-ctl.sh`, `gaps-status.py` (755), `gapscheck.py`, `gapslib.py`, `gapsproc.py`, `gapsstatus.py` (644) | root |
 | `/usr/lib/systemd/system/update-gaps-scan.{service,timer}` | the scan and its timer (every 6 h, `*-*-* 00/6:37:00`); the timer is off until `gaps-ctl.sh install timer` | root, 644 |
 | `/var/lib/update-gaps/scan.json` | the state, written atomically by the service (`StateDirectory`) | root, 644 (folder 755) |
+| `/var/lib/update-gaps/status.json` | the add-on's status for the Status Board, written atomically by the service after `scan.json` | root, 644 |
 | `/etc/update-gaps.conf` | settings (optional, see below) | root, not writable by others |
 | `/run/update-gaps-scan.lock` | `flock` lock of a scan as root (exit 75 while one runs) | root |
 
@@ -49,7 +50,7 @@ install without a state checks once by itself when an administrator opens the pa
 | 2 | not possible: the service or timer is missing |
 | 64 | wrong call |
 | 75 | a scan is running already |
-| 77 | no root rights (`gaps-ctl.sh scan`, `install timer`, `remove timer`) |
+| 77 | no root rights (`gaps-ctl.sh scan`, `install timer`, `remove timer`); `gaps-status.py`: `status.json` exists but cannot be read |
 
 ## `scan.json`
 
@@ -166,6 +167,55 @@ read (no link followed, no FIFO opened) to tell a script from a program.
 `standard_until` (Ubuntu: `eol-server`, else `eol`), `extended_until` (Ubuntu `eol-esm`, Debian
 `eol-lts`), `days_left`; `found` with `kind` `soon` (180 days or less) or `ended`.
 
+## `status.json` and `gaps-status.py status` (status contract)
+
+The status format all Azentrius add-ons share (schema 1), for the Status Board and other tools. The
+service writes `/var/lib/update-gaps/status.json` after `scan.json` (`gaps-scan.py --status FILE`);
+the verb only reads it:
+
+| Call | Kind | Output |
+|---|---|---|
+| `gaps-status.py status --lang en\|de`, `superuser: "try"` | read: no root, no network, no lock, no command | one JSON object, exit 0 |
+
+`manifest.json` names the command:
+`"azentrius": {"status": ["/usr/lib/cockpit-update-gaps/gaps-status.py", "status"]}`. `--lang`
+takes a language tag (`de`, `de-DE`, `de_AT`, `fr`): German for `de…`, English for every other.
+Anything else is a wrong call (64); a file that exists but cannot be read is 77. Without the file the
+state is `none` (“Not checked yet”), a broken file gives `none` (“State not readable”), both with
+exit 0, as does every finding, `danger` included.
+
+```json
+{"schema": 1, "addon": "update-gaps", "label": "Update Gaps", "version": "0.1.0",
+ "checked_at": "2026-10-19T20:55:00Z", "state": "warning",
+ "summary": "Findings in 3 areas: Held packages, Restart, Fixes only with Ubuntu Pro.",
+ "items": [{"id": "held", "state": "warning", "title": "Held packages", "value": "6",
+            "detail": "newer versions for containerd.io, docker-buildx-plugin, …", "link": "#/held",
+            "checked_at": "2026-10-19T20:55:00Z", "stale_after": 86400}, …]}
+```
+
+The items, in this order. A check that does not apply here (`pro` outside Ubuntu, every check
+without apt) has no item; one that was skipped, failed or ran out of time is `none` with “not
+checked” or “check failed”; a partial check adds “partly checked” to its detail.
+
+| `id` | `ok` | `info` | `warning` | `danger` | `value` |
+|---|---|---|---|---|---|
+| `held` | nothing held, or held without a newer version | | a held package has a newer version | | packages with a newer version |
+| `restart` | nothing pending | | kernel, microcode, services on old libraries or the reboot flag | | |
+| `pro` | no fix only with Ubuntu Pro | fixes only with Ubuntu Pro | | | packages |
+| `lists` | no finding | only left-over lists or messages of apt-daily | a source without lists, lists older than 48 hours, an expired Release file, apt-daily failed | | |
+| `eol` | standard support continues | | ends within 180 days | ended | days left |
+| `updates` | none | regular updates (no link: Software Updates shows them) | | | updates |
+
+The add-on's state is the worst of `danger`, `warning` and `info`; without any of them `ok` when an
+item is `ok`, else `none`. `stale_after` is 24 hours, as on the page; `link` is `#/<id>` and opens
+the page at that card. Texts hold only numbers, states and names of packages, services and kernels
+(at most 6 names, then `(+n)`): no addresses, URLs, user names or paths.
+
+The file holds the English document plus the German texts under `i18n.de` (`summary`,
+`items.<id>.title` and `.detail`), a field readers of schema 1 ignore. The verb returns the document
+in the language asked for, without `i18n`, with the version of the installed page (`const VERSION`
+in `gaps.js`). Examples from the recorded hosts: `test/fixtures/status-*.json`.
+
 ## Settings (`/etc/update-gaps.conf`)
 
 ```ini
@@ -182,8 +232,11 @@ an `error` with `reason: "settings"`; nothing is hidden on a guess.
 
 `gapsproc.run`: a list (never a shell), `PATH=/usr/sbin:/usr/bin:/sbin:/bin`, `LC_ALL=C`, `TZ=UTC`,
 its own process group, a deadline (120 s per command, 300 s for `apt-cache policy` of every installed
-package); at the deadline the group gets SIGTERM, then SIGKILL. `pro security-status` needs to write
-`/var/log/ubuntu-advantage.log`; the service allows that one file.
+package); at the deadline the group gets SIGTERM, then SIGKILL. `pro security-status` runs through
+`gapsproc.run_unprivileged`: as `nobody` with an empty private `HOME` (removed afterwards). As root
+pro always writes `/var/log/ubuntu-advantage.log` and a lock in `/var/lib/ubuntu-advantage`, which
+the service (`ProtectSystem=strict`, no exceptions) does not allow; without root it reads the same
+public state and logs below `$XDG_CACHE_HOME`.
 
 ## Page internals
 
@@ -195,6 +248,8 @@ package); at the deadline the group gets SIGTERM, then SIGKILL. `pro security-st
   Values from the system go through `tr()`/`esc()`: escaped, and a backtick in a value cannot open a
   `<code>` of the text.
 - Loading: `safeLoad()` never runs twice at once; the state file's watch reloads only on a new tag.
+- `#/<check>` (a status item's `link`) scrolls to that card once the cards are there, again on
+  `locationchanged` (Cockpit keeps the page loaded and only changes its location).
 - Version: `const VERSION` in `gaps.js`; `index.html` loads every file with `?v=<version>`;
   `tools/check-version.sh` keeps them and `CHANGELOG.md` in step.
 
@@ -203,11 +258,12 @@ package); at the deadline the group gets SIGTERM, then SIGKILL. `pro security-st
 | File | Checks |
 |---|---|
 | `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy`, `apt-get -s`, needrestart, deb822, `apt-config`, dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed |
-| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group); the `scan-*.json` fixtures current |
+| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current |
+| `test/status_test.py` | the status (schema 1) of every recorded host in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status` |
 | `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |
-| `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; never `apt-get` from `/usr/local` |
-| `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, no JavaScript or resource errors beyond Cockpit's own |
+| `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local` |
+| `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card, no JavaScript or resource errors beyond Cockpit's own |
 | `tools/check-units.sh` | `systemd-analyze verify`, and `systemd-analyze security` exposure at most 5.0 |
 | `tools/check-version.sh`, `tools/check-design-files.sh` | version, changelog, shared design files |
 

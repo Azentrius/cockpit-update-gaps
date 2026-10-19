@@ -6,6 +6,10 @@ administrative access. The page tests and the preview read these, so the page
 is always tested against what the helper really produces;
 test/scan_test.py checks that they are current.
 
+Beside them status-<scenario>.json: the status file the service writes for the
+Status Board (gapsstatus.py), with a fixed version so a release leaves them as
+they are.
+
     python3 test/fixtures/make_scans.py          write them
     python3 test/fixtures/make_scans.py --check  exit 1 if one differs
 """
@@ -18,6 +22,7 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "..", "lib"))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import gapscheck  # noqa: E402
+import gapsstatus  # noqa: E402
 from fakesys import FakeSystem  # noqa: E402
 
 SCANS = {
@@ -26,25 +31,37 @@ SCANS = {
     "scan-resolute-nodesource.json": ("resolute-nodesource", {}),
     "scan-resolute-nodesource-user.json": ("resolute-nodesource", {"uid": 1000}),
 }
+STATUS_VERSION = "0.1.0"
 
 
-def build(scenario, kw):
+def scan(scenario, kw):
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     doc["took_ms"] = 3300
     for c in doc["checks"]:
         c["took_ms"] = 0
-    return json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+    return doc
+
+
+def files():
+    """{file name: content} of every fixture this script writes."""
+    out = {}
+    for name, (scenario, kw) in SCANS.items():
+        doc = scan(scenario, kw)
+        out[name] = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+        if not kw:
+            status = gapsstatus.status_file(doc, STATUS_VERSION)
+            out["status-" + scenario + ".json"] = json.dumps(status, ensure_ascii=False, indent=1) + "\n"
+    return out
 
 
 def main(argv):
     check = "--check" in argv
     bad = 0
-    for name, (scenario, kw) in SCANS.items():
+    for name, text in files().items():
         path = os.path.join(HERE, name)
-        text = build(scenario, kw)
         if check:
             try:
-                with open(path) as f:
+                with open(path, encoding="utf-8", newline="") as f:
                     same = f.read() == text
             except OSError:
                 same = False
@@ -52,7 +69,7 @@ def main(argv):
                 print(f"{name} is not current: python3 test/fixtures/make_scans.py", file=sys.stderr)
                 bad = 1
         else:
-            with open(path, "w") as f:
+            with open(path, "w", encoding="utf-8", newline="\n") as f:
                 f.write(text)
             print(path)
     return bad

@@ -13,5 +13,8 @@
                 }
             ]
         }
+    },
+    "azentrius": {
+        "status": ["/usr/lib/cockpit-update-gaps/gaps-status.py", "status"]
     }
 }

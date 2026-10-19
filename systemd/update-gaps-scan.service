@@ -5,7 +5,7 @@ After=apt-daily.service apt-daily-upgrade.service
 
 [Service]
 Type=oneshot
-ExecStart=/usr/bin/python3 -IB /usr/lib/cockpit-update-gaps/gaps-scan.py --output /var/lib/update-gaps/scan.json
+ExecStart=/usr/bin/python3 -IB /usr/lib/cockpit-update-gaps/gaps-scan.py --output /var/lib/update-gaps/scan.json --status /var/lib/update-gaps/status.json
 # Creates /var/lib/update-gaps (root-owned, readable: the page shows the state without root).
 StateDirectory=update-gaps
 StateDirectoryMode=0755
@@ -20,8 +20,6 @@ PrivateNetwork=yes
 IPAddressDeny=any
 RestrictAddressFamilies=AF_UNIX
 ProtectSystem=strict
-# `pro security-status` writes its own log, lock and cache, and fails without them.
-ReadWritePaths=-/var/log/ubuntu-advantage.log -/var/lib/ubuntu-advantage -/run/ubuntu-advantage
 ProtectHome=read-only
 PrivateTmp=yes
 NoNewPrivileges=yes

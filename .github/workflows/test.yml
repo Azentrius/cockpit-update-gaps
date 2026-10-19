@@ -48,6 +48,7 @@ jobs:
             apt-get install -y -qq /dist/*.deb > /dev/null
             test -x /usr/lib/cockpit-update-gaps/gaps-scan.py
             test -x /usr/lib/cockpit-update-gaps/gaps-ctl.sh
+            test -x /usr/lib/cockpit-update-gaps/gaps-status.py
             test -f /usr/lib/systemd/system/update-gaps-scan.timer
             test -f /usr/share/cockpit/update-gaps/manifest.json
             test -f /usr/share/metainfo/de.azentrius.update_gaps.metainfo.xml
@@ -55,6 +56,10 @@ jobs:
             dpkg -L cockpit-update-gaps | grep -qx /usr/share/doc/cockpit-update-gaps/CC-BY-4.0-Font-Awesome.txt
             /usr/lib/cockpit-update-gaps/gaps-ctl.sh status | python3 -c "import json, sys; json.load(sys.stdin)"
             /usr/lib/cockpit-update-gaps/gaps-scan.py | python3 -c "import json, sys; d = json.load(sys.stdin); assert d[\"pm\"] == \"apt\""
+            mkdir -p /var/lib/update-gaps
+            /usr/lib/cockpit-update-gaps/gaps-scan.py --output /var/lib/update-gaps/scan.json --status /var/lib/update-gaps/status.json
+            python3 -c "import json; argv = json.load(open(\"/usr/share/cockpit/update-gaps/manifest.json\"))[\"azentrius\"][\"status\"]; print(\" \".join(argv))" > /tmp/verb
+            su nobody -s /bin/sh -c "$(cat /tmp/verb) --lang de" | python3 -c "import json, sys; d = json.load(sys.stdin); print(d[\"state\"], d[\"summary\"]); assert d[\"schema\"] == 1 and d[\"version\"] != \"unknown\""
             apt-get remove -y -qq cockpit-update-gaps > /dev/null
             test ! -e /usr/lib/cockpit-update-gaps'
       - name: Browser for the preview
@@ -82,7 +87,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/src" -w /src/test python:3.8-slim sh -ec '
             python3 --version
-            for t in lib_test.py scan_test.py; do python3 "$t" > "/tmp/$t.log" 2>&1 || { cat "/tmp/$t.log"; exit 1; }; echo "PASS $t"; done'
+            for t in lib_test.py scan_test.py status_test.py; do python3 "$t" > "/tmp/$t.log" 2>&1 || { cat "/tmp/$t.log"; exit 1; }; echo "PASS $t"; done'
 
   # The helpers on real Debian and Ubuntu systems, in throw-away containers: a held package, a
   # package without a source, a source without lists, files outside apt, a hidden folder, the

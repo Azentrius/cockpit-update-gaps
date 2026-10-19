@@ -58,7 +58,7 @@ function proc(out, { chunks = [], fail = null, gate = null } = {}) {
 }
 
 function boot({ language = "en", state = scan("noble-held"), status = STATUS, now = NOW, monitor = true,
-                onSpawn = null } = {}) {
+                onSpawn = null, location = [] } = {}) {
     const dom = new JSDOM(html, { runScripts: "outside-only", url: "https://localhost:9090/update-gaps/" });
     const w = dom.window;
     w.document.querySelectorAll("script").forEach((s) => s.remove());
@@ -70,8 +70,11 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
     const files = { [STATE]: state, "/etc/hostname": "server\n",
                     "/usr/share/cockpit/image-updates/manifest.json": monitor ? "{}" : null };
     const watchers = [];
+    const listeners = {};
     w.cockpit = {
         language,
+        location: { path: location },
+        addEventListener(ev, cb) { (listeners[ev] = listeners[ev] || []).push(cb); },
         file(p) {
             return {
                 read() {
@@ -95,7 +98,7 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
         transport: { wait() {} },
     };
     w.eval(js);
-    return { w, d: w.document, calls, files, watchers };
+    return { w, d: w.document, calls, files, watchers, listeners };
 }
 
 // The visible text, with a space between table cells and list items as a reader sees them.

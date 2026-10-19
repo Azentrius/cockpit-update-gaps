@@ -530,12 +530,29 @@
             if (pending) { pending = false; return safeLoad(); }
             setBusy(scanning);
             render();
+            goToLinkedCard();
             // A fresh install has no state yet: with administrative access, check once.
             if (!doc && !loadError && isAdmin() && !autoScanned) {
                 autoScanned = true;
                 scan();
             }
         });
+    }
+
+    // The status of the add-on (gaps-status.py) links its items as #/<check>, for
+    // the Status Board: once the cards are there, scroll to that card, once per
+    // link (Cockpit keeps the page loaded and only changes its location).
+    let linkHandled = false;
+    if (typeof cockpit.addEventListener === "function") {
+        cockpit.addEventListener("locationchanged", () => { linkHandled = false; goToLinkedCard(); });
+    }
+    function goToLinkedCard() {
+        if (linkHandled || !doc) return;
+        linkHandled = true;
+        const first = ((cockpit.location && cockpit.location.path) || [])[0] || "";
+        if (!/^[a-z]{1,20}$/.test(first)) return;
+        const card = $("ug-card-" + first);
+        if (card) card.scrollIntoView({ block: "start" });
     }
 
     // "Refresh": with administrative access a new check through the service,

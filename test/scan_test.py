@@ -217,6 +217,11 @@ class Degraded(unittest.TestCase):
         doc, c = scan("noble-held", missing={"pro"})
         self.assertEqual((c["pro"]["state"], c["pro"]["reason"], c["pro"]["tool"]), ("skipped", "tool-missing", "pro"))
 
+    def test_pro_runs_without_root(self):
+        fs = FakeSystem("noble-held")
+        gapscheck.scan(fs, only={"pro"})
+        self.assertEqual(fs.unprivileged, ["pro"])
+
     def test_timeout_is_one_check_only(self):
         doc, c = scan("noble-held", results={"apt-get-s-dist-upgrade": gapsproc.Result(None, timeout=True)})
         self.assertEqual(c["updates"]["state"], "timeout")
@@ -313,6 +318,22 @@ class Proc(unittest.TestCase):
     def test_environment(self):
         r = gapsproc.run(["sh", "-c", 'echo "$PATH|$LC_ALL|$TZ"'], 5)
         self.assertEqual(r.out.strip(), "/usr/sbin:/usr/bin:/sbin:/bin|C|UTC")
+
+    def test_unprivileged(self):
+        """As root: nobody without other groups; else the caller. HOME is a
+        fresh writable directory that is gone afterwards."""
+        import pwd
+        r = gapsproc.run_unprivileged(["sh", "-c", 'id -u; id -G; echo "$HOME|$XDG_CACHE_HOME"; touch "$HOME/log"'], 10)
+        self.assertEqual(r.rc, 0, r.err)
+        uid, groups, homes = r.out.strip().splitlines()
+        if os.geteuid() == 0:
+            nobody = pwd.getpwnam("nobody")
+            self.assertEqual((uid, groups), (str(nobody.pw_uid), str(nobody.pw_gid)))
+        else:
+            self.assertEqual(uid, str(os.geteuid()))
+        home, cache = homes.split("|")
+        self.assertEqual(home, cache)
+        self.assertFalse(os.path.exists(home))
 
 
 if __name__ == "__main__":

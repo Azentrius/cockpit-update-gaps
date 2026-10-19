@@ -29,6 +29,7 @@ run() {
 
 run "python: parsers, versions, unattended-upgrades" python3 lib_test.py
 run "python: checks against recorded hosts"           python3 scan_test.py
+run "python: status for the Status Board, its verb"    python3 status_test.py
 run "python: syntax lib/*.py"                          python3 -c 'import ast, glob; [ast.parse(open(f).read(), f) for f in glob.glob("../lib/*.py")]'
 run "shell:  syntax of the shell scripts"              bash -c 'for f in ../lib/*.sh ../tools/*.sh ../packaging/scripts/* *.sh fixtures/*.sh; do sh -n "$f" || exit 1; done'
 run "shell:  gaps-ctl.sh status (JSON), wrong calls"   bash -c 'sh ../lib/gaps-ctl.sh status | python3 -c "import json, sys; d = json.load(sys.stdin); assert set(d) >= {\"root\", \"timer\", \"running\", \"dpkg_status_mtime\"}" && ! sh ../lib/gaps-ctl.sh nonsense 2>/dev/null && ! sh ../lib/gaps-ctl.sh scan now please 2>/dev/null'

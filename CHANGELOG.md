@@ -16,7 +16,12 @@ lists none, with the reason for every finding. Read only.
   and German, light and dark, phones.
 - **The scan:** a local service without network access (`update-gaps-scan.service`), started by
   “Refresh” and, once set up from the page, every 6 hours. The state is readable without
-  administrative access.
+  administrative access. `pro security-status` runs as `nobody`, so the service may write nothing
+  outside its own folder.
+- **Status for the Status Board:** after every check the service writes `status.json` in the status
+  format all Azentrius add-ons share; `gaps-status.py status --lang en|de` reads it without
+  administrative access, and `manifest.json` names the command (`azentrius.status`). A link of an
+  item (`#/held`) opens the page at its card.
 - **Settings:** `/etc/update-gaps.conf` hides known folders from “Software outside the package
   manager”.
 - Tests against output recorded on real servers, scenarios in Debian and Ubuntu containers, and the

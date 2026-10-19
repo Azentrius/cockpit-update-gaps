@@ -7,6 +7,7 @@
 //   &admin=0     a user without administrative access
 //   &timer=on    the regular check set up
 //   &lang=de     German (po.js stand-in)
+//   #/held       a link of the status: the page scrolls to that card
 (function () {
     "use strict";
     const FX = __FIXTURES__;
@@ -44,8 +45,17 @@
         "/usr/share/cockpit/image-updates/manifest.json": "{}",
     };
 
+    const path = () => location.hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+    const listeners = [];
+    window.addEventListener("hashchange", () => {
+        window.cockpit.location = { path: path() };
+        listeners.forEach((cb) => cb());
+    });
+
     window.cockpit = {
         language: "en",
+        location: { path: path() },
+        addEventListener(ev, cb) { if (ev === "locationchanged") listeners.push(cb); },
         locale(po) {
             if (po && po[""] && po[""].language) this.language = po[""].language;
         },

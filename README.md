@@ -75,13 +75,17 @@ flowchart LR
         CTL["gaps-ctl.sh<br/>status / scan / install|remove timer"]
         SVC["update-gaps-scan.service<br/>gaps-scan.py, no network"]
     end
-    ST[("scan.json<br/>/var/lib/update-gaps")]
+    ST[("scan.json, status.json<br/>/var/lib/update-gaps")]
     SYS["apt, dpkg, needrestart, pro,<br/>apt's lists, the journal"]
+    SB["Status Board and other tools"]
+    STV["gaps-status.py status"]
     P -->|"cockpit.file read (no root needed)"| ST
     P -->|"cockpit.spawn"| CTL
     CTL -->|"systemctl start"| SVC
     SVC --> SYS
     SVC --> ST
+    SB -->|"cockpit.spawn (no root needed)"| STV
+    STV --> ST
 ```
 
 | Part | Installed to | Job |
@@ -90,18 +94,28 @@ flowchart LR
 | `lib/gaps-scan.py` | `/usr/lib/cockpit-update-gaps/` | every check, writes the state atomically |
 | `lib/gapscheck.py`, `gapslib.py`, `gapsproc.py` | `/usr/lib/cockpit-update-gaps/` | the checks, the parsers, commands with time limits |
 | `lib/gaps-ctl.sh` | `/usr/lib/cockpit-update-gaps/` | status for the page, “Refresh”, the timer |
+| `lib/gaps-status.py`, `gapsstatus.py` | `/usr/lib/cockpit-update-gaps/` | the add-on's state for the Status Board, in English or German |
 | `systemd/update-gaps-scan.service`, `.timer` | `/usr/lib/systemd/system/` | the check, hardened and without network; the timer is off until set up from the page |
 
-Interfaces, the format of `scan.json` and the exit codes: [docs/INTERNALS.md](docs/INTERNALS.md).
+After every check the service also writes `status.json`: a short summary in the status format
+all Azentrius add-ons share (held packages with newer versions, a pending restart, fixes only with
+Ubuntu Pro, package lists, the end of support, regular updates, each with its state). The Status
+Board finds the command in the page's `manifest.json` (`azentrius.status`) and runs
+`gaps-status.py status --lang en|de`, which needs no administrative access; a link of an item
+(`#/held`) opens this page at its card.
+
+Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
+[docs/INTERNALS.md](docs/INTERNALS.md).
 
 ## Security model
 
 - **Read only.** The scan never runs `apt update`, never installs, removes or restarts anything.
-  It writes only its state file and its lock.
+  It writes only its state files (`scan.json`, `status.json`) and its lock.
 - **No network for root code.** The scan runs as `update-gaps-scan.service` with
   `PrivateNetwork=yes`, `IPAddressDeny=any`, `ProtectSystem=strict` and more
   (`systemd-analyze security` exposure 4.9, checked in CI). “Refresh” starts the same service, so
-  every scan runs in the same sandbox.
+  every scan runs in the same sandbox. It may write only its own folder, `/var/lib/update-gaps`;
+  `pro security-status` runs as `nobody`, since as root it writes its own log and lock.
 - **Fixed commands.** The helpers run fixed argument lists with a PATH that leaves `/usr/local`
   out (a program there can never stand in for apt), in the C locale and with time limits. The page
   calls only fixed verbs.
@@ -170,6 +184,7 @@ sudo systemctl start update-gaps-scan.service           # check now (what "Refre
 journalctl -u update-gaps-scan.service -n 20            # how the last check went
 sudo /usr/lib/cockpit-update-gaps/gaps-scan.py | less   # the same checks, on stdout
 /usr/lib/cockpit-update-gaps/gaps-ctl.sh status         # timer, admin, last package change
+/usr/lib/cockpit-update-gaps/gaps-status.py status --lang de   # what the Status Board shows
 systemctl list-timers update-gaps-scan.timer            # the regular check
 ```
 

@@ -3,7 +3,9 @@
 """Update Gaps, the Cockpit add-on: every check of this host, as JSON.
 
   gaps-scan.py                   the document on stdout (diagnosis; as any user)
-  gaps-scan.py --output FILE     written atomically, mode 0644
+  gaps-scan.py --output FILE [--status FILE]
+                                 written atomically, mode 0644, with the
+                                 status of the add-on (gapsstatus.py) beside it
                                  (update-gaps-scan.service, as root, no network)
 
 Only reads: no `apt update`, no install, no restart, no network. The checks
@@ -25,13 +27,14 @@ import tempfile
 sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import gapscheck  # noqa: E402
+import gapsstatus  # noqa: E402
 
 LOCK = "/run/update-gaps-scan.lock"
 
 
 def write_atomic(path, doc):
     d = os.path.dirname(path) or "."
-    fd, tmp = tempfile.mkstemp(dir=d, prefix=".scan-", suffix=".tmp")
+    fd, tmp = tempfile.mkstemp(dir=d, prefix="." + os.path.basename(path) + "-", suffix=".tmp")
     try:
         with os.fdopen(fd, "w") as f:
             json.dump(doc, f, ensure_ascii=False, indent=1)
@@ -65,7 +68,10 @@ def lock():
 def main(argv):
     ap = argparse.ArgumentParser(description="Update Gaps: where this host misses updates")
     ap.add_argument("--output", metavar="FILE", help="write the document atomically (mode 0644)")
+    ap.add_argument("--status", metavar="FILE", help="with --output: write the status of the add-on as well")
     args = ap.parse_args(argv)
+    if args.status and not args.output:
+        ap.error("--status needs --output")
     held = lock()
     try:
         doc = gapscheck.scan()
@@ -74,6 +80,8 @@ def main(argv):
         return 1
     if args.output:
         write_atomic(args.output, doc)
+        if args.status:
+            write_atomic(args.status, gapsstatus.status_file(doc, gapsstatus.version()))
         states = {}
         for c in doc["checks"]:
             states[c["state"]] = states.get(c["state"], 0) + 1

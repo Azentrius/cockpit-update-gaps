@@ -51,6 +51,9 @@ class System:
     def run(self, argv, limit=LIMIT):
         return gapsproc.run(argv, limit)
 
+    def run_unprivileged(self, argv, limit=LIMIT):
+        return gapsproc.run_unprivileged(argv, limit)
+
     def read_bytes(self, path, limit=4 << 20):
         try:
             with open(path, "rb") as f:
@@ -297,7 +300,8 @@ def _gunzip(data):
 def check_pro(ctx):
     if (ctx.osr.get("ID") or "").lower() != "ubuntu":
         return {"state": "skipped", "reason": "not-applicable"}
-    r = ctx.sys.run(["pro", "security-status", "--format", "json"], LIMIT)
+    # Without root: as root pro insists on writing its log and lock, see gapsproc.run_unprivileged.
+    r = ctx.sys.run_unprivileged(["pro", "security-status", "--format", "json"], LIMIT)
     if r.missing:
         return {"state": "skipped", "reason": "tool-missing", "tool": "pro"}
     if r.timeout or r.rc != 0:

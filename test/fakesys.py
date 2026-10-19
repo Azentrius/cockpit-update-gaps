@@ -80,6 +80,10 @@ class FakeSystem:
                 return gapsproc.Result(1 if key == "dpkg-query-S" else 0, text, "")
         return gapsproc.Result(None, missing=True)
 
+    def run_unprivileged(self, argv, limit=120):
+        self.unprivileged = getattr(self, "unprivileged", []) + [argv[0]]
+        return self.run(argv, limit)
+
     # -- files
     def read_bytes(self, path, limit=4 << 20):
         text = self.meta["files"].get(path)

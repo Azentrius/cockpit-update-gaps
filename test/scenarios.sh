@@ -6,8 +6,9 @@
 #
 # NEVER on a machine you use: it holds a package, installs a package without a source, adds a
 # package source that does not exist, writes into /usr/local, /opt and /etc and sets the reboot
-# flag. Then it runs gaps-scan.py from the checkout, as root and as a user, and checks what it
-# found. No systemd runs in the container: the scan runs directly, as the service would.
+# flag. Then it runs gaps-scan.py from the checkout, as root (with the files the service writes)
+# and as a user, reads the status as a user and checks what it found. No systemd runs in the
+# container: the scan runs directly, as the service would.
 set -eu
 src=${1:?usage: scenarios.sh CHECKOUT}
 export DEBIAN_FRONTEND=noninteractive LC_ALL=C
@@ -45,10 +46,13 @@ echo linux-base > /var/run/reboot-required.pkgs
 printf '#!/bin/sh\ntouch /tmp/ug-fake-apt-ran\nexit 1\n' > /usr/local/bin/apt-get
 chmod 755 /usr/local/bin/apt-get
 
-python3 -I "$src/lib/gaps-scan.py" > /tmp/scan-root.json
+mkdir -p /var/lib/update-gaps
+python3 -I "$src/lib/gaps-scan.py" --output /var/lib/update-gaps/scan.json --status /var/lib/update-gaps/status.json
+cp /var/lib/update-gaps/scan.json /tmp/scan-root.json
 useradd -m ugplain 2> /dev/null || true
 su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-scan.py'" > /tmp/scan-user.json
 sh "$src/lib/gaps-ctl.sh" status > /tmp/status.json
+su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-status.py' status --lang de" > /tmp/board.json
 
 python3 - "$ID" <<'EOF'
 import json, sys
@@ -86,6 +90,14 @@ assert not [x for x in user["checks"] if x["state"] in ("error", "timeout")], "a
 assert u["lists"]["missing"] == ["journal"]
 st = json.load(open("/tmp/status.json"))
 assert st["timer"] == "missing" and st["root"] is True, st
+board = json.load(open("/tmp/board.json"))
+items = {i["id"]: i for i in board["items"]}
+print("status:", board["state"], "|", board["summary"])
+assert board["schema"] == 1 and board["addon"] == "update-gaps" and board["version"] != "unknown", board
+assert items["restart"]["state"] == "warning" and "linux-base" in items["restart"]["detail"], items
+assert items["held"]["state"] in ("ok", "warning") and "tzdata" in items["held"]["detail"], items
+assert board["state"] in ("warning", "danger") and "Neustart" in board["summary"], board
+assert ("pro" in items) == (ident == "ubuntu"), items
 print("SCENARIO OK")
 EOF
 test ! -e /tmp/ug-fake-apt-ran || { echo "the helper ran apt-get from /usr/local/bin"; exit 1; }

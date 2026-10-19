@@ -273,6 +273,21 @@ test("links: Software Updates, Image Update Monitor, chips scroll to their card"
     assert.ok(!r.d.getElementById("ug-open-monitor"), "no link when Image Update Monitor is not installed");
 });
 
+test("a link of the status (#/held) scrolls to its card; anything else is ignored", async () => {
+    let r = boot({ location: ["held"] });
+    await settle();
+    assert.strictEqual(r.w.__scrolled, "ug-card-held");
+    r.w.cockpit.location = { path: ["pro"] };
+    r.listeners.locationchanged.forEach((cb) => cb());
+    assert.strictEqual(r.w.__scrolled, "ug-card-pro", "a new link while the page stays loaded");
+    r = boot({ location: ["no-such-card"] });
+    await settle();
+    assert.strictEqual(r.w.__scrolled, undefined);
+    r = boot({ location: ["held"], state: null, status: { ...STATUS, root: false, state_file: false } });
+    await settle();
+    assert.strictEqual(r.w.__scrolled, undefined, "no state, no card");
+});
+
 test("the state file's watch reloads on a new tag only, never twice at once", async () => {
     const { calls, watchers } = boot();
     await settle();

@@ -1,0 +1,94 @@
+{
+ "schema": 1,
+ "addon": "update-gaps",
+ "label": "Update Gaps",
+ "version": "0.1.0",
+ "checked_at": "2026-10-19T20:55:00Z",
+ "state": "warning",
+ "summary": "Findings in 3 areas: Held packages, Restart, Fixes only with Ubuntu Pro.",
+ "items": [
+  {
+   "id": "held",
+   "state": "warning",
+   "title": "Held packages",
+   "value": "6",
+   "detail": "newer versions for containerd.io, docker-buildx-plugin, docker-ce, docker-ce-cli, docker-ce-rootless-extras, docker-compose-plugin",
+   "link": "#/held",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "restart",
+   "state": "warning",
+   "title": "Restart",
+   "detail": "kernel 6.8.0-147 installed, 6.8.0-146 running; requested by linux-base, linux-image-6.8.0-147-generic; 5 services on old libraries: dbus.service, NetworkManager.service, systemd-logind.service, unattended-upgrades.service, wpa_supplicant.service",
+   "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "pro",
+   "state": "info",
+   "title": "Fixes only with Ubuntu Pro",
+   "value": "4",
+   "detail": "python3-pip, python3-wheel, restic, skopeo",
+   "link": "#/pro",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "lists",
+   "state": "ok",
+   "title": "Package lists",
+   "link": "#/lists",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "eol",
+   "state": "ok",
+   "title": "Support of the release",
+   "detail": "standard support until 2029-05-31",
+   "link": "#/eol",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "updates",
+   "state": "ok",
+   "title": "Regular updates",
+   "value": "0",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  }
+ ],
+ "i18n": {
+  "de": {
+   "summary": "Befunde in 3 Bereichen: Gehaltene Pakete, Neustart, Fixes nur mit Ubuntu Pro.",
+   "items": {
+    "held": {
+     "title": "Gehaltene Pakete",
+     "detail": "neuere Versionen für containerd.io, docker-buildx-plugin, docker-ce, docker-ce-cli, docker-ce-rootless-extras, docker-compose-plugin"
+    },
+    "restart": {
+     "title": "Neustart",
+     "detail": "Kernel 6.8.0-147 installiert, 6.8.0-146 läuft; angefordert von linux-base, linux-image-6.8.0-147-generic; 5 Dienste mit alten Bibliotheken: dbus.service, NetworkManager.service, systemd-logind.service, unattended-upgrades.service, wpa_supplicant.service"
+    },
+    "pro": {
+     "title": "Fixes nur mit Ubuntu Pro",
+     "detail": "python3-pip, python3-wheel, restic, skopeo"
+    },
+    "lists": {
+     "title": "Paketlisten"
+    },
+    "eol": {
+     "title": "Unterstützung der Version",
+     "detail": "Standard-Unterstützung bis 2029-05-31"
+    },
+    "updates": {
+     "title": "Reguläre Updates"
+    }
+   }
+  }
+ }
+}

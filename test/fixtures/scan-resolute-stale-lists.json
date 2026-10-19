@@ -1,0 +1,368 @@
+{
+ "format": 1,
+ "generated": "2026-10-19T20:55:00Z",
+ "root": true,
+ "pm": "apt",
+ "os": {
+  "id": "ubuntu",
+  "version_id": "26.04",
+  "codename": "resolute",
+  "name": "Ubuntu 26.04.1 LTS"
+ },
+ "checks": [
+  {
+   "check": "updates",
+   "count": 0,
+   "security": 0,
+   "kept_back": [],
+   "phased": [],
+   "source": [
+    "apt-get -s dist-upgrade"
+   ],
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "held",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "apt-mark showhold",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "pro",
+   "state": "found",
+   "findings": [
+    {
+     "package": "restic",
+     "version": "0.18.1-3ubuntu1+esm1",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "0.18.1-3ubuntu1"
+    }
+   ],
+   "attached": false,
+   "services": [],
+   "counts": {
+    "esm_apps_packages": 0,
+    "esm_apps_updates": 1,
+    "esm_infra_packages": 0,
+    "esm_infra_updates": 0,
+    "installed_packages": 681,
+    "main_packages": 654,
+    "multiverse_packages": 0,
+    "restricted_packages": 0,
+    "standard_security_updates": 0,
+    "third_party_packages": 0,
+    "universe_packages": 24,
+    "unknown_packages": 3
+   },
+   "source": [
+    "pro security-status --format json"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "restart",
+   "source": [
+    "needrestart -b -r l",
+    "/var/run/reboot-required"
+   ],
+   "kernel": {
+    "running": "7.0.0-34-generic",
+    "expected": "7.0.0-38-generic",
+    "state": 3
+   },
+   "microcode": {
+    "state": 1,
+    "running": "0x08701034",
+    "expected": "0x08701034"
+   },
+   "services": [
+    "dbus.service",
+    "NetworkManager.service"
+   ],
+   "reboot_required": {
+    "since": "2026-10-05T06:36:07Z",
+    "packages": [
+     "linux-base",
+     "linux-image-7.0.0-38-generic"
+    ]
+   },
+   "tool": "needrestart 3.11",
+   "state": "found",
+   "took_ms": 0
+  },
+  {
+   "check": "lists",
+   "state": "found",
+   "findings": [
+    {
+     "kind": "missing",
+     "site": "https://packages.azentrius.com/apt",
+     "release": "stable",
+     "entry": "/etc/apt/sources.list.d/azentrius.sources:1"
+    },
+    {
+     "kind": "orphaned",
+     "site": "packages.azentrius.de/apt",
+     "files": 3
+    }
+   ],
+   "last_update": {
+    "ts": "2026-10-19T06:08:37Z",
+    "src": "update-success-stamp",
+    "age_h": 14.8
+   },
+   "apt_daily": {
+    "finished": "2026-10-19T06:08:44Z",
+    "result": "success"
+   },
+   "indexes": [
+    {
+     "file": "archive.ubuntu.com_ubuntu_dists_resolute-backports_InRelease",
+     "date": "2026-10-18T23:54:18Z",
+     "valid_until": null
+    },
+    {
+     "file": "archive.ubuntu.com_ubuntu_dists_resolute-updates_InRelease",
+     "date": "2026-10-19T01:07:49Z",
+     "valid_until": null
+    },
+    {
+     "file": "archive.ubuntu.com_ubuntu_dists_resolute_InRelease",
+     "date": "2026-04-23T17:07:15Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_InRelease",
+     "date": "2026-10-17T23:35:41Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute-security_InRelease",
+     "date": "2026-10-17T23:34:23Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_InRelease",
+     "date": "2026-10-18T13:08:42Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute_InRelease",
+     "date": "2026-04-23T17:07:15Z",
+     "valid_until": null
+    },
+    {
+     "file": "packages.azentrius.de_apt_dists_stable_InRelease",
+     "date": "2026-10-18T21:11:43Z",
+     "valid_until": null
+    },
+    {
+     "file": "security.ubuntu.com_ubuntu_dists_resolute-security_InRelease",
+     "date": "2026-10-18T23:53:25Z",
+     "valid_until": null
+    }
+   ],
+   "stale_after_h": 48,
+   "source": [
+    "apt-get indextargets",
+    "/var/lib/apt/lists",
+    "/var/lib/apt/periodic"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "local",
+   "state": "found",
+   "findings": [
+    {
+     "package": "azentrius-repository",
+     "version": "1.2.0-1",
+     "arch": "all",
+     "cause": "lists-missing"
+    },
+    {
+     "package": "cockpit-cronjobs",
+     "version": "2.7.4-1",
+     "arch": "all",
+     "cause": "lists-missing"
+    },
+    {
+     "package": "cockpit-image-update-monitor",
+     "version": "0.19.1-1",
+     "arch": "all",
+     "cause": "lists-missing"
+    }
+   ],
+   "source": [
+    "apt-cache policy",
+    "dpkg-query"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "auto",
+   "state": "found",
+   "findings": [
+    {
+     "kind": "blacklist",
+     "pattern": "^docker\\.io",
+     "packages": [
+      "docker.io"
+     ]
+    },
+    {
+     "kind": "blacklist",
+     "pattern": "^docker-",
+     "packages": [
+      "docker-buildx",
+      "docker-compose-v2"
+     ]
+    },
+    {
+     "kind": "blacklist",
+     "pattern": "^containerd",
+     "packages": [
+      "containerd"
+     ]
+    },
+    {
+     "kind": "blacklist",
+     "pattern": "^runc$",
+     "packages": [
+      "runc"
+     ]
+    }
+   ],
+   "installed": true,
+   "periodic": {
+    "update_lists": "1",
+    "unattended": "1"
+   },
+   "timer": "enabled",
+   "allowed": [
+    "Ubuntu:resolute",
+    "Ubuntu:resolute-security",
+    "UbuntuESMApps:resolute-apps-security",
+    "UbuntuESM:resolute-infra-security",
+    "Ubuntu:resolute-updates"
+   ],
+   "patterns": [],
+   "blacklist": [
+    "^docker\\.io",
+    "^docker-",
+    "^containerd",
+    "^runc$"
+   ],
+   "source": [
+    "apt-config dump",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "backports",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "outside",
+   "state": "found",
+   "dirs": [
+    {
+     "dir": "/opt/app1/bin",
+     "files": [
+      {
+       "name": "tool-1",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-2",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-3",
+       "mtime": "2026-09-15T18:45:23Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-4",
+       "mtime": "2026-09-19T10:19:51Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-5",
+       "mtime": "2026-09-08T12:38:38Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-6",
+       "mtime": "2026-09-15T18:04:55Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-7",
+       "mtime": "2026-09-10T21:34:22Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-8",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-9",
+       "mtime": "2026-09-08T12:38:37Z",
+       "kind": "script",
+       "interpreter": "python3"
+      }
+     ]
+    }
+   ],
+   "hidden": 0,
+   "hidden_paths": [],
+   "settings": null,
+   "source": [
+    "/usr/local/bin",
+    "/usr/local/sbin",
+    "/opt/*/bin",
+    "dpkg -S"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "eol",
+   "release": "26.04 LTS",
+   "codename": "resolute",
+   "standard_until": "2031-05-29",
+   "extended_until": "2036-04-23",
+   "days_left": 1683,
+   "source": [
+    "/usr/share/distro-info/ubuntu.csv"
+   ],
+   "state": "none",
+   "took_ms": 0
+  }
+ ],
+ "dpkg_status_mtime": "2026-10-19T18:42:37Z",
+ "took_ms": 3300
+}

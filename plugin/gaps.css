@@ -1,0 +1,133 @@
+/* Update Gaps: only what this page needs on top of azentrius.css (tokens for
+ * light and dark, page frame, buttons, cards, tables, labels, dialogs).
+ * Colours always come from the tokens there.
+ * SPDX-License-Identifier: Apache-2.0 */
+
+*, *::before, *::after { box-sizing: border-box; }
+/* The az classes set display; [hidden] must win. */
+[hidden] { display: none !important; }
+html { background: var(--bg-page); }
+.az-alert__body { overflow-wrap: anywhere; }
+.az-card code, .az-alert code, .ug-dialog code {
+    padding: 0 4px;
+    border-radius: var(--radius-tiny);
+    background: var(--tint-neutral);
+    color: var(--on-tint-neutral);
+    overflow-wrap: anywhere;
+}
+
+/* ---------- busy states ---------- */
+
+@keyframes ug-spin { to { transform: rotate(360deg); } }
+.ug-btn-spinner {
+    display: none;
+    flex: none;
+    inline-size: 1em;
+    block-size: 1em;
+    border: 2px solid currentColor;
+    border-inline-end-color: transparent;
+    border-radius: 50%;
+    animation: ug-spin 0.8s linear infinite;
+}
+.az-btn.is-busy .ug-btn-spinner { display: inline-block; }
+.az-btn.is-busy .az-icon { display: none; }
+.az-btn.is-busy { cursor: progress; }
+.ug-loading { display: flex; align-items: center; gap: var(--space-md); padding: var(--space-xl) var(--space-lg); }
+.ug-spinner {
+    flex: none;
+    inline-size: 22px;
+    block-size: 22px;
+    border: 2px solid var(--line-control);
+    border-block-start-color: var(--text-subtle);
+    border-radius: 50%;
+    animation: ug-spin 0.8s linear infinite;
+}
+.ug-loading-title { display: block; font-weight: 600; }
+.ug-loading-sub { display: block; margin-block-start: 2px; color: var(--text-subtle); font-size: 13px; }
+.ug-cards.is-busy, #ug-summary.is-busy { opacity: 0.6; transition: opacity 120ms ease; }
+
+/* ---------- page messages, overview ---------- */
+
+.ug-status-list { display: flex; flex-direction: column; gap: var(--space-sm); }
+.ug-status-list:empty { display: none; }
+.ug-summary-body { display: flex; flex-direction: column; gap: var(--space-md); }
+.ug-summary-body p { margin: 0; }
+.ug-chips { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-block-start: var(--space-xs); }
+.ug-chips a { text-decoration: none; }
+.ug-chips a:hover .az-label { box-shadow: inset 0 0 0 1px var(--primary); }
+.ug-timer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); }
+.ug-timer .az-icon { color: var(--text-subtle); }
+.ug-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); }
+
+/* ---------- finding cards ---------- */
+
+.ug-cards { display: flex; flex-direction: column; gap: var(--space-lg); }
+.ug-cards:empty { display: none; }
+.ug-card { scroll-margin-block-start: var(--space-lg); }
+.ug-card .az-card__body { display: flex; flex-direction: column; gap: var(--space-md); }
+.ug-card .az-card__body > p, .ug-card .az-card__body > ul { margin: 0; }
+.ug-explain { display: grid; gap: var(--space-sm); padding: var(--space-md); border-radius: var(--radius-small); background: var(--bg-page); }
+.ug-explain p { margin: 0; }
+.ug-explain strong { display: block; font-size: 13px; }
+.ug-source { margin: 0; color: var(--text-subtle); font-size: 12px; }
+.ug-source code { font-size: 12px; }
+.ug-note { margin: 0; color: var(--text-subtle); font-size: 13px; }
+.ug-kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-xs) var(--space-lg); margin: 0; }
+.ug-kv dt { font-weight: 600; font-size: 13px; }
+.ug-kv dd { margin: 0; overflow-wrap: anywhere; }
+.ug-sub { margin: 0; font-size: 14px; font-weight: 600; }
+.ug-plain-list { margin: 0; padding-inline-start: 1.2em; display: flex; flex-direction: column; gap: var(--space-xs); }
+.ug-plain-list li::marker { color: var(--text-subtle); }
+.ug-intro { margin: 0 0 var(--space-sm); color: var(--text-subtle); }
+.ug-pkgs { overflow-wrap: anywhere; }
+.az-table td > .ug-v { min-width: 0; overflow-wrap: anywhere; }
+/* Link buttons in running text may wrap (azentrius.css keeps buttons on one line). */
+.ug-card .az-btn--link, .ug-summary-body .az-btn--link, .ug-plain-list .az-btn--link { white-space: normal; text-align: start; }
+.az-table td.ug-ver { font-family: var(--az-font-code); font-size: 13px; overflow-wrap: anywhere; }
+.az-table td .az-label { margin-inline-start: var(--space-xs); }
+.ug-lines { margin: 0; padding: var(--space-sm) var(--space-md); border-radius: var(--radius-small); background: var(--bg-page);
+    font-family: var(--az-font-code); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+
+/* Folders of "outside the package manager": folded, one per line. */
+.ug-dir { border-block-start: 1px solid var(--line); }
+.ug-dir:first-of-type { border-block-start: 0; }
+.ug-dir > summary { display: flex; align-items: center; gap: var(--space-sm); padding: var(--space-sm) 0; cursor: pointer; list-style: none; }
+.ug-dir > summary::-webkit-details-marker { display: none; }
+.ug-dir > summary .ug-fold { transition: transform 120ms ease; color: var(--text-subtle); }
+.ug-dir[open] > summary .ug-fold { transform: rotate(90deg); }
+.ug-dir > summary code { font-size: 13px; }
+.ug-dir .az-table-wrap { margin-block-end: var(--space-sm); }
+
+/* ---------- dialog ---------- */
+
+dialog.ug-dialog { padding: 0; border: 0; }
+dialog.ug-dialog:not([open]) { display: none; }
+dialog.ug-dialog::backdrop { background: var(--backdrop); }
+.ug-dialog .az-modal__body { padding-block-end: var(--space-xs); }
+.ug-dialog-desc, .ug-dialog-note, .ug-dialog-result { margin: 0; }
+.ug-dialog-note { color: var(--text-subtle); font-size: 13px; }
+.ug-dialog-log {
+    margin: 0;
+    max-block-size: 16rem;
+    overflow: auto;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-small);
+    background: var(--bg-page);
+    font-family: var(--az-font-code);
+    font-size: 12px;
+    white-space: pre-wrap;
+    overflow-wrap: anywhere;
+}
+.ug-dialog-result:empty { display: none; }
+.ug-dialog-result.is-ok { color: var(--status-success); }
+.ug-dialog-result.is-error { color: var(--danger-text); }
+.ug-dialog-result .az-icon { margin-inline-end: var(--space-xs); }
+
+@media (max-width: 640px) {
+    .ug-kv { grid-template-columns: 1fr; }
+    .ug-kv dd { margin-block-end: var(--space-xs); }
+}
+@media (prefers-reduced-motion: reduce) {
+    .ug-spinner, .ug-btn-spinner { animation: none; }
+    .ug-dir > summary .ug-fold { transition: none; }
+}

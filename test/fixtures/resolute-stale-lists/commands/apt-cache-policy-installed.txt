@@ -1,0 +1,546 @@
+3cpio:
+  Installed: 0.14.0-1ubuntu1
+  Candidate: 0.14.0-1ubuntu1
+  Version table:
+ *** 0.14.0-1ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+aardvark-dns:
+  Installed: 1.16.0-3
+  Candidate: 1.16.0-3
+  Version table:
+ *** 1.16.0-3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+acl:
+  Installed: 2.3.2-2
+  Candidate: 2.3.2-2
+  Version table:
+ *** 2.3.2-2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+acpid:
+  Installed: 1:2.0.34-1ubuntu3
+  Candidate: 1:2.0.34-1ubuntu3
+  Version table:
+ *** 1:2.0.34-1ubuntu3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+adduser:
+  Installed: 3.153ubuntu1
+  Candidate: 3.153ubuntu1
+  Version table:
+ *** 3.153ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+amd64-microcode:
+  Installed: 3.20251202.1ubuntu2
+  Candidate: 3.20251202.1ubuntu2
+  Version table:
+ *** 3.20251202.1ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+apparmor:
+  Installed: 5.0.2-0ubuntu1~26.04.1
+  Candidate: 5.0.2-0ubuntu1~26.04.1
+  Version table:
+ *** 5.0.2-0ubuntu1~26.04.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     5.0.0~beta1-0ubuntu7 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+apport:
+  Installed: 2.34.1-0ubuntu0.1
+  Candidate: 2.34.1-0ubuntu0.1
+  Version table:
+ *** 2.34.1-0ubuntu0.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.34.0-0ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+apport-core-dump-handler:
+  Installed: 2.34.1-0ubuntu0.1
+  Candidate: 2.34.1-0ubuntu0.1
+  Version table:
+ *** 2.34.1-0ubuntu0.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.34.0-0ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+apport-symptoms:
+  Installed: 0.25build1
+  Candidate: 0.25build1
+  Version table:
+ *** 0.25build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+appstream:
+  Installed: 1.1.2-1
+  Candidate: 1.1.2-1
+  Version table:
+ *** 1.1.2-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+apt:
+  Installed: 3.2.0
+  Candidate: 3.2.0
+  Version table:
+ *** 3.2.0 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+at:
+  Installed: 3.2.5-2.2ubuntu2
+  Candidate: 3.2.5-2.2ubuntu2
+  Version table:
+ *** 3.2.5-2.2ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+audispd-plugins:
+  Installed: 1:4.1.2-1ubuntu0.1
+  Candidate: 1:4.1.2-1ubuntu0.1
+  Version table:
+ *** 1:4.1.2-1ubuntu0.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     1:4.1.2-1build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+auditd:
+  Installed: 1:4.1.2-1ubuntu0.1
+  Candidate: 1:4.1.2-1ubuntu0.1
+  Version table:
+ *** 1:4.1.2-1ubuntu0.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:4.1.2-1build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+azentrius-repository:
+  Installed: 1.2.0-1
+  Candidate: 1.2.0-1
+  Version table:
+ *** 1.2.0-1 100
+        100 /var/lib/dpkg/status
+base-files:
+  Installed: 14ubuntu6.2
+  Candidate: 14ubuntu6.2
+  Version table:
+ *** 14ubuntu6.2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     14ubuntu6 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+base-passwd:
+  Installed: 3.6.8
+  Candidate: 3.6.8
+  Version table:
+ *** 3.6.8 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+bash:
+  Installed: 5.3-2ubuntu1
+  Candidate: 5.3-2ubuntu1
+  Version table:
+ *** 5.3-2ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+bash-completion:
+  Installed: 1:2.16.0-8build1
+  Candidate: 1:2.16.0-8build1
+  Version table:
+ *** 1:2.16.0-8build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+bc:
+  Installed: 1.07.1-4build1
+  Candidate: 1.07.1-4build1
+  Version table:
+ *** 1.07.1-4build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+bcache-tools:
+  Installed: 1.0.8-5ubuntu1
+  Candidate: 1.0.8-5ubuntu1
+  Version table:
+ *** 1.0.8-5ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+bind9-dnsutils:
+  Installed: 1:9.20.24-1ubuntu0.4
+  Candidate: 1:9.20.24-1ubuntu0.4
+  Version table:
+ *** 1:9.20.24-1ubuntu0.4 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.20.24-1ubuntu0.3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+     1:9.20.18-1ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+bind9-host:
+  Installed: 1:9.20.24-1ubuntu0.4
+  Candidate: 1:9.20.24-1ubuntu0.4
+  Version table:
+ *** 1:9.20.24-1ubuntu0.4 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.20.24-1ubuntu0.3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+     1:9.20.18-1ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+bind9-libs:
+  Installed: 1:9.20.24-1ubuntu0.4
+  Candidate: 1:9.20.24-1ubuntu0.4
+  Version table:
+ *** 1:9.20.24-1ubuntu0.4 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.20.24-1ubuntu0.3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+     1:9.20.18-1ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+bpftool:
+  Installed: 7.7.0+7.0.0-38.38
+  Candidate: 7.7.0+7.0.0-38.38
+  Version table:
+ *** 7.7.0+7.0.0-38.38 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     7.7.0+7.0.0-14.14 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+bridge-utils:
+  Installed: 1.7.1-4ubuntu3
+  Candidate: 1.7.1-4ubuntu3
+  Version table:
+ *** 1.7.1-4ubuntu3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-bridge:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-cronjobs:
+  Installed: 2.7.4-1
+  Candidate: 2.7.4-1
+  Version table:
+ *** 2.7.4-1 100
+        100 /var/lib/dpkg/status
+cockpit-files:
+  Installed: 39-1
+  Candidate: 39-1
+  Version table:
+ *** 39-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-image-update-monitor:
+  Installed: 0.19.1-1
+  Candidate: 0.19.1-1
+  Version table:
+ *** 0.19.1-1 100
+        100 /var/lib/dpkg/status
+cockpit-networkmanager:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-packagekit:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-storaged:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-system:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-ws:
+  Installed: 360-1
+  Candidate: 360-1
+  Version table:
+ *** 360-1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+containerd:
+  Installed: 2.2.2-0ubuntu1.1
+  Candidate: 2.2.2-0ubuntu1.1
+  Version table:
+ *** 2.2.2-0ubuntu1.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.2.2-0ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+distro-info-data:
+  Installed: 0.72-0ubuntu0.26.04.1
+  Candidate: 0.72-0ubuntu0.26.04.1
+  Version table:
+ *** 0.72-0ubuntu0.26.04.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     0.68build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+docker-buildx:
+  Installed: 0.30.1-0ubuntu1
+  Candidate: 0.30.1-0ubuntu1
+  Version table:
+ *** 0.30.1-0ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+docker-compose-v2:
+  Installed: 2.40.3+ds1-0ubuntu1
+  Candidate: 2.40.3+ds1-0ubuntu1
+  Version table:
+ *** 2.40.3+ds1-0ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+docker.io:
+  Installed: 29.1.3-0ubuntu4.1
+  Candidate: 29.1.3-0ubuntu4.1
+  Version table:
+ *** 29.1.3-0ubuntu4.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/universe amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/universe amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     29.1.3-0ubuntu4 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+dpkg:
+  Installed: 1.23.7ubuntu1
+  Candidate: 1.23.7ubuntu1
+  Version table:
+ *** 1.23.7ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+libc6:
+  Installed: 2.43-2ubuntu2.4
+  Candidate: 2.43-2ubuntu2.4
+  Version table:
+ *** 2.43-2ubuntu2.4 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.43-2ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+linux-image-7.0.0-34-generic:
+  Installed: 7.0.0-34.34
+  Candidate: 7.0.0-34.34
+  Version table:
+ *** 7.0.0-34.34 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+linux-image-7.0.0-38-generic:
+  Installed: 7.0.0-38.38
+  Candidate: 7.0.0-38.38
+  Version table:
+ *** 7.0.0-38.38 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+linux-image-generic:
+  Installed: 7.0.0-38.38
+  Candidate: 7.0.0-38.38
+  Version table:
+ *** 7.0.0-38.38 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     7.0.0-14.14 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+needrestart:
+  Installed: 3.11-1ubuntu2
+  Candidate: 3.11-1ubuntu2
+  Version table:
+ *** 3.11-1ubuntu2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+openssh-server:
+  Installed: 1:10.2p1-2ubuntu3.8
+  Candidate: 1:10.2p1-2ubuntu3.8
+  Version table:
+ *** 1:10.2p1-2ubuntu3.8 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:10.2p1-2ubuntu3.7 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+     1:10.2p1-2ubuntu3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+openssl:
+  Installed: 3.5.5-1ubuntu3.7
+  Candidate: 3.5.5-1ubuntu3.7
+  Version table:
+ *** 3.5.5-1ubuntu3.7 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     3.5.5-1ubuntu3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+restic:
+  Installed: 0.18.1-3ubuntu1
+  Candidate: 0.18.1-3ubuntu1
+  Version table:
+ *** 0.18.1-3ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+runc:
+  Installed: 1.4.0-0ubuntu1
+  Candidate: 1.4.0-0ubuntu1
+  Version table:
+ *** 1.4.0-0ubuntu1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status
+skopeo:
+  Installed: 1.21.0~pre1-2build1
+  Candidate: 1.21.0~pre1-2build1
+  Version table:
+ *** 1.21.0~pre1-2build1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+        100 /var/lib/dpkg/status
+sudo:
+  Installed: 1.9.17p2-1ubuntu3.2
+  Candidate: 1.9.17p2-1ubuntu3.2
+  Version table:
+ *** 1.9.17p2-1ubuntu3.2 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1.9.17p2-1ubuntu3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+systemd:
+  Installed: 259.5-0ubuntu3.4
+  Candidate: 259.5-0ubuntu3.4
+  Version table:
+ *** 259.5-0ubuntu3.4 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     259.5-0ubuntu3 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+ubuntu-pro-client:
+  Installed: 37.2ubuntu0.1
+  Candidate: 37.2ubuntu0.1
+  Version table:
+ *** 37.2ubuntu0.1 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+        500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+        500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     37.2ubuntu 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+unattended-upgrades:
+  Installed: 2.12ubuntu9
+  Candidate: 2.12ubuntu9
+  Version table:
+ *** 2.12ubuntu9 500
+        500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+        500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+        100 /var/lib/dpkg/status

@@ -1,0 +1,20 @@
+{
+    "version": 0,
+    "requires": {
+        "cockpit": "264"
+    },
+    "menu": {
+        "index": {
+            "label": "Update Gaps",
+            "order": 36,
+            "keywords": [
+                {
+                    "matches": ["update", "updates", "apt", "held", "hold", "restart", "reboot", "ubuntu pro", "esm", "unattended", "backports", "security"]
+                }
+            ]
+        }
+    },
+    "azentrius": {
+        "status": ["/usr/lib/cockpit-update-gaps/gaps-status.py", "status"]
+    }
+}

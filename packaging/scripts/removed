@@ -1,0 +1,9 @@
+# shellcheck shell=sh
+# After cockpit-update-gaps was removed (as root; also `make uninstall`): forget its units and
+# its state. The state is only a cache of what the scan saw; /etc/update-gaps.conf stays.
+# SPDX-License-Identifier: Apache-2.0
+rm -f /var/lib/update-gaps/scan.json /var/lib/update-gaps/status.json /run/update-gaps-scan.lock
+rmdir /var/lib/update-gaps 2> /dev/null || true
+if [ -d /run/systemd/system ]; then
+    systemctl daemon-reload || true
+fi

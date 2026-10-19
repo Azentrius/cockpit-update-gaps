@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- SPDX-License-Identifier: CC0-1.0 -->
+<!-- AppStream data: Cockpit lists the page under Applications and opens it from there. -->
+<component type="addon">
+  <id>de.azentrius.update_gaps</id>
+  <metadata_license>CC0-1.0</metadata_license>
+  <project_license>Apache-2.0</project_license>
+  <name>Update Gaps</name>
+  <summary>The updates a server misses although Software Updates lists none</summary>
+  <summary xml:lang="de">Die Updates, die einem Server fehlen, obwohl Software-Updates nichts meldet</summary>
+  <description>
+    <p>
+      The page shows where updates are missing although Cockpit's Software Updates lists none:
+      held packages, fixes that only come with Ubuntu Pro, pending restarts, missing or old
+      package lists, packages without a source, sources the automatic updates leave out,
+      backports not installed, software outside the package manager and the end of support.
+      For every finding it says why Software Updates does not show it and what you can do.
+      It only reads.
+    </p>
+    <p xml:lang="de">
+      Die Seite zeigt, wo Updates fehlen, obwohl Software-Updates in Cockpit nichts meldet:
+      gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, fehlende oder alte
+      Paketlisten, Pakete ohne Paketquelle, Quellen außerhalb der automatischen Updates, nicht
+      installierte Backports, Software außerhalb des Paketmanagers und das Ende der
+      Unterstützung. Zu jedem Befund steht, warum Software-Updates ihn nicht zeigt und was Sie
+      tun können. Sie liest nur.
+    </p>
+  </description>
+  <extends>org.cockpit_project.cockpit</extends>
+  <launchable type="cockpit-manifest">update-gaps</launchable>
+  <url type="homepage">https://github.com/Azentrius/cockpit-update-gaps</url>
+  <url type="bugtracker">https://github.com/Azentrius/cockpit-update-gaps/issues</url>
+  <developer id="de.azentrius">
+    <name>Azentrius</name>
+  </developer>
+</component>

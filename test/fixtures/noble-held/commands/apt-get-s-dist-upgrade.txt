@@ -1,0 +1,23 @@
+Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following packages were automatically installed and are no longer required:
+  cockpit libdrm-amdgpu1 libdrm-intel1 libegl-mesa0 libegl1
+  libfile-basedir-perl libfile-desktopentry-perl libfile-mimeinfo-perl libgbm1
+  libgl1 libgl1-mesa-dri libgles2 libglvnd0 libglx-mesa0 libglx0 libice6
+  libio-stringy-perl libipc-system-simple-perl libllvm20 libnet-dbus-perl
+  libpciaccess0 libsm6 libtie-ixhash-perl libvulkan1 libwayland-client0
+  libx11-protocol-perl libx11-xcb1 libxaw7 libxcb-dri3-0 libxcb-glx0
+  libxcb-present0 libxcb-randr0 libxcb-shape0 libxcb-shm0 libxcb-sync1
+  libxcb-xfixes0 libxcomposite1 libxcursor1 libxext6 libxfixes3 libxft2 libxi6
+  libxinerama1 libxkbfile1 libxml-parser-perl libxml-twig-perl
+  libxml-xpathengine-perl libxmu6 libxmuu1 libxrandr2 libxrender1
+  libxshmfence1 libxt6t64 libxtst6 libxv1 libxxf86dga1 libxxf86vm1
+  mesa-libgallium mesa-vulkan-drivers unzip x11-common x11-utils
+  x11-xserver-utils xdg-utils zip zutty
+Use 'apt autoremove' to remove them.
+The following packages have been kept back:
+  containerd.io docker-buildx-plugin docker-ce docker-ce-cli
+  docker-ce-rootless-extras docker-compose-plugin
+0 upgraded, 0 newly installed, 0 to remove and 6 not upgraded.

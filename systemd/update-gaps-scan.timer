@@ -1,0 +1,12 @@
+[Unit]
+Description=Update Gaps: check this host every 6 hours
+
+[Timer]
+# Offset from the version radar of Image Update Monitor (:17).
+OnCalendar=*-*-* 00/6:37:00
+RandomizedDelaySec=10min
+OnBootSec=10min
+Persistent=true
+
+[Install]
+WantedBy=timers.target

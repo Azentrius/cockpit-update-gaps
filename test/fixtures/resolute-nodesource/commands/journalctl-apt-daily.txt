@@ -1,0 +1,4 @@
+2026-10-19T20:34:58+00:00 server systemd[1]: Starting apt-daily.service - Daily apt download activities...
+2026-10-19T20:35:28+00:00 server apt-helper[39883]: E: Sub-process nm-online returned an error code (1)
+2026-10-19T20:35:28+00:00 server systemd[1]: apt-daily.service: Deactivated successfully.
+2026-10-19T20:35:28+00:00 server systemd[1]: Finished apt-daily.service - Daily apt download activities.

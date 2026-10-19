@@ -1,0 +1,1296 @@
+aardvark-dns:
+  Installed: 1.4.0-5
+  Candidate: 1.4.0-5
+  Version table:
+ *** 1.4.0-5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+        100 /var/lib/dpkg/status
+acl:
+  Installed: 2.3.2-1build1.1
+  Candidate: 2.3.2-1build1.1
+  Version table:
+ *** 2.3.2-1build1.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.3.2-1build1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+acpid:
+  Installed: 1:2.0.34-1ubuntu2
+  Candidate: 1:2.0.34-1ubuntu2
+  Version table:
+ *** 1:2.0.34-1ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+adduser:
+  Installed: 3.137ubuntu1
+  Candidate: 3.137ubuntu1
+  Version table:
+ *** 3.137ubuntu1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+amd64-microcode:
+  Installed: 3.20251202.1ubuntu0.24.04.1
+  Candidate: 3.20251202.1ubuntu0.24.04.1
+  Version table:
+ *** 3.20251202.1ubuntu0.24.04.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     3.20231019.1ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+apparmor:
+  Installed: 4.0.1really4.0.1-0ubuntu0.24.04.9
+  Candidate: 4.0.1really4.0.1-0ubuntu0.24.04.9
+  Version table:
+ *** 4.0.1really4.0.1-0ubuntu0.24.04.9 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     4.0.0-beta3-0ubuntu3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+apport:
+  Installed: 2.28.3-0ubuntu0.1
+  Candidate: 2.28.3-0ubuntu0.1
+  Version table:
+ *** 2.28.3-0ubuntu0.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.28.1-0ubuntu3.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+     2.28.1-0ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+apport-core-dump-handler:
+  Installed: 2.28.3-0ubuntu0.1
+  Candidate: 2.28.3-0ubuntu0.1
+  Version table:
+ *** 2.28.3-0ubuntu0.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.28.1-0ubuntu3.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+     2.28.1-0ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+apport-symptoms:
+  Installed: 0.25
+  Candidate: 0.25
+  Version table:
+ *** 0.25 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+appstream:
+  Installed: 1.0.2-1build6
+  Candidate: 1.0.2-1build6
+  Version table:
+ *** 1.0.2-1build6 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+apt:
+  Installed: 2.8.3
+  Candidate: 2.8.3
+  Version table:
+ *** 2.8.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.7.14build2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+apt-utils:
+  Installed: 2.8.3
+  Candidate: 2.8.3
+  Version table:
+ *** 2.8.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.7.14build2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+at:
+  Installed: 3.2.5-2.1ubuntu3
+  Candidate: 3.2.5-2.1ubuntu3
+  Version table:
+ *** 3.2.5-2.1ubuntu3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+        100 /var/lib/dpkg/status
+auditd:
+  Installed: 1:3.1.2-2.1ubuntu0.1
+  Candidate: 1:3.1.2-2.1ubuntu0.1
+  Version table:
+ *** 1:3.1.2-2.1ubuntu0.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:3.1.2-2.1build1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+azentrius-repository:
+  Installed: 1.2.0-1
+  Candidate: 1.2.0-1
+  Version table:
+ *** 1.2.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+        100 /var/lib/dpkg/status
+     1.1.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     1.0.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+base-files:
+  Installed: 13ubuntu10.5
+  Candidate: 13ubuntu10.5
+  Version table:
+ *** 13ubuntu10.5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     13ubuntu10 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+base-passwd:
+  Installed: 3.6.3build1
+  Candidate: 3.6.3build1
+  Version table:
+ *** 3.6.3build1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+bash:
+  Installed: 5.2.21-2ubuntu4
+  Candidate: 5.2.21-2ubuntu4
+  Version table:
+ *** 5.2.21-2ubuntu4 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+bash-completion:
+  Installed: 1:2.11-8
+  Candidate: 1:2.11-8
+  Version table:
+ *** 1:2.11-8 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+bc:
+  Installed: 1.07.1-3ubuntu4
+  Candidate: 1.07.1-3ubuntu4
+  Version table:
+ *** 1.07.1-3ubuntu4 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+bcache-tools:
+  Installed: 1.0.8-5build1
+  Candidate: 1.0.8-5build1
+  Version table:
+ *** 1.0.8-5build1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status
+bind9-dnsutils:
+  Installed: 1:9.18.39-0ubuntu0.24.04.8
+  Candidate: 1:9.18.39-0ubuntu0.24.04.8
+  Version table:
+ *** 1:9.18.39-0ubuntu0.24.04.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.18.39-0ubuntu0.24.04.7 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+     1:9.18.24-0ubuntu5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+bind9-host:
+  Installed: 1:9.18.39-0ubuntu0.24.04.8
+  Candidate: 1:9.18.39-0ubuntu0.24.04.8
+  Version table:
+ *** 1:9.18.39-0ubuntu0.24.04.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.18.39-0ubuntu0.24.04.7 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+     1:9.18.24-0ubuntu5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+bind9-libs:
+  Installed: 1:9.18.39-0ubuntu0.24.04.8
+  Candidate: 1:9.18.39-0ubuntu0.24.04.8
+  Version table:
+ *** 1:9.18.39-0ubuntu0.24.04.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.18.39-0ubuntu0.24.04.7 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+     1:9.18.24-0ubuntu5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+binutils:
+  Installed: 2.42-4ubuntu2.10
+  Candidate: 2.42-4ubuntu2.10
+  Version table:
+ *** 2.42-4ubuntu2.10 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.42-4ubuntu2.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+     2.42-4ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+binutils-common:
+  Installed: 2.42-4ubuntu2.10
+  Candidate: 2.42-4ubuntu2.10
+  Version table:
+ *** 2.42-4ubuntu2.10 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.42-4ubuntu2.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+     2.42-4ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+binutils-x86-64-linux-gnu:
+  Installed: 2.42-4ubuntu2.10
+  Candidate: 2.42-4ubuntu2.10
+  Version table:
+ *** 2.42-4ubuntu2.10 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.42-4ubuntu2.8 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+     2.42-4ubuntu2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+cockpit:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     329-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     316-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+cockpit-bridge:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+cockpit-cronjobs:
+  Installed: 2.7.4-1
+  Candidate: 2.7.4-1
+  Version table:
+ *** 2.7.4-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+        100 /var/lib/dpkg/status
+     2.7.3-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     2.7.2-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     2.7.1-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     2.7.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     2.6.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+cockpit-files:
+  Installed: 39-1~bpo24.04.1
+  Candidate: 39-1~bpo24.04.1
+  Version table:
+ *** 39-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+cockpit-image-update-monitor:
+  Installed: 0.19.1-1
+  Candidate: 0.19.1-1
+  Version table:
+ *** 0.19.1-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+        100 /var/lib/dpkg/status
+     0.19.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.18.1-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.18.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.17.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.16.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.15.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.14.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+     0.13.0-1 500
+        500 https://packages.azentrius.com/apt stable/main amd64 Packages
+        500 https://packages.azentrius.com/apt stable/main all Packages
+cockpit-networkmanager:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     329-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     316-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+cockpit-packagekit:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     329-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     316-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+cockpit-storaged:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     329-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     316-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+cockpit-system:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     329-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     316-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+cockpit-ws:
+  Installed: 362-1~bpo24.04.1
+  Candidate: 362-1~bpo24.04.1
+  Version table:
+ *** 362-1~bpo24.04.1 100
+        100 https://mirror.hetzner.com/ubuntu/packages noble-backports/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     314-1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+containerd.io:
+  Installed: 2.3.5-1~ubuntu.24.04~noble
+  Candidate: 2.4.2-2~ubuntu.24.04~noble
+  Version table:
+     2.4.2-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.4.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.4.1-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.3.6-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+ *** 2.3.5-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+        100 /var/lib/dpkg/status
+     2.3.4-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.3.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.3.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.6-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.5-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.2.0-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.1.5-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.29-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.28-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.28-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.28-0~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.27-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.26-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.25-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.24-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.23-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.22-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.21-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.20-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.19-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.7.18-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.6.33-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.6.32-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.6.31-1 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     1.6.28-2 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+distro-info-data:
+  Installed: 0.72-0ubuntu0.24.04.1
+  Candidate: 0.72-0ubuntu0.24.04.1
+  Version table:
+ *** 0.72-0ubuntu0.24.04.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     0.60 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+docker-buildx-plugin:
+  Installed: 0.37.0-1~ubuntu.24.04~noble
+  Candidate: 0.38.0-1~ubuntu.24.04~noble
+  Version table:
+     0.38.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.37.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+ *** 0.37.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+        100 /var/lib/dpkg/status
+     0.36.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.36.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.35.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.34.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.34.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.33.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.32.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.32.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.31.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.30.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.30.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.29.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.29.0-0~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.28.0-0~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.27.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.26.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.25.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.24.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.23.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.22.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.21.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.21.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.20.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.19.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.19.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.17.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.16.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.16.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.15.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.14.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.14.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     0.13.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+docker-ce:
+  Installed: 5:29.8.0-1~ubuntu.24.04~noble
+  Candidate: 5:29.9.1-1~ubuntu.24.04~noble
+  Version table:
+     5:29.9.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.9.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.8.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.8.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+ *** 5:29.8.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+        100 /var/lib/dpkg/status
+     5:29.7.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.7.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.7.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.2-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.5-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.4.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+docker-ce-cli:
+  Installed: 5:29.8.0-1~ubuntu.24.04~noble
+  Candidate: 5:29.9.1-1~ubuntu.24.04~noble
+  Version table:
+     5:29.9.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.9.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.8.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.8.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+ *** 5:29.8.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+        100 /var/lib/dpkg/status
+     5:29.7.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.7.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.7.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.2-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.5-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.4.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+docker-ce-rootless-extras:
+  Installed: 5:29.8.0-1~ubuntu.24.04~noble
+  Candidate: 5:29.9.1-1~ubuntu.24.04~noble
+  Version table:
+     5:29.9.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.9.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.8.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.8.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+ *** 5:29.8.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+        100 /var/lib/dpkg/status
+     5:29.7.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.7.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.7.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.6.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.2-2~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.5-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:29.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:28.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.4.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.2.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:27.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5:26.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+docker-compose-plugin:
+  Installed: 5.5.1-1~ubuntu.24.04~noble
+  Candidate: 5.6.0-1~ubuntu.24.04~noble
+  Version table:
+     5.6.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+ *** 5.5.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+        100 /var/lib/dpkg/status
+     5.5.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.4.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.3.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.3.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.2.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.1.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.1.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.1.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.1.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.1.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.0.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.0.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     5.0.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.40.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.40.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.40.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.40.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.39.4-0~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.39.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.39.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.38.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.38.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.37.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.36.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.35.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.35.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.34.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.33.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.33.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.32.4-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.32.3-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.32.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.31.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.29.7-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.29.6-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.29.2-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.29.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.29.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.28.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.27.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.27.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.26.1-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+     2.25.0-1~ubuntu.24.04~noble 500
+        500 https://download.docker.com/linux/ubuntu noble/stable amd64 Packages
+dpkg:
+  Installed: 1.22.6ubuntu6.6
+  Candidate: 1.22.6ubuntu6.6
+  Version table:
+ *** 1.22.6ubuntu6.6 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1.22.6ubuntu6 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+gh:
+  Installed: 2.102.0
+  Candidate: 2.102.0
+  Version table:
+ *** 2.102.0 500
+        500 https://cli.github.com/packages stable/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.45.0-1ubuntu0.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/universe amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/universe amd64 Packages
+     2.45.0-1build1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+hc-utils:
+  Installed: 0.0.6-1
+  Candidate: 0.0.6-1
+  Version table:
+ *** 0.0.6-1 100
+        100 /var/lib/dpkg/status
+libc6:
+  Installed: 2.39-0ubuntu8.9
+  Candidate: 2.39-0ubuntu8.9
+  Version table:
+ *** 2.39-0ubuntu8.9 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     2.39-0ubuntu8 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+linux-generic:
+  Installed: 6.8.0-147.147
+  Candidate: 6.8.0-147.147
+  Version table:
+ *** 6.8.0-147.147 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     6.8.0-31.31 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+linux-image-6.8.0-146-generic:
+  Installed: 6.8.0-146.146
+  Candidate: 6.8.0-146.146
+  Version table:
+ *** 6.8.0-146.146 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+linux-image-6.8.0-147-generic:
+  Installed: 6.8.0-147.147
+  Candidate: 6.8.0-147.147
+  Version table:
+ *** 6.8.0-147.147 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+linux-image-generic:
+  Installed: 6.8.0-147.147
+  Candidate: 6.8.0-147.147
+  Version table:
+ *** 6.8.0-147.147 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     6.8.0-31.31 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+linux-image-virtual:
+  Installed: 6.8.0-147.147
+  Candidate: 6.8.0-147.147
+  Version table:
+ *** 6.8.0-147.147 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     6.8.0-31.31 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+needrestart:
+  Installed: 3.6-7ubuntu4.5
+  Candidate: 3.6-7ubuntu4.5
+  Version table:
+ *** 3.6-7ubuntu4.5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     3.6-7ubuntu4 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+openssh-server:
+  Installed: 1:9.6p1-3ubuntu13.20
+  Candidate: 1:9.6p1-3ubuntu13.20
+  Version table:
+ *** 1:9.6p1-3ubuntu13.20 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1:9.6p1-3ubuntu13.19 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+     1:9.6p1-3ubuntu13 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+openssl:
+  Installed: 3.0.13-0ubuntu3.16
+  Candidate: 3.0.13-0ubuntu3.16
+  Version table:
+ *** 3.0.13-0ubuntu3.16 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     3.0.13-0ubuntu3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+python3-pip:
+  Installed: 24.0+dfsg-1ubuntu1.3
+  Candidate: 24.0+dfsg-1ubuntu1.3
+  Version table:
+ *** 24.0+dfsg-1ubuntu1.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/universe amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     24.0+dfsg-1ubuntu1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+python3-wheel:
+  Installed: 0.42.0-2
+  Candidate: 0.42.0-2
+  Version table:
+ *** 0.42.0-2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+        100 /var/lib/dpkg/status
+restic:
+  Installed: 0.16.4-2ubuntu0.24.04.3
+  Candidate: 0.16.4-2ubuntu0.24.04.3
+  Version table:
+ *** 0.16.4-2ubuntu0.24.04.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/universe amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     0.16.4-2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+skopeo:
+  Installed: 1.13.3+ds1-2ubuntu0.24.04.3
+  Candidate: 1.13.3+ds1-2ubuntu0.24.04.3
+  Version table:
+ *** 1.13.3+ds1-2ubuntu0.24.04.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/universe amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/universe amd64 Packages
+        100 /var/lib/dpkg/status
+     1.13.3+ds1-2build2 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/universe amd64 Packages
+sudo:
+  Installed: 1.9.15p5-3ubuntu5.24.04.4
+  Candidate: 1.9.15p5-3ubuntu5.24.04.4
+  Version table:
+ *** 1.9.15p5-3ubuntu5.24.04.4 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1.9.15p5-3ubuntu5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+systemd:
+  Installed: 255.4-1ubuntu8.18
+  Candidate: 255.4-1ubuntu8.18
+  Version table:
+ *** 255.4-1ubuntu8.18 500
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     255.4-1ubuntu8.17 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+     255.4-1ubuntu8 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+ubuntu-pro-client:
+  Installed: 37.2ubuntu~24.04.1
+  Candidate: 37.2ubuntu~24.04.1
+  Version table:
+ *** 37.2ubuntu~24.04.1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     31.2.3 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+unattended-upgrades:
+  Installed: 2.9.1+nmu4ubuntu1
+  Candidate: 2.9.1+nmu4ubuntu1
+  Version table:
+ *** 2.9.1+nmu4ubuntu1 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+        100 /var/lib/dpkg/status

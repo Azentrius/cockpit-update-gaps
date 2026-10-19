@@ -209,7 +209,7 @@ checked” or “check failed”; a partial check adds “partly checked” to i
 The add-on's state is the worst of `danger`, `warning` and `info`; without any of them `ok` when an
 item is `ok`, else `none`. `stale_after` is 24 hours, as on the page; `link` is `#/<id>` and opens
 the page at that card. Texts hold only numbers, states and names of packages, services and kernels
-(at most 6 names, then `(+n)`): no addresses, URLs, user names or paths.
+(at most 6 names, services 2, then `(+n)`; a detail longer than 200 characters, where the Status Board cuts it, ends at a word with ` …`): no addresses, URLs, user names or paths.
 
 The file holds the English document plus the German texts under `i18n.de` (`summary`,
 `items.<id>.title` and `.detail`), a field readers of schema 1 ignore. The verb returns the document

@@ -72,6 +72,8 @@ class Contract(unittest.TestCase):
                 self.assertEqual((doc["addon"], doc["label"], doc["schema"]), ("update-gaps", "Update Gaps", 1))
                 self.assertEqual([i["id"] for i in doc["items"]], [i["id"] for i in status["items"]])
                 self.assertEqual([i["state"] for i in doc["items"]], [i["state"] for i in status["items"]])
+                for i in doc["items"]:
+                    self.assertLessEqual(len(i.get("detail", "")), gapsstatus.MAX_DETAIL, (s, lang, i["id"]))
 
     def test_findings_of_the_hosts(self):
         """What each recorded host reports (test/fixtures/<scenario>/)."""
@@ -168,6 +170,25 @@ class Contract(unittest.TestCase):
         eol.update(kind="soon", standard_until="2027-01-31", days_left=103)
         item = next(i for i in gapsstatus.document(doc, "en", "0.1.0")["items"] if i["id"] == "eol")
         self.assertEqual((item["state"], item["value"]), ("warning", "103"))
+
+    def test_long_details_end_at_a_word(self):
+        doc = fixture("scan-noble-held.json")
+        restart = next(c for c in doc["checks"] if c["check"] == "restart")
+        restart["services"] = [f"a-rather-long-service-name-{n}.service" for n in range(12)]
+        restart["reboot_required"]["packages"] = [f"linux-image-7.0.0-{n}-generic" for n in range(30, 38)]
+        for lang in ("en", "de"):
+            item = next(i for i in gapsstatus.document(doc, lang, "0.1.0")["items"] if i["id"] == "restart")
+            self.assertLessEqual(len(item["detail"]), gapsstatus.MAX_DETAIL)
+            self.assertTrue(item["detail"].endswith(" " + chr(0x2026)), item["detail"])
+            self.assertNotIn(", " + chr(0x2026), item["detail"])
+
+    def test_old_lists_in_hours_then_days(self):
+        doc = fixture("scan-resolute-nodesource.json")
+        lists = next(c for c in doc["checks"] if c["check"] == "lists")
+        for hours, want in ((50, "older than 50 hours"), (2882, "older than 120 days")):
+            lists.update(state="found", findings=[{"kind": "old", "hours": hours}])
+            item = next(i for i in gapsstatus.document(doc, "en", "0.1.0")["items"] if i["id"] == "lists")
+            self.assertEqual((item["state"], item["detail"]), ("warning", want))
 
     def test_other_systems(self):
         doc = fixture("scan-noble-held.json")

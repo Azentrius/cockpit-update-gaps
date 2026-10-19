@@ -1,4 +1,4 @@
 # Python tools for the checks in CI (lint), pinned; Dependabot keeps them
 # current. The add-on itself needs none of them.
-ruff==0.17.0
+ruff==0.17.1
 shellcheck-py==0.11.0.1

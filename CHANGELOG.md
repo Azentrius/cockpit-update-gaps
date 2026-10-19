@@ -1,6 +1,6 @@
 # Changelog
 
-## 0.1.0 – 2026-10-19
+## 0.1.0 – 2026-10-20
 
 First release: where a Debian or Ubuntu server misses updates although Cockpit's Software Updates
 lists none, with the reason for every finding. Read only.

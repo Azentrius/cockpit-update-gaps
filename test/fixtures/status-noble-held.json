@@ -21,7 +21,7 @@
    "id": "restart",
    "state": "warning",
    "title": "Restart",
-   "detail": "kernel 6.8.0-147 installed, 6.8.0-146 running; requested by linux-base, linux-image-6.8.0-147-generic; 5 services on old libraries: dbus.service, NetworkManager.service, systemd-logind.service, unattended-upgrades.service, wpa_supplicant.service",
+   "detail": "kernel 6.8.0-147 installed, 6.8.0-146 running; requested by linux-base, linux-image-6.8.0-147-generic; 5 services on old libraries: dbus.service, NetworkManager.service (+3)",
    "link": "#/restart",
    "checked_at": "2026-10-19T20:55:00Z",
    "stale_after": 86400
@@ -72,7 +72,7 @@
     },
     "restart": {
      "title": "Neustart",
-     "detail": "Kernel 6.8.0-147 installiert, 6.8.0-146 läuft; angefordert von linux-base, linux-image-6.8.0-147-generic; 5 Dienste mit alten Bibliotheken: dbus.service, NetworkManager.service, systemd-logind.service, unattended-upgrades.service, wpa_supplicant.service"
+     "detail": "Kernel 6.8.0-147 installiert, 6.8.0-146 läuft; angefordert von linux-base, linux-image-6.8.0-147-generic; 5 Dienste mit alten Bibliotheken: dbus.service, NetworkManager.service (+3)"
     },
     "pro": {
      "title": "Fixes nur mit Ubuntu Pro",

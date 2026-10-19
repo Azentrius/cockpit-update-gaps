@@ -29,6 +29,7 @@ ORDER = {"none": 0, "ok": 1, "info": 2, "warning": 3, "danger": 4}
 ID_RE = re.compile(r"^[a-z0-9-]{1,40}$")
 LINK_RE = re.compile(r"^#/[A-Za-z0-9/_-]{0,80}$")
 MAX_NAMES = 6
+MAX_DETAIL = 200        # the Status Board cuts a detail there; cut it at a word boundary first
 # The version lives in the page (const VERSION in gaps.js): next to lib/ in a checkout, else installed.
 PAGE_JS = (os.path.join(os.path.dirname(os.path.realpath(__file__)), "..", "plugin", "gaps.js"),
            "/usr/share/cockpit/update-gaps/gaps.js")
@@ -148,10 +149,18 @@ def overall(items):
     return "ok" if any(i.get("state") == "ok" for i in items) else "none"
 
 
-def _names(names):
-    names = [str(n) for n in names]
-    more = len(names) - MAX_NAMES
-    return ", ".join(names[:MAX_NAMES]) + (f" (+{more})" if more > 0 else "")
+def _names(names, n=MAX_NAMES):
+    names = [str(x) for x in names]
+    more = len(names) - n
+    return ", ".join(names[:n]) + (f" (+{more})" if more > 0 else "")
+
+
+def _clip(text):
+    if len(text) <= MAX_DETAIL:
+        return text
+    cut = text[:MAX_DETAIL - 2]
+    at = max(cut.rfind(", "), cut.rfind("; "), cut.rfind(" "))
+    return (cut[:at] if at > 0 else cut).rstrip(",; ") + " …"
 
 
 def _kernel(k):
@@ -172,7 +181,7 @@ def items_of(doc, lang):
         if value is not None:
             i["value"] = str(value)
         if detail:
-            i["detail"] = detail
+            i["detail"] = _clip(detail)
         if link:
             i["link"] = "#/" + cid
         i["checked_at"] = at
@@ -200,7 +209,7 @@ def items_of(doc, lang):
             parts.append(t(lang, "restart.flag", names=_names(pk)) if pk else t(lang, "restart.flag.plain"))
         svc = c.get("services") or []
         if svc:
-            parts.append(t(lang, "restart.services", n=len(svc), names=_names(svc)))
+            parts.append(t(lang, "restart.services", n=len(svc), names=_names(svc, 2)))
         return item("restart", "warning" if c.get("state") == "found" else "ok", detail="; ".join(parts))
 
     def pro(c):

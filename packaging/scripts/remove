@@ -5,3 +5,5 @@ if [ -d /run/systemd/system ]; then
     systemctl disable --now update-gaps-scan.timer > /dev/null 2>&1 || true
     systemctl stop update-gaps-scan.service > /dev/null 2>&1 || true
 fi
+# Bytecode a Python run without -B may have left next to the helpers.
+rm -rf /usr/lib/cockpit-update-gaps/__pycache__

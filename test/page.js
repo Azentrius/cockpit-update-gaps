@@ -9,9 +9,10 @@ const { JSDOM } = require("jsdom");
 
 const PLUGIN = path.join(__dirname, "..", "plugin");
 const FIX = path.join(__dirname, "fixtures");
-const html = fs.readFileSync(path.join(PLUGIN, "index.html"), "utf8")
-    .replace(/<script[^>]*><\/script>/g, "");          // the scripts are injected below
-const js = ["icons.js", "i18n.js", "gaps.js"].map((f) => fs.readFileSync(path.join(PLUGIN, f), "utf8")).join("\n");
+// jsdom loads no external scripts; the page's own scripts are run below with eval, after the
+// script elements are taken out of the document.
+const html = fs.readFileSync(path.join(PLUGIN, "index.html"), "utf8");
+const js =["icons.js", "i18n.js", "gaps.js"].map((f) => fs.readFileSync(path.join(PLUGIN, f), "utf8")).join("\n");
 const NOW = "2026-10-19T21:00:00Z";
 const STATE = "/var/lib/update-gaps/scan.json";
 
@@ -60,6 +61,7 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
                 onSpawn = null } = {}) {
     const dom = new JSDOM(html, { runScripts: "outside-only", url: "https://localhost:9090/update-gaps/" });
     const w = dom.window;
+    w.document.querySelectorAll("script").forEach((s) => s.remove());
     w.HTMLDialogElement.prototype.showModal = function () { this.setAttribute("open", ""); };
     w.HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); };
     w.Element.prototype.scrollIntoView = function () { w.__scrolled = this.id; };

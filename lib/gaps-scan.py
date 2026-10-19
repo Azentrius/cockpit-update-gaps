@@ -1,4 +1,4 @@
-#!/usr/bin/python3 -I
+#!/usr/bin/python3 -IB
 # SPDX-License-Identifier: Apache-2.0
 """Update Gaps, the Cockpit add-on: every check of this host, as JSON.
 
@@ -20,7 +20,9 @@ import sys
 import tempfile
 
 # -I leaves the script's directory out of sys.path; the modules come from this
-# root-owned directory only.
+# root-owned directory only. No bytecode is written next to them (-B, and here
+# for a call without it): the package owns every file in that directory.
+sys.dont_write_bytecode = True
 sys.path.insert(0, os.path.dirname(os.path.realpath(__file__)))
 import gapscheck  # noqa: E402
 

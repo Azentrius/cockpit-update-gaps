@@ -18,7 +18,9 @@ apt-get update -qq
 apt-get install -y -qq --no-install-recommends python3 unattended-upgrades needrestart distro-info-data dpkg-dev > /dev/null
 
 # A held package, a package without a source, a source without package lists.
-apt-mark hold tzdata 2> /dev/null || { apt-get install -y -qq tzdata > /dev/null; apt-mark hold tzdata; }
+# apt-mark holds a package that is not installed as well; it must be installed to count.
+apt-get install -y -qq --no-install-recommends tzdata > /dev/null
+apt-mark hold tzdata
 pkg=$(mktemp -d)
 mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/doc/ug-local"
 printf 'Package: ug-local\nVersion: 1.0\nArchitecture: all\nMaintainer: Test <test@example.invalid>\nDescription: a package without a source\n' > "$pkg/DEBIAN/control"

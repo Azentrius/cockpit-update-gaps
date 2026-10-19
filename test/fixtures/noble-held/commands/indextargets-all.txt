@@ -1,0 +1,1311 @@
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: Packages
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: Packages
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: Translations
+Component: main
+Target-Of: deb
+Optional: yes
+
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: CNF
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://packages.azentrius.com/apt
+Release: stable
+Filename: /var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_main_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/azentrius.sources:1
+Identifier: CNF
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: Packages
+Component: stable
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: Packages
+Component: stable
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: Translations
+Component: stable
+Target-Of: deb
+Optional: yes
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: DEP-11
+Component: stable
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: DEP-11
+Component: stable
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: CNF
+Component: stable
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://download.docker.com/linux/ubuntu
+Release: noble
+Filename: /var/lib/apt/lists/download.docker.com_linux_ubuntu_dists_noble_stable_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/docker.list:1
+Identifier: CNF
+Component: stable
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: Packages
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: Packages
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: Translations
+Component: main
+Target-Of: deb
+Optional: yes
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: DEP-11
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: DEP-11
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: CNF
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://cli.github.com/packages
+Release: stable
+Filename: /var/lib/apt/lists/cli.github.com_packages_dists_stable_main_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/github-cli.list:1
+Identifier: CNF
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: main
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_main_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: universe
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_universe_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: restricted
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_restricted_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: multiverse
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble_multiverse_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: main
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_main_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: universe
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_universe_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: restricted
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_restricted_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: multiverse
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-updates
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-updates_multiverse_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: main
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_main_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: universe
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_universe_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: restricted
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_restricted_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Packages
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: Translations
+Component: multiverse
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: DEP-11
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/packages
+Release: noble-backports
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_noble-backports_multiverse_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:1
+Identifier: CNF
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Translations
+Component: main
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: main
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_main_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: main
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Translations
+Component: universe
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: universe
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_universe_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: universe
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Translations
+Component: restricted
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: restricted
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_restricted_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: restricted
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_binary-amd64_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: no
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_binary-all_Packages
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Packages
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_i18n_Translation-en
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: Translations
+Component: multiverse
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_dep11_Components-amd64.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_dep11_Components-all.yml
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: DEP-11
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_cnf_Commands-amd64
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: multiverse
+Architecture: amd64
+Target-Of: deb
+Optional: yes
+
+Site: https://mirror.hetzner.com/ubuntu/security
+Release: noble-security
+Filename: /var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_noble-security_multiverse_cnf_Commands-all
+Sourcesentry: /etc/apt/sources.list.d/ubuntu.sources:2
+Identifier: CNF
+Component: multiverse
+Architecture: all
+Target-Of: deb
+Optional: yes
+

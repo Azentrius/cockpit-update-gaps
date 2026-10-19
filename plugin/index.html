@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<!-- SPDX-License-Identifier: Apache-2.0 -->
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>Update Gaps</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <!-- Shared Azentrius design files (identical in every add-on, see
+         tools/design-files.sha256): the theme script comes first so the page
+         never flashes in the wrong brightness, then the shared stylesheet,
+         then what only this page needs. Everything is local, so Cockpit's
+         default (strict) CSP applies unchanged. -->
+    <script src="azentrius-theme.js?v=0.1.0"></script>
+    <link rel="stylesheet" href="azentrius.css?v=0.1.0">
+    <link rel="stylesheet" href="gaps.css?v=0.1.0">
+    <!-- Cockpit base API + Cockpit's own translation file for the session
+         language (sets cockpit.language, e.g. "de"; absent for English). -->
+    <script src="../base1/cockpit.js"></script>
+    <script src="../base1/po.js"></script>
+    <script src="icons.js?v=0.1.0"></script>
+</head>
+<body>
+    <!-- Static texts are English (the fallback) and get translated by
+         gaps.js before anything is interactive; see data-i18n. -->
+    <div class="az-page">
+        <header class="az-page-header">
+            <h1 class="az-page-title az-page-title--dot">Update Gaps</h1>
+            <div class="az-page-actions">
+                <span id="ug-meta" class="az-meta"></span>
+                <!-- Starts busy: the first load begins as soon as gaps.js runs. -->
+                <button id="ug-refresh" class="az-btn az-btn--primary is-busy" type="button" disabled aria-busy="true">
+                    <span class="ug-btn-spinner" aria-hidden="true"></span><span data-icon="sync-alt"></span><span class="ug-btn-label" data-i18n="btn.loading">Loading …</span>
+                </button>
+            </div>
+        </header>
+
+        <!-- Messages for the whole page (role="alert" for errors, set by gaps.js). -->
+        <div id="ug-status" class="ug-status-list"></div>
+
+        <section id="ug-loading" class="az-card ug-loading" aria-live="polite">
+            <span class="ug-spinner" aria-hidden="true"></span>
+            <span><span class="ug-loading-title" data-i18n="loading.title">Checking this server …</span>
+                <span class="ug-loading-sub" data-i18n="loading.sub">Reading the package database, apt's lists and what waits for a restart. Nothing is changed.</span></span>
+        </section>
+
+        <section id="ug-summary" class="az-card" aria-labelledby="ug-summary-title" hidden>
+            <div class="az-card__header">
+                <h2 class="az-card__title" id="ug-summary-title" data-i18n="sum.title">Overview</h2>
+            </div>
+            <div class="az-card__body ug-summary-body">
+                <p id="ug-sum-updates"></p>
+                <div id="ug-sum-found"></div>
+                <div id="ug-sum-timer" class="ug-timer"></div>
+            </div>
+        </section>
+
+        <div id="ug-cards" class="ug-cards"></div>
+
+        <section id="ug-clean" class="az-card" aria-labelledby="ug-clean-title" hidden>
+            <div class="az-card__header">
+                <h2 class="az-card__title" id="ug-clean-title" data-i18n="clean.title">No findings</h2>
+            </div>
+            <div class="az-card__body">
+                <p class="ug-intro" data-i18n="clean.intro">Checked, nothing found.</p>
+                <ul id="ug-clean-list" class="ug-plain-list"></ul>
+            </div>
+        </section>
+
+        <section id="ug-unchecked" class="az-card" aria-labelledby="ug-unchecked-title">
+            <div class="az-card__header">
+                <h2 class="az-card__title" id="ug-unchecked-title" data-i18n="unchecked.title">Not checked</h2>
+            </div>
+            <div class="az-card__body">
+                <p class="ug-intro" data-i18n="unchecked.intro">Update Gaps does not see these.</p>
+                <ul id="ug-unchecked-list" class="ug-plain-list"></ul>
+            </div>
+        </section>
+
+        <footer class="az-signature">
+            <a class="az-signature__mark" href="https://azentrius.com" target="_blank" rel="noopener noreferrer">Azentrius</a>
+            <span class="az-signature__meta"><span id="ug-sig-version">Update Gaps</span><span id="ug-sig-host" hidden></span>
+                <a href="https://github.com/Azentrius/cockpit-update-gaps" target="_blank" rel="noopener noreferrer" data-i18n="sig.source">Source code</a></span>
+        </footer>
+    </div>
+
+    <!-- The one dialog: set up or switch off the regular check. A description
+         first, then the live output and the result. -->
+    <dialog id="ug-dialog" class="az-modal ug-dialog" aria-labelledby="ug-dialog-title">
+        <div class="az-modal__header">
+            <h2 id="ug-dialog-title" class="az-modal__title"></h2>
+        </div>
+        <div class="az-modal__body">
+            <p id="ug-dialog-desc" class="ug-dialog-desc"></p>
+            <p id="ug-dialog-note" class="ug-dialog-note" data-i18n="dialog.note">Runs with administrator privileges via Cockpit.</p>
+            <pre id="ug-dialog-log" class="ug-dialog-log" hidden></pre>
+            <p id="ug-dialog-result" class="ug-dialog-result" role="status" aria-live="polite"></p>
+        </div>
+        <div class="az-modal__footer">
+            <button id="ug-dialog-confirm" class="az-btn az-btn--primary" type="button">
+                <span class="ug-btn-spinner" aria-hidden="true"></span><span class="ug-btn-label"></span>
+            </button>
+            <button id="ug-dialog-cancel" class="az-btn az-btn--link" type="button" data-i18n="dialog.cancel">Cancel</button>
+        </div>
+    </dialog>
+
+    <script src="i18n.js?v=0.1.0"></script>
+    <script src="gaps.js?v=0.1.0"></script>
+</body>
+</html>

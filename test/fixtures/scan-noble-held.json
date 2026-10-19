@@ -1,0 +1,581 @@
+{
+ "format": 1,
+ "generated": "2026-10-19T20:55:00Z",
+ "root": true,
+ "pm": "apt",
+ "os": {
+  "id": "ubuntu",
+  "version_id": "24.04",
+  "codename": "noble",
+  "name": "Ubuntu 24.04.5 LTS"
+ },
+ "checks": [
+  {
+   "check": "updates",
+   "count": 0,
+   "security": 0,
+   "kept_back": [
+    "containerd.io",
+    "docker-buildx-plugin",
+    "docker-ce",
+    "docker-ce-cli",
+    "docker-ce-rootless-extras",
+    "docker-compose-plugin"
+   ],
+   "phased": [],
+   "source": [
+    "apt-get -s dist-upgrade"
+   ],
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "held",
+   "state": "found",
+   "findings": [
+    {
+     "package": "containerd.io",
+     "installed": "2.3.5-1~ubuntu.24.04~noble",
+     "candidate": "2.4.2-2~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:09"
+    },
+    {
+     "package": "docker-buildx-plugin",
+     "installed": "0.37.0-1~ubuntu.24.04~noble",
+     "candidate": "0.38.0-1~ubuntu.24.04~noble",
+     "newer": 2,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:13"
+    },
+    {
+     "package": "docker-ce",
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "candidate": "5:29.9.1-1~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:10"
+    },
+    {
+     "package": "docker-ce-cli",
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "candidate": "5:29.9.1-1~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:09"
+    },
+    {
+     "package": "docker-ce-rootless-extras",
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "candidate": "5:29.9.1-1~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:13"
+    },
+    {
+     "package": "docker-compose-plugin",
+     "installed": "5.5.1-1~ubuntu.24.04~noble",
+     "candidate": "5.6.0-1~ubuntu.24.04~noble",
+     "newer": 1,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:14"
+    }
+   ],
+   "source": [
+    "apt-mark showhold",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "pro",
+   "state": "found",
+   "findings": [
+    {
+     "package": "python3-pip",
+     "version": "24.0+dfsg-1ubuntu1.3+esm3",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "24.0+dfsg-1ubuntu1.3"
+    },
+    {
+     "package": "python3-wheel",
+     "version": "0.42.0-2ubuntu0.1~esm1",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "0.42.0-2"
+    },
+    {
+     "package": "restic",
+     "version": "0.16.4-2ubuntu0.24.04.3+esm2",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "0.16.4-2ubuntu0.24.04.3"
+    },
+    {
+     "package": "skopeo",
+     "version": "1.13.3+ds1-2ubuntu0.24.04.3+esm2",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "1.13.3+ds1-2ubuntu0.24.04.3"
+    }
+   ],
+   "attached": false,
+   "services": [],
+   "counts": {
+    "esm_apps_packages": 0,
+    "esm_apps_updates": 4,
+    "esm_infra_packages": 0,
+    "esm_infra_updates": 0,
+    "installed_packages": 962,
+    "main_packages": 881,
+    "multiverse_packages": 0,
+    "restricted_packages": 0,
+    "standard_security_updates": 0,
+    "third_party_packages": 10,
+    "universe_packages": 70,
+    "unknown_packages": 1
+   },
+   "source": [
+    "pro security-status --format json"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "restart",
+   "source": [
+    "needrestart -b -r l",
+    "/var/run/reboot-required"
+   ],
+   "kernel": {
+    "running": "6.8.0-146-generic",
+    "expected": "6.8.0-147-generic",
+    "state": 3
+   },
+   "microcode": null,
+   "services": [
+    "dbus.service",
+    "NetworkManager.service",
+    "systemd-logind.service",
+    "unattended-upgrades.service",
+    "wpa_supplicant.service"
+   ],
+   "reboot_required": {
+    "since": "2026-10-14T06:04:25Z",
+    "packages": [
+     "linux-base",
+     "linux-image-6.8.0-147-generic"
+    ]
+   },
+   "tool": "needrestart 3.6",
+   "state": "found",
+   "took_ms": 0
+  },
+  {
+   "check": "lists",
+   "state": "none",
+   "findings": [],
+   "last_update": {
+    "ts": "2026-10-19T14:29:37Z",
+    "src": "update-success-stamp",
+    "age_h": 6.4
+   },
+   "apt_daily": {
+    "finished": "2026-10-19T10:04:25Z",
+    "result": "success"
+   },
+   "indexes": [
+    {
+     "file": "cli.github.com_packages_dists_stable_InRelease",
+     "date": "2026-09-30T02:39:10Z",
+     "valid_until": null
+    },
+    {
+     "file": "download.docker.com_linux_ubuntu_dists_noble_InRelease",
+     "date": "2026-10-19T03:59:02Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_noble-backports_InRelease",
+     "date": "2026-10-17T23:38:40Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_noble-updates_InRelease",
+     "date": "2026-10-18T12:26:19Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_noble_InRelease",
+     "date": "2024-04-25T15:10:33Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_security_dists_noble-security_InRelease",
+     "date": "2026-10-17T23:35:54Z",
+     "valid_until": null
+    },
+    {
+     "file": "packages.azentrius.com_apt_dists_stable_InRelease",
+     "date": "2026-10-18T21:11:43Z",
+     "valid_until": null
+    }
+   ],
+   "stale_after_h": 48,
+   "source": [
+    "apt-get indextargets",
+    "/var/lib/apt/lists",
+    "/var/lib/apt/periodic"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "local",
+   "state": "found",
+   "findings": [
+    {
+     "package": "hc-utils",
+     "version": "0.0.6-1",
+     "arch": "all",
+     "cause": "no-source"
+    }
+   ],
+   "source": [
+    "apt-cache policy",
+    "dpkg-query"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "auto",
+   "state": "found",
+   "findings": [
+    {
+     "kind": "source",
+     "site": "https://cli.github.com/packages",
+     "host": "cli.github.com",
+     "o": "gh",
+     "a": "",
+     "n": "stable",
+     "l": "gh",
+     "c": "main",
+     "packages": [
+      "gh"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://download.docker.com/linux/ubuntu",
+     "host": "download.docker.com",
+     "o": "Docker",
+     "a": "noble",
+     "n": "",
+     "l": "Docker CE",
+     "c": "stable",
+     "packages": [
+      "containerd.io",
+      "docker-buildx-plugin",
+      "docker-ce",
+      "docker-ce-cli",
+      "docker-ce-rootless-extras",
+      "docker-compose-plugin"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://mirror.hetzner.com/ubuntu/packages",
+     "host": "mirror.hetzner.com",
+     "o": "Ubuntu",
+     "a": "noble-backports",
+     "n": "noble",
+     "l": "Ubuntu",
+     "c": "universe",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge",
+      "cockpit-files",
+      "cockpit-networkmanager",
+      "cockpit-packagekit",
+      "cockpit-storaged",
+      "cockpit-system",
+      "cockpit-ws"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://packages.azentrius.com/apt",
+     "host": "packages.azentrius.com",
+     "o": "Azentrius",
+     "a": "stable",
+     "n": "stable",
+     "l": "Azentrius",
+     "c": "main",
+     "packages": [
+      "azentrius-repository",
+      "cockpit-cronjobs",
+      "cockpit-image-update-monitor"
+     ]
+    },
+    {
+     "kind": "held",
+     "packages": [
+      "containerd.io",
+      "docker-buildx-plugin",
+      "docker-ce",
+      "docker-ce-cli",
+      "docker-ce-rootless-extras",
+      "docker-compose-plugin"
+     ]
+    }
+   ],
+   "installed": true,
+   "periodic": {
+    "update_lists": "1",
+    "unattended": "1"
+   },
+   "timer": "enabled",
+   "allowed": [
+    "Ubuntu:noble",
+    "Ubuntu:noble-security",
+    "UbuntuESMApps:noble-apps-security",
+    "UbuntuESM:noble-infra-security",
+    "Ubuntu:noble-updates"
+   ],
+   "patterns": [],
+   "blacklist": [],
+   "source": [
+    "apt-config dump",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "backports",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "outside",
+   "state": "found",
+   "dirs": [
+    {
+     "dir": "/usr/local/bin",
+     "files": [
+      {
+       "name": "local-1",
+       "mtime": "2026-10-16T12:41:38Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "local-2",
+       "mtime": "2026-10-19T07:54:21Z",
+       "kind": "script",
+       "interpreter": "python3"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app1/bin",
+     "files": [
+      {
+       "name": "tool-1",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-2",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-3",
+       "mtime": "2026-09-15T18:45:23Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-4",
+       "mtime": "2026-09-19T10:19:51Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-5",
+       "mtime": "2026-09-08T12:38:38Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-6",
+       "mtime": "2026-09-15T18:04:55Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-7",
+       "mtime": "2026-09-10T21:34:22Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-8",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-9",
+       "mtime": "2026-09-08T12:38:37Z",
+       "kind": "script",
+       "interpreter": "python3"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app2/bin",
+     "files": [
+      {
+       "name": "tool-1.sh",
+       "mtime": "2026-10-18T01:47:24Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-2.sh",
+       "mtime": "2026-10-18T00:16:20Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-3.sh",
+       "mtime": "2026-10-18T01:11:14Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-4.sh",
+       "mtime": "2026-10-18T01:12:18Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app3/bin",
+     "files": [
+      {
+       "name": "tool-1.sh",
+       "mtime": "2026-10-18T03:22:58Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-2.sh",
+       "mtime": "2026-10-18T03:22:58Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app4/bin",
+     "files": [
+      {
+       "name": "tool-1.sh",
+       "mtime": "2026-10-19T19:34:37Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    }
+   ],
+   "hidden": 0,
+   "hidden_paths": [],
+   "settings": null,
+   "source": [
+    "/usr/local/bin",
+    "/usr/local/sbin",
+    "/opt/*/bin",
+    "dpkg -S"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "eol",
+   "release": "24.04 LTS",
+   "codename": "noble",
+   "standard_until": "2029-05-31",
+   "extended_until": "2034-04-25",
+   "days_left": 955,
+   "source": [
+    "/usr/share/distro-info/ubuntu.csv"
+   ],
+   "state": "none",
+   "took_ms": 0
+  }
+ ],
+ "dpkg_status_mtime": "2026-10-19T18:42:39Z",
+ "took_ms": 3300
+}

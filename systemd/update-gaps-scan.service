@@ -1,0 +1,39 @@
+[Unit]
+Description=Update Gaps: where this host misses updates (read-only scan)
+Documentation=https://github.com/Azentrius/cockpit-update-gaps
+After=apt-daily.service apt-daily-upgrade.service
+
+[Service]
+Type=oneshot
+ExecStart=/usr/bin/python3 -I /usr/lib/cockpit-update-gaps/gaps-scan.py --output /var/lib/update-gaps/scan.json
+# Creates /var/lib/update-gaps (root-owned, readable: the page shows the state without root).
+StateDirectory=update-gaps
+StateDirectoryMode=0755
+Nice=10
+IOSchedulingClass=idle
+TimeoutStartSec=10min
+
+# Hardening: the scan only reads the package database, apt's lists and a few files. Root is
+# needed for needrestart (the processes of every user) and the journal of apt-daily.service.
+# No network at all.
+PrivateNetwork=yes
+IPAddressDeny=any
+RestrictAddressFamilies=AF_UNIX
+ProtectSystem=strict
+# `pro security-status` writes its own log and fails without it.
+ReadWritePaths=-/var/log/ubuntu-advantage.log
+ProtectHome=read-only
+PrivateTmp=yes
+NoNewPrivileges=yes
+ProtectKernelTunables=yes
+ProtectKernelModules=yes
+ProtectKernelLogs=yes
+ProtectControlGroups=yes
+ProtectClock=yes
+ProtectHostname=yes
+RestrictNamespaces=yes
+RestrictRealtime=yes
+RestrictSUIDSGID=yes
+LockPersonality=yes
+SystemCallArchitectures=native
+UMask=0022

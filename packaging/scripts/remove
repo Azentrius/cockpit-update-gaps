@@ -1,0 +1,7 @@
+# shellcheck shell=sh
+# Before cockpit-update-gaps is removed (as root; also `make uninstall`): stop its timer and scan.
+# SPDX-License-Identifier: Apache-2.0
+if [ -d /run/systemd/system ]; then
+    systemctl disable --now update-gaps-scan.timer > /dev/null 2>&1 || true
+    systemctl stop update-gaps-scan.service > /dev/null 2>&1 || true
+fi

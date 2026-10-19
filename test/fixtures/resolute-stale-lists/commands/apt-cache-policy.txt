@@ -1,0 +1,82 @@
+Package files:
+ 100 /var/lib/dpkg/status
+     release a=now
+ 500 http://security.ubuntu.com/ubuntu resolute-security/multiverse amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=multiverse,b=amd64
+     origin security.ubuntu.com
+ 500 http://security.ubuntu.com/ubuntu resolute-security/restricted amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=restricted,b=amd64
+     origin security.ubuntu.com
+ 500 http://security.ubuntu.com/ubuntu resolute-security/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin security.ubuntu.com
+ 500 http://security.ubuntu.com/ubuntu resolute-security/main amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=main,b=amd64
+     origin security.ubuntu.com
+ 100 http://archive.ubuntu.com/ubuntu resolute-backports/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-backports,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute-updates/multiverse amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=multiverse,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute-updates/restricted amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=restricted,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute-updates/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute-updates/main amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=main,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute/multiverse amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=multiverse,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute/restricted amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=restricted,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin archive.ubuntu.com
+ 500 http://archive.ubuntu.com/ubuntu resolute/main amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=main,b=amd64
+     origin archive.ubuntu.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-security/multiverse amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=multiverse,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-security/restricted amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=restricted,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-security/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-security/main amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-security,n=resolute,l=Ubuntu,c=main,b=amd64
+     origin mirror.hetzner.com
+ 100 http://mirror.hetzner.com/ubuntu/packages resolute-backports/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-backports,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/multiverse amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=multiverse,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/restricted amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=restricted,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute-updates/main amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute-updates,n=resolute,l=Ubuntu,c=main,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute/multiverse amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=multiverse,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute/restricted amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=restricted,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute/universe amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=universe,b=amd64
+     origin mirror.hetzner.com
+ 500 http://mirror.hetzner.com/ubuntu/packages resolute/main amd64 Packages
+     release v=26.04,o=Ubuntu,a=resolute,n=resolute,l=Ubuntu,c=main,b=amd64
+     origin mirror.hetzner.com
+Pinned packages:

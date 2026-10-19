@@ -1,0 +1,62 @@
+#!/usr/bin/env python3
+# SPDX-License-Identifier: Apache-2.0
+"""The state files (scan.json) of the recorded scenarios, as the helper
+writes them: test/fixtures/scan-<scenario>.json, plus one of a user without
+administrative access. The page tests and the preview read these, so the page
+is always tested against what the helper really produces;
+test/scan_test.py checks that they are current.
+
+    python3 test/fixtures/make_scans.py          write them
+    python3 test/fixtures/make_scans.py --check  exit 1 if one differs
+"""
+
+import json
+import os
+import sys
+
+HERE = os.path.dirname(os.path.abspath(__file__))
+sys.path.insert(0, os.path.join(HERE, "..", "..", "lib"))
+sys.path.insert(0, os.path.join(HERE, ".."))
+import gapscheck  # noqa: E402
+from fakesys import FakeSystem  # noqa: E402
+
+SCANS = {
+    "scan-noble-held.json": ("noble-held", {}),
+    "scan-resolute-stale-lists.json": ("resolute-stale-lists", {}),
+    "scan-resolute-nodesource.json": ("resolute-nodesource", {}),
+    "scan-resolute-nodesource-user.json": ("resolute-nodesource", {"uid": 1000}),
+}
+
+
+def build(scenario, kw):
+    doc = gapscheck.scan(FakeSystem(scenario, **kw))
+    doc["took_ms"] = 3300
+    for c in doc["checks"]:
+        c["took_ms"] = 0
+    return json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
+
+
+def main(argv):
+    check = "--check" in argv
+    bad = 0
+    for name, (scenario, kw) in SCANS.items():
+        path = os.path.join(HERE, name)
+        text = build(scenario, kw)
+        if check:
+            try:
+                with open(path) as f:
+                    same = f.read() == text
+            except OSError:
+                same = False
+            if not same:
+                print(f"{name} is not current: python3 test/fixtures/make_scans.py", file=sys.stderr)
+                bad = 1
+        else:
+            with open(path, "w") as f:
+                f.write(text)
+            print(path)
+    return bad
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

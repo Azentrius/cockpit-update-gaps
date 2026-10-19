@@ -1,0 +1,321 @@
+{
+ "dirs": {
+  "/boot": [
+   "vmlinuz-7.0.0-34-generic",
+   "vmlinuz-7.0.0-38-generic"
+  ],
+  "/opt": [
+   "app1"
+  ],
+  "/opt/app1/bin": [
+   "tool-1",
+   "tool-2",
+   "tool-3",
+   "tool-4",
+   "tool-5",
+   "tool-6",
+   "tool-7",
+   "tool-8",
+   "tool-9"
+  ],
+  "/usr/local/bin": [
+   "local-1"
+  ],
+  "/usr/local/sbin": [
+   "local-1.sh",
+   "local-2.sh"
+  ],
+  "/var/lib/apt/lists": [
+   "auxfiles",
+   "deb.nodesource.com_node%5f24.x_dists_nodistro_InRelease",
+   "deb.nodesource.com_node%5f24.x_dists_nodistro_main_binary-amd64_Packages",
+   "lock",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_InRelease",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_main_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_main_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_multiverse_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_multiverse_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_restricted_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_restricted_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_universe_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_universe_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_universe_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_universe_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_InRelease",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_main_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_main_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_main_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_main_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_multiverse_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_multiverse_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_multiverse_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_multiverse_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_restricted_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_restricted_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_restricted_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_restricted_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_universe_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_universe_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_universe_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_universe_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_InRelease",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_main_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_main_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_main_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_main_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_multiverse_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_multiverse_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_multiverse_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_multiverse_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_restricted_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_restricted_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_restricted_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_restricted_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_universe_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_universe_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_universe_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_packages_dists_resolute_universe_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_InRelease",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_main_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_main_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_main_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_main_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_multiverse_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_multiverse_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_multiverse_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_multiverse_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_restricted_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_restricted_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_restricted_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_restricted_i18n_Translation-en",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_universe_binary-amd64_Packages",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_universe_cnf_Commands-amd64",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_universe_dep11_Components-amd64.yml.gz",
+   "mirror.hetzner.com_ubuntu_security_dists_resolute-security_universe_i18n_Translation-en",
+   "packages.azentrius.com_apt_dists_stable_InRelease",
+   "packages.azentrius.com_apt_dists_stable_main_binary-all_Packages",
+   "packages.azentrius.com_apt_dists_stable_main_binary-amd64_Packages",
+   "partial"
+  ],
+  "/var/log": [
+   "dpkg.log"
+  ]
+ },
+ "files": {
+  "/etc/os-release": "PRETTY_NAME=\"Ubuntu 26.04.1 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04.1 LTS (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n",
+  "/usr/share/distro-info/debian.csv": "version,codename,series,created,release,eol,eol-lts,eol-elts\n1.1,Buzz,buzz,1993-08-16,1996-06-17,1997-06-05\n1.2,Rex,rex,1996-06-17,1996-12-12,1998-06-05\n1.3,Bo,bo,1996-12-12,1997-06-05,1999-03-09\n2.0,Hamm,hamm,1997-06-05,1998-07-24,2000-03-09\n2.1,Slink,slink,1998-07-24,1999-03-09,2000-10-30\n2.2,Potato,potato,1999-03-09,2000-08-15,2003-06-30\n3.0,Woody,woody,2000-08-15,2002-07-19,2006-06-30\n3.1,Sarge,sarge,2002-07-19,2005-06-06,2008-03-31\n4.0,Etch,etch,2005-06-06,2007-04-08,2010-02-15\n5.0,Lenny,lenny,2007-04-08,2009-02-14,2012-02-06\n6.0,Squeeze,squeeze,2009-02-14,2011-02-06,2014-05-31,2016-02-29\n7,Wheezy,wheezy,2011-02-06,2013-05-04,2016-04-25,2018-05-31,2020-06-30\n8,Jessie,jessie,2013-05-04,2015-04-26,2018-06-17,2020-06-30,2025-06-30\n9,Stretch,stretch,2015-04-26,2017-06-17,2020-07-18,2022-06-30,2027-06-30\n10,Buster,buster,2017-06-17,2019-07-06,2022-09-10,2024-06-30,2029-06-30\n11,Bullseye,bullseye,2019-07-06,2021-08-14,2024-08-14,2026-08-31,2031-06-30\n12,Bookworm,bookworm,2021-08-14,2023-06-10,2026-07-11,2028-06-30,2033-06-30\n13,Trixie,trixie,2023-06-10,2025-08-09,2028-08-09,2030-06-30,2035-06-30\n14,Forky,forky,2025-08-09\n15,Duke,duke,2027-08-01\n,Sid,sid,1993-08-16\n,Experimental,experimental,1993-08-16\n",
+  "/usr/share/distro-info/ubuntu.csv": "version,codename,series,created,release,eol,eol-server,eol-esm,eol-legacy\n4.10,Warty Warthog,warty,2004-03-05,2004-10-20,2006-04-30\n5.04,Hoary Hedgehog,hoary,2004-10-20,2005-04-08,2006-10-31\n5.10,Breezy Badger,breezy,2005-04-08,2005-10-12,2007-04-13\n6.06 LTS,Dapper Drake,dapper,2005-10-12,2006-06-01,2009-07-14,2011-06-01\n6.10,Edgy Eft,edgy,2006-06-01,2006-10-26,2008-04-25\n7.04,Feisty Fawn,feisty,2006-10-26,2007-04-19,2008-10-19\n7.10,Gutsy Gibbon,gutsy,2007-04-19,2007-10-18,2009-04-18\n8.04 LTS,Hardy Heron,hardy,2007-10-18,2008-04-24,2011-05-12,2013-05-09\n8.10,Intrepid Ibex,intrepid,2008-04-24,2008-10-30,2010-04-30\n9.04,Jaunty Jackalope,jaunty,2008-10-30,2009-04-23,2010-10-23\n9.10,Karmic Koala,karmic,2009-04-23,2009-10-29,2011-04-30\n10.04 LTS,Lucid Lynx,lucid,2009-10-29,2010-04-29,2013-05-09,2015-04-30\n10.10,Maverick Meerkat,maverick,2010-04-29,2010-10-10,2012-04-10\n11.04,Natty Narwhal,natty,2010-10-10,2011-04-28,2012-10-28\n11.10,Oneiric Ocelot,oneiric,2011-04-28,2011-10-13,2013-05-09\n12.04 LTS,Precise Pangolin,precise,2011-10-13,2012-04-26,2017-04-28,2017-04-28,2019-04-26\n12.10,Quantal Quetzal,quantal,2012-04-26,2012-10-18,2014-05-16\n13.04,Raring Ringtail,raring,2012-10-18,2013-04-25,2014-01-27\n13.10,Saucy Salamander,saucy,2013-04-25,2013-10-17,2014-07-17\n14.04 LTS,Trusty Tahr,trusty,2013-10-17,2014-04-17,2019-04-25,2019-04-25,2024-04-25,2029-04-26\n14.10,Utopic Unicorn,utopic,2014-04-17,2014-10-23,2015-07-23\n15.04,Vivid Vervet,vivid,2014-10-23,2015-04-23,2016-02-04\n15.10,Wily Werewolf,wily,2015-04-23,2015-10-22,2016-07-28\n16.04 LTS,Xenial Xerus,xenial,2015-10-22,2016-04-21,2021-04-30,2021-04-30,2026-04-23,2031-04-30\n16.10,Yakkety Yak,yakkety,2016-04-21,2016-10-13,2017-07-20\n17.04,Zesty Zapus,zesty,2016-10-13,2017-04-13,2018-01-13\n17.10,Artful Aardvark,artful,2017-04-13,2017-10-19,2018-07-19\n18.04 LTS,Bionic Beaver,bionic,2017-10-19,2018-04-26,2023-05-31,2023-05-31,2028-04-26,2033-04-28\n18.10,Cosmic Cuttlefish,cosmic,2018-04-26,2018-10-18,2019-07-18\n19.04,Disco Dingo,disco,2018-10-18,2019-04-18,2020-01-23\n19.10,Eoan Ermine,eoan,2019-04-18,2019-10-17,2020-07-17\n20.04 LTS,Focal Fossa,focal,2019-10-17,2020-04-23,2025-05-29,2025-05-29,2030-04-23,2035-04-26\n20.10,Groovy Gorilla,groovy,2020-04-23,2020-10-22,2021-07-22\n21.04,Hirsute Hippo,hirsute,2020-10-22,2021-04-22,2022-01-20\n21.10,Impish Indri,impish,2021-04-22,2021-10-14,2022-07-14\n22.04 LTS,Jammy Jellyfish,jammy,2021-10-14,2022-04-21,2027-06-01,2027-06-01,2032-04-21,2037-04-30\n22.10,Kinetic Kudu,kinetic,2022-04-21,2022-10-20,2023-07-20\n23.04,Lunar Lobster,lunar,2022-10-20,2023-04-20,2024-01-25\n23.10,Mantic Minotaur,mantic,2023-04-20,2023-10-12,2024-07-11\n24.04 LTS,Noble Numbat,noble,2023-10-12,2024-04-25,2029-05-31,2029-05-31,2034-04-25,2039-04-28\n24.10,Oracular Oriole,oracular,2024-04-25,2024-10-10,2025-07-10\n25.04,Plucky Puffin,plucky,2024-10-10,2025-04-17,2026-01-15\n25.10,Questing Quokka,questing,2025-04-17,2025-10-09,2026-07-09\n26.04 LTS,Resolute Raccoon,resolute,2025-10-09,2026-04-23,2031-05-29,2031-05-29,2036-04-23,2041-04-30\n26.10,Stonking Stingray,stonking,2026-04-24,2026-10-15,2027-07-15\n",
+  "/var/lib/apt/lists/deb.nodesource.com_node%5f24.x_dists_nodistro_InRelease": "Date: Wed, 14 Oct 2026 17:12:03 UTC\n",
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_InRelease": "Date: Sat, 17 Oct 2026 23:35:41 UTC\n",
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_InRelease": "Date: Sun, 18 Oct 2026 13:08:42 UTC\n",
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute_InRelease": "Date: Thu, 23 Apr 2026 17:07:15 UTC\n",
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_resolute-security_InRelease": "Date: Sat, 17 Oct 2026 23:34:23 UTC\n",
+  "/var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_InRelease": "Date: Sun, 18 Oct 2026 21:11:43 +0000\n",
+  "/var/log/dpkg.log": ""
+ },
+ "heads": {
+  "/opt/app1/bin/tool-1": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-2": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-3": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-4": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-5": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-6": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-7": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-8": "#!/usr/bin/env python3",
+  "/opt/app1/bin/tool-9": "#!/usr/bin/env python3",
+  "/usr/local/bin/local-1": "#!/bin/bash",
+  "/usr/local/sbin/local-1.sh": "#!/bin/bash",
+  "/usr/local/sbin/local-2.sh": "#!/bin/bash"
+ },
+ "kernel": "7.0.0-38-generic",
+ "now": "2026-10-19T20:55:00Z",
+ "stat": {
+  "/etc/os-release": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin": {
+   "mode": "755",
+   "mtime": 1792400000,
+   "type": "dir",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-1": {
+   "mode": "755",
+   "mtime": 1788964738,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-2": {
+   "mode": "755",
+   "mtime": 1788964738,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-3": {
+   "mode": "755",
+   "mtime": 1789497923,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-4": {
+   "mode": "755",
+   "mtime": 1789813191,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-5": {
+   "mode": "755",
+   "mtime": 1788871118,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-6": {
+   "mode": "755",
+   "mtime": 1789495495,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-7": {
+   "mode": "755",
+   "mtime": 1789076062,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-8": {
+   "mode": "755",
+   "mtime": 1788964738,
+   "type": "file",
+   "uid": 0
+  },
+  "/opt/app1/bin/tool-9": {
+   "mode": "755",
+   "mtime": 1788871117,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/bin/apt-get": {
+   "mode": "755",
+   "mtime": 1792400000,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/local/bin/local-1": {
+   "mode": "755",
+   "mtime": 1788949965,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/local/sbin/local-1.sh": {
+   "mode": "755",
+   "mtime": 1789418335,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/local/sbin/local-2.sh": {
+   "mode": "755",
+   "mtime": 1789418755,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/share/distro-info/debian.csv": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/share/distro-info/ubuntu.csv": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/deb.nodesource.com_node%5f24.x_dists_nodistro_InRelease": {
+   "mode": "644",
+   "mtime": 1791997926,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_InRelease": {
+   "mode": "644",
+   "mtime": 1792280145,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_InRelease": {
+   "mode": "644",
+   "mtime": 1792328940,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute_InRelease": {
+   "mode": "644",
+   "mtime": 1776964050,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_resolute-security_InRelease": {
+   "mode": "644",
+   "mtime": 1792280082,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_InRelease": {
+   "mode": "644",
+   "mtime": 1792357903,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/lists/partial": {
+   "mode": "644",
+   "mtime": 1792420017,
+   "type": "dir",
+   "uid": 0
+  },
+  "/var/lib/apt/periodic/download-upgradeable-stamp": {
+   "mode": "644",
+   "mtime": 1792413437,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/periodic/unattended-upgrades-stamp": {
+   "mode": "644",
+   "mtime": 1792391606,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/periodic/update-stamp": {
+   "mode": "644",
+   "mtime": 1792413436,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/periodic/update-success-stamp": {
+   "mode": "644",
+   "mtime": 1792420017,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/apt/periodic/upgrade-stamp": {
+   "mode": "644",
+   "mtime": 1792391606,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/lib/dpkg/status": {
+   "mode": "644",
+   "mtime": 1792435354,
+   "type": "file",
+   "uid": 0
+  },
+  "/var/log/dpkg.log": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "type": "file",
+   "uid": 0
+  }
+ },
+ "uid": 0
+}

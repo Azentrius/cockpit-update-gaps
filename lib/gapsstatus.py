@@ -63,6 +63,7 @@ T = {
         "lists.title": "Package lists",
         "lists.missing": {"one": "{n} source without lists", "other": "{n} sources without lists"},
         "lists.old": "older than {hours} hours",
+        "lists.old.days": "older than {days} days",
         "lists.expired": "a Release file has expired",
         "lists.apt-daily": "apt-daily reported problems",
         "lists.orphaned": "left-over lists",
@@ -104,6 +105,7 @@ T = {
         "lists.title": "Paketlisten",
         "lists.missing": {"one": "{n} Quelle ohne Listen", "other": "{n} Quellen ohne Listen"},
         "lists.old": "älter als {hours} Stunden",
+        "lists.old.days": "älter als {days} Tage",
         "lists.expired": "eine Release-Datei ist abgelaufen",
         "lists.apt-daily": "apt-daily meldete Probleme",
         "lists.orphaned": "liegengebliebene Listen",
@@ -213,7 +215,9 @@ def items_of(doc, lang):
             parts.append(t(lang, "lists.missing", n=kinds.count("missing")))
         for x in f:
             if x.get("kind") == "old":
-                parts.append(t(lang, "lists.old", hours=int(x.get("hours") or 0)))
+                hours = int(x.get("hours") or 0)
+                parts.append(t(lang, "lists.old", hours=hours) if hours < 72 else
+                             t(lang, "lists.old.days", days=hours // 24))
         for k in ("expired", "apt-daily", "orphaned"):
             if k in kinds:
                 parts.append(t(lang, "lists." + k))

@@ -169,6 +169,14 @@ class Contract(unittest.TestCase):
         item = next(i for i in gapsstatus.document(doc, "en", "0.1.0")["items"] if i["id"] == "eol")
         self.assertEqual((item["state"], item["value"]), ("warning", "103"))
 
+    def test_old_lists_in_hours_then_days(self):
+        doc = fixture("scan-resolute-nodesource.json")
+        lists = next(c for c in doc["checks"] if c["check"] == "lists")
+        for hours, want in ((50, "older than 50 hours"), (2882, "older than 120 days")):
+            lists.update(state="found", findings=[{"kind": "old", "hours": hours}])
+            item = next(i for i in gapsstatus.document(doc, "en", "0.1.0")["items"] if i["id"] == "lists")
+            self.assertEqual((item["state"], item["detail"]), ("warning", want))
+
     def test_other_systems(self):
         doc = fixture("scan-noble-held.json")
         doc["pm"] = None

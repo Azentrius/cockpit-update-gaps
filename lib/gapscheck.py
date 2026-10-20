@@ -16,9 +16,11 @@ recorded output of real hosts (test/fixtures/).
 """
 
 import gzip
+import http.client
 import json
 import os
 import re
+import socket
 import stat
 import time
 from datetime import datetime, timezone
@@ -41,6 +43,15 @@ RADAR_STALE_H = 72      # the radar runs daily; older data is called stale
 POCKETS = ("Release", "Security", "Updates", "Backports")
 VERSION_RE = re.compile(r"^[0-9][0-9A-Za-z.+~:-]{0,99}$")
 SERIES_RE = re.compile(r"^[a-z]{2,20}$")
+CPU_VULN = "/sys/devices/system/cpu/vulnerabilities"
+DMI = "/sys/class/dmi/id"
+MICROCODE_PKG = {"GenuineIntel": "intel-microcode", "AuthenticAMD": "amd64-microcode"}
+FW_LIMIT = 60           # seconds for fwupdmgr (it may first start fwupd through D-Bus)
+FW_METADATA_DAYS = 30   # fwupd's metadata older than this are a finding
+SNAP_DIR = "/snap"
+SNAPD_SOCKET = "/run/snapd.socket"
+SNAPD_MAX = 8 << 20
+SNAP_FAILED_DAYS = 7    # failed auto-refreshes in this time are a finding
 
 
 class RadarError(Exception):
@@ -118,6 +129,29 @@ class System:
 
     def kernel(self):
         return os.uname().release
+
+    def snapd(self, path, limit=20):
+        """GET of snapd's REST API over its socket -> the "result" of the
+        answer. Only called when snaps are installed: a request starts snapd
+        through its socket otherwise."""
+        class Conn(http.client.HTTPConnection):
+            def connect(self):
+                s = socket.socket(socket.AF_UNIX, socket.SOCK_STREAM)
+                s.settimeout(limit)
+                s.connect(SNAPD_SOCKET)
+                self.sock = s
+
+        conn = Conn("localhost", timeout=limit)
+        try:
+            conn.request("GET", path, headers={"Accept": "application/json"})
+            body = conn.getresponse().read(SNAPD_MAX)
+        finally:
+            conn.close()
+        doc = json.loads(body.decode("utf-8", "replace"))
+        if not isinstance(doc, dict) or doc.get("type") == "error":
+            msg = ((doc.get("result") or {}).get("message") if isinstance(doc, dict) else None) or "error"
+            raise ValueError(f"snapd {path}: {msg}"[:200])
+        return doc.get("result")
 
 
 class Context:
@@ -731,6 +765,211 @@ def check_eol(ctx):
     return out
 
 
+# ------------------------------------------------------ stage 3: the machine --
+
+def machine(ctx):
+    """{"kind": metal|vm|container|unknown, "virt": what systemd-detect-virt
+    printed}. A VM gets its microcode and firmware from the hypervisor."""
+    def get():
+        r = ctx.sys.run(["systemd-detect-virt"], 20)
+        lines = (r.out or "").split()
+        virt = lines[0] if lines and not (r.missing or r.timeout) and r.rc in (0, 1) else ""
+        if not virt and any(ctx.sys.lstat(p) is not None for p in ("/.dockerenv", "/run/.containerenv")):
+            virt = "container-other"      # a container without systemd (docker run, podman)
+        return {"kind": L.machine_kind(virt), "virt": virt if L.VIRT_RE.match(virt) else None}
+    return ctx._cached("machine", get)
+
+
+def _dmi(ctx):
+    out = {}
+    for key in ("sys_vendor", "product_name", "board_vendor", "board_name", "bios_vendor", "bios_version", "bios_date"):
+        v = L.dmi_value(ctx.sys.read(f"{DMI}/{key}", 256))
+        if v:
+            out[key] = v
+    if "bios_date" in out:
+        out["bios_date"] = L.dmi_date(out["bios_date"]) or out["bios_date"]
+    return out
+
+
+def _microcode_package(ctx, name):
+    """The microcode package for this CPU: installed version and what the
+    sources offer (None: no source has it; on Debian it is in the component
+    non-free-firmware)."""
+    p = ctx.installed().get(name)
+    if p and p["installed"]:
+        pol = ctx.pkg(name) or {}
+        return {"name": name, "installed": p["version"], "candidate": pol.get("candidate")}
+    r = ctx.sys.run(["apt-cache", "policy", name], LIMIT)
+    if r.missing or r.timeout or r.rc != 0:
+        return {"name": name, "installed": None, "candidate": None, "available": None}
+    cand = (L.parse_policy_packages(r.out).get(name) or {}).get("candidate")
+    return {"name": name, "installed": None, "candidate": cand, "available": bool(cand)}
+
+
+def check_cpu(ctx):
+    """What the kernel says about the CPU vulnerabilities it knows, quoted:
+    vulnerable, only partly mitigated, unknown. In a VM a missing microcode
+    is the provider's to fix; on a physical server the microcode package and
+    the BIOS are this server's. Newer microcode waiting for a restart stays in
+    `restart`."""
+    m = machine(ctx)
+    if m["kind"] == "container":
+        return {"state": "skipped", "reason": "container", "virt": m["virt"]}
+    names = ctx.sys.listdir(CPU_VULN)
+    if names is None:
+        return {"state": "skipped", "reason": "not-applicable"}
+    findings, mitigated, unaffected = [], 0, 0
+    for n in names:
+        if not L.VULN_NAME_RE.match(n):
+            continue
+        text = L.clean_text(ctx.sys.read(f"{CPU_VULN}/{n}", 1024), 300)
+        kind = L.classify_vulnerability(text)
+        if kind == "not-affected":
+            unaffected += 1
+            continue
+        if kind == "mitigated":
+            mitigated += 1
+            continue
+        low = text.lower()
+        hw = "microcode" in low or "hypervisor" in low
+        findings.append({"name": n, "text": text, "kind": kind, "microcode": "microcode" in low,
+                         "fix": "provider" if m["kind"] == "vm" and hw else "here"})
+    out = {"machine": m["kind"], "virt": m["virt"],
+           "cpu": L.parse_cpuinfo(ctx.sys.read("/proc/cpuinfo", 4 << 20)),
+           "findings": findings, "mitigated": mitigated, "not_affected": unaffected,
+           "mitigations_off": L.mitigations_off(ctx.sys.read("/proc/cmdline", 4096)),
+           "source": [CPU_VULN, "/proc/cpuinfo", "/proc/cmdline", "systemd-detect-virt"]}
+    if m["kind"] == "metal":
+        out["firmware"] = _dmi(ctx)
+        out["source"].append(DMI)
+        pkg = MICROCODE_PKG.get(out["cpu"]["vendor"] or "")
+        if pkg:
+            out["microcode_package"] = _microcode_package(ctx, pkg)
+            out["source"].append("apt-cache policy " + pkg)
+    mc = (ctx.results.get("restart") or {}).get("microcode")
+    out["microcode_pending"] = isinstance(mc, dict) and mc.get("state") == 2
+    no_pkg = bool(out.get("microcode_package")) and not out["microcode_package"]["installed"]
+    out["state"] = "found" if findings or out["mitigations_off"] or no_pkg else "none"
+    return out
+
+
+def check_firmware(ctx):
+    """Firmware updates fwupd knows from its local metadata (fwupd fetches
+    them itself, with fwupd-refresh.timer); nothing goes to the network here.
+    Without fwupd the check says so: Cockpit has no page for firmware."""
+    m = machine(ctx)
+    if m["kind"] == "container":
+        return {"state": "skipped", "reason": "container", "virt": m["virt"]}
+    p = ctx.installed().get("fwupd")
+    if not (p and p["installed"]):
+        return {"state": "skipped", "reason": "tool-missing", "tool": "fwupd", "machine": m["kind"]}
+    argv = ["fwupdmgr", "get-updates", "--json", "--no-unreported-check", "--no-metadata-check"]
+    r = ctx.sys.run(argv, FW_LIMIT)
+    if r.missing or r.timeout or r.rc not in (0, 2):
+        raise CommandError(argv, r)
+    updates = L.parse_fwupd_updates(r.out) if r.rc == 0 else []    # 2: nothing to update
+    findings = [dict(kind="update", **u) for u in updates[:MAX_ITEMS]]
+    rr = ctx.sys.run(["fwupdmgr", "get-remotes", "--json"], FW_LIMIT)
+    remotes = []
+    if not (rr.missing or rr.timeout) and rr.rc == 0:
+        remotes = L.parse_fwupd_remotes(rr.out)
+        download = [x for x in remotes if x["enabled"] and x["kind"] == "download"]
+        if not download:
+            findings.append({"kind": "no-remote"})
+        for x in download:
+            days = int((ctx.now.timestamp() - x["mtime"]) // 86400) if x["mtime"] else None
+            x["age_days"] = days
+            if days is not None and days > FW_METADATA_DAYS:
+                findings.append({"kind": "metadata-old", "remote": x["id"], "days": days})
+    t = ctx.sys.run(["systemctl", "is-enabled", "fwupd-refresh.timer"], 20)
+    timer = (t.out or "").split()[0] if not (t.missing or t.timeout) and (t.out or "").split() else None
+    if timer and timer not in ("enabled", "static", "indirect", "alias", "generated"):
+        findings.append({"kind": "refresh-off", "timer": timer[:20]})
+    return {"state": "found" if findings else "none", "findings": findings, "machine": m["kind"],
+            "remotes": [{k: x.get(k) for k in ("id", "enabled", "kind", "age_days")} for x in remotes][:10],
+            "timer": timer[:20] if timer else None,
+            "source": ["fwupdmgr get-updates --json", "fwupdmgr get-remotes --json",
+                       "systemctl is-enabled fwupd-refresh.timer"]}
+
+
+def installed_snaps(ctx):
+    """The snaps in /snap (a folder with a current revision)."""
+    out = []
+    for n in ctx.sys.listdir(SNAP_DIR) or []:
+        if n != "bin" and L.SNAP_NAME_RE.match(n) and ctx.sys.lstat(f"{SNAP_DIR}/{n}/current") is not None:
+            out.append(n)
+    return out
+
+
+def _series_eol(ctx):
+    """{series: (release, end of standard support, end of ESM)} of Ubuntu."""
+    rows = L.parse_distro_info(ctx.sys.read("/usr/share/distro-info/ubuntu.csv") or "")
+    return {r.get("series") or "": (r.get("version") or "", L.parse_date(r.get("eol-server") or "") or
+                                    L.parse_date(r.get("eol") or ""), L.parse_date(r.get("eol-esm") or ""))
+            for r in rows}
+
+
+def _until(dt):
+    """A hold until a time snapd calls forever (year 2200 and later) -> None."""
+    return None if dt.year >= 2200 else L.iso(dt)
+
+
+def check_snaps(ctx):
+    """Why snaps are not refreshed: held (one snap or all), refreshes failing
+    or put off while an app runs, a base whose Ubuntu release is out of
+    support. snapd refreshes by itself several times a day, so a newer
+    version in the Store is no gap. Without snaps snapd is not asked at all
+    (a request would start it through its socket)."""
+    snapd = ctx.sys.lstat("/usr/bin/snap") is not None
+    names = installed_snaps(ctx)
+    if not names:
+        return {"state": "none", "snapd": snapd, "installed": 0, "source": [SNAP_DIR]}
+    snaps = ctx.sys.snapd("/v2/snaps") or []
+    info = ctx.sys.snapd("/v2/system-info") or {}
+    changes = ctx.sys.snapd("/v2/changes?select=all") or []
+    now, today = ctx.now, ctx.now.date()
+    eol = _series_eol(ctx)
+    findings, listed = [], []
+    for s in snaps if isinstance(snaps, list) else []:
+        if not isinstance(s, dict) or not L.SNAP_NAME_RE.match(str(s.get("name") or "")):
+            continue
+        name, kind = s["name"], s.get("type") if isinstance(s.get("type"), str) else "app"
+        base = s.get("base") if isinstance(s.get("base"), str) else ("core" if kind == "app" else None)
+        listed.append({"name": name, "version": L.clean_text(str(s.get("version") or ""), 40),
+                       "channel": L.clean_text(str(s.get("tracking-channel") or s.get("channel") or ""), 60),
+                       "type": kind[:20], "base": base})
+        hold = L.parse_rfc3339(s.get("hold"))
+        if hold and hold > now:
+            findings.append({"kind": "held", "snap": name, "until": _until(hold)})
+        inhibit = s.get("refresh-inhibit") if isinstance(s.get("refresh-inhibit"), dict) else None
+        if inhibit:
+            proceed = L.parse_rfc3339(inhibit.get("proceed-time"))
+            findings.append({"kind": "inhibited", "snap": name, "until": L.iso(proceed) if proceed else None})
+        series = L.SNAP_BASES.get(base or "")
+        if kind == "app" and series in eol:
+            release, std, esm = eol[series]
+            if std and std < today:
+                findings.append({"kind": "old-base", "snap": name, "base": base, "release": release,
+                                 "ended": std.isoformat(), "esm_until": esm.isoformat() if esm else None})
+    refresh = info.get("refresh") if isinstance(info, dict) and isinstance(info.get("refresh"), dict) else {}
+    hold = L.parse_rfc3339(refresh.get("hold"))
+    if hold and hold > now:
+        findings.append({"kind": "refresh-held", "until": _until(hold)})
+    failed = []
+    for ch in changes if isinstance(changes, list) else []:
+        if not isinstance(ch, dict) or ch.get("kind") != "auto-refresh" or ch.get("status") != "Error":
+            continue
+        when = L.parse_rfc3339(ch.get("spawn-time"))
+        if when and (now - when).days < SNAP_FAILED_DAYS:
+            failed.append({"kind": "refresh-failed", "id": L.clean_text(str(ch.get("id") or ""), 12),
+                           "when": L.iso(when), "summary": L.clean_text(str(ch.get("summary") or ""), 200),
+                           "error": L.clean_text(str(ch.get("err") or ""), 300)})
+    findings += sorted(failed, key=lambda f: f["when"], reverse=True)[:5]
+    return {"state": "found" if findings else "none", "snapd": snapd, "installed": len(names),
+            "snaps": listed[:MAX_ITEMS], "findings": findings,
+            "source": ["snapd REST API (" + SNAPD_SOCKET + ")", "/usr/share/distro-info/ubuntu.csv"]}
+
+
 # ----------------------------------------------------------------- stage 2 --
 
 def _radar(ctx, service):
@@ -944,6 +1183,9 @@ CHECKS = (
     ("held", check_held),
     ("pro", check_pro),
     ("restart", check_restart),
+    ("cpu", check_cpu),
+    ("firmware", check_firmware),
+    ("snaps", check_snaps),
     ("lists", check_lists),
     ("local", check_local),
     ("auto", check_auto),

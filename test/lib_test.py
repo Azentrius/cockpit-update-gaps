@@ -222,5 +222,73 @@ class CredentialsTest(unittest.TestCase):
         self.assertEqual(L.strip_credentials("http://h.example/x"), "http://h.example/x")
 
 
+class CpuTest(unittest.TestCase):
+    def test_classify(self):
+        cases = {
+            "Not affected": "not-affected",
+            "Mitigation: PTI": "mitigated",
+            "KVM: Mitigation: VMX unsupported": "mitigated",
+            "Mitigation: Clear CPU buffers; SMT Host state unknown": "mitigated",
+            "Mitigation: Clear CPU buffers; SMT vulnerable": "partial",
+            "Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown": "vulnerable",
+            "Vulnerable: No microcode": "vulnerable",
+            "Vulnerable": "vulnerable",
+            "Unknown: Dependent on hypervisor status": "unknown",
+            "Processor vulnerable": "partial",
+            "": "unknown",
+        }
+        for text, want in cases.items():
+            self.assertEqual(L.classify_vulnerability(text), want, text)
+
+    def test_machine(self):
+        for virt, want in (("none", "metal"), ("kvm", "vm"), ("microsoft", "vm"), ("docker", "container"),
+                           ("wsl", "container"), ("", "unknown"), ("kvm; rm -rf", "unknown")):
+            self.assertEqual(L.machine_kind(virt), want, virt)
+
+    def test_cpuinfo(self):
+        text = ("processor\t: 0\nvendor_id\t: GenuineIntel\nmodel name\t: Intel Xeon\nmicrocode\t: 0x1\n\n"
+                "processor\t: 1\nvendor_id\t: GenuineIntel\nmodel name\t: Intel Xeon\nmicrocode\t: 0xF8\n\n"
+                "processor\t: 2\nmicrocode\t: <script>\n")
+        self.assertEqual(L.parse_cpuinfo(text), {"vendor": "GenuineIntel", "model": "Intel Xeon", "threads": 3,
+                                                 "revisions": ["0x1", "0xf8"]})
+        self.assertEqual(L.parse_cpuinfo(None)["threads"], 0)
+
+    def test_mitigations_off(self):
+        self.assertEqual(L.mitigations_off("BOOT_IMAGE=/vmlinuz ro mitigations=off nosmt tsa=off spectre_v2=on nopti"),
+                         ["mitigations=off", "tsa=off", "nopti"])
+        self.assertEqual(L.mitigations_off("root=/dev/sda1 ro quiet"), [])
+
+    def test_dmi(self):
+        self.assertEqual(L.dmi_date("08/30/2024"), "2024-08-30")
+        self.assertIsNone(L.dmi_date("2024-08-30"))
+        self.assertIsNone(L.dmi_date("13/40/2024"))
+        self.assertIsNone(L.dmi_value("To Be Filled By O.E.M.\n"))
+        self.assertIsNone(L.dmi_value(""))
+        self.assertEqual(L.dmi_value(" ASRockRack\n"), "ASRockRack")
+
+
+class FirmwareSnapTest(unittest.TestCase):
+    def test_fwupd_updates(self):
+        doc = ('{"Devices": [{"Name": "Dock\\u0000 X", "Version": "1.0", "Releases": [{"Version": "1.2", '
+               '"Urgency": "urgent", "Issues": ["CVE-2026-1234", "x"]}]}, {"Name": "Y", "Releases": []}]}')
+        self.assertEqual(L.parse_fwupd_updates(doc), [{"device": "Dock X", "vendor": None, "version": "1.0", "new": "1.2",
+                                                       "urgency": None, "issues": ["CVE-2026-1234"]}])
+        with self.assertRaises(ValueError):
+            L.parse_fwupd_updates("No updatable devices")
+        with self.assertRaises(ValueError):
+            L.parse_fwupd_updates("[]")
+
+    def test_fwupd_remotes(self):
+        doc = '{"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": true, "ModificationTime": 1792400000}, {"Id": ""}]}'
+        self.assertEqual(L.parse_fwupd_remotes(doc), [{"id": "lvfs", "enabled": True, "kind": "download",
+                                                       "mtime": 1792400000}])
+
+    def test_rfc3339(self):
+        self.assertEqual(L.iso(L.parse_rfc3339("2026-10-20T15:11:00.123456789+02:00")), "2026-10-20T13:11:00Z")
+        self.assertEqual(L.iso(L.parse_rfc3339("2026-10-20T15:11:00Z")), "2026-10-20T15:11:00Z")
+        for bad in ("2026-10-20", "yesterday", None, 5, "2026-13-40T00:00:00Z"):
+            self.assertIsNone(L.parse_rfc3339(bad), bad)
+
+
 if __name__ == "__main__":
     unittest.main()

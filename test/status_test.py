@@ -78,12 +78,13 @@ class Contract(unittest.TestCase):
     def test_findings_of_the_hosts(self):
         """What each recorded host reports (test/fixtures/<scenario>/)."""
         want = {
-            "noble-held": ("warning", {"held": "warning", "restart": "warning", "pro": "info", "lists": "ok",
-                                       "eol": "ok", "updates": "ok"}),
-            "resolute-stale-lists": ("warning", {"held": "ok", "restart": "warning", "pro": "info",
+            # In the two VMs the kernel reports tsa without microcode: only the provider can fix it, so info.
+            "noble-held": ("warning", {"held": "warning", "restart": "warning", "cpu": "info", "pro": "info",
+                                       "lists": "ok", "eol": "ok", "updates": "ok"}),
+            "resolute-stale-lists": ("warning", {"held": "ok", "restart": "warning", "cpu": "ok", "pro": "info",
                                                  "lists": "warning", "eol": "ok", "updates": "ok"}),
-            "resolute-nodesource": ("info", {"held": "ok", "restart": "ok", "pro": "info", "lists": "info",
-                                             "eol": "ok", "updates": "ok"}),
+            "resolute-nodesource": ("info", {"held": "ok", "restart": "ok", "cpu": "info", "pro": "info",
+                                             "lists": "info", "eol": "ok", "updates": "ok"}),
         }
         for s, (state, items) in want.items():
             doc = gapsstatus.document(fixture(f"scan-{s}.json"), "en", "0.1.0")
@@ -220,6 +221,54 @@ class Contract(unittest.TestCase):
             want = re.search(r'const VERSION = "([^"]+)"', f.read()).group(1)
         self.assertEqual(gapsstatus.version(), want)
 
+    def item(self, doc, cid, lang="en"):
+        return next((i for i in gapsstatus.document(doc, lang, "0.1.0")["items"] if i["id"] == cid), None)
+
+    def test_cpu(self):
+        doc = fixture("scan-noble-held.json")
+        cpu = next(c for c in doc["checks"] if c["check"] == "cpu")
+        i = self.item(doc, "cpu")
+        self.assertEqual((i["state"], i["value"], i["link"]), ("info", "1", "#/cpu"))
+        self.assertEqual(i["detail"], "tsa; only the provider can fix it (virtual machine)")
+        self.assertEqual(self.item(doc, "cpu", "de")["detail"], "tsa; beheben kann es nur der Anbieter (virtuelle Maschine)")
+        cpu["mitigations_off"] = ["mitigations=off"]
+        self.assertEqual(self.item(doc, "cpu")["state"], "warning", "switched off here: this server's to fix")
+        cpu["mitigations_off"] = []
+        cpu["findings"][0]["fix"] = "here"
+        self.assertEqual((self.item(doc, "cpu")["state"], self.item(doc, "cpu")["detail"]), ("warning", "tsa"))
+        cpu.update(state="none", findings=[], microcode_package={"name": "amd64-microcode", "installed": None})
+        cpu["state"] = "found"
+        i = self.item(doc, "cpu")
+        self.assertEqual((i["state"], i["detail"]), ("warning", "amd64-microcode is not installed"))
+        cpu.clear()
+        cpu.update(check="cpu", state="skipped", reason="container")
+        self.assertIsNone(self.item(doc, "cpu"), "a container has no CPU item")
+
+    def test_firmware_and_snaps_only_with_a_finding(self):
+        doc = fixture("scan-resolute-stale-lists.json")
+        self.assertIsNone(self.item(doc, "firmware"), "fwupd missing: no item")
+        self.assertIsNone(self.item(doc, "snaps"), "no snaps: no item")
+        fw = next(c for c in doc["checks"] if c["check"] == "firmware")
+        fw.clear()
+        fw.update(check="firmware", state="found", findings=[
+            {"kind": "update", "device": "UEFI dbx"}, {"kind": "metadata-old", "days": 40}, {"kind": "refresh-off"}])
+        i = self.item(doc, "firmware")
+        self.assertEqual((i["state"], i["value"]), ("warning", "1"))
+        self.assertEqual(i["detail"], "1 update: UEFI dbx; the metadata of fwupd are 40 days old; fwupd-refresh.timer is off")
+        fw["findings"] = [{"kind": "metadata-old", "days": 40}]
+        self.assertEqual(self.item(doc, "firmware")["state"], "info")
+        sn = next(c for c in doc["checks"] if c["check"] == "snaps")
+        sn.update(state="found", findings=[{"kind": "held", "snap": "lxd"},
+                                           {"kind": "old-base", "snap": "lxd", "base": "core20"}])
+        i = self.item(doc, "snaps")
+        self.assertEqual((i["state"], i["detail"]), ("info", "held: lxd; base out of support: lxd (core20)"))
+        sn["findings"].append({"kind": "refresh-failed"})
+        i = self.item(doc, "snaps", "de")
+        self.assertEqual(i["state"], "warning")
+        self.assertIn("1 fehlgeschlagene Aktualisierung", i["detail"])
+        st = gapsstatus.status_file(doc, "0.1.0")
+        self.assertEqual(gapsstatus.problems(st), [])
+
 
 class Verb(unittest.TestCase):
     def setUp(self):
@@ -238,12 +287,12 @@ class Verb(unittest.TestCase):
         rc, out, _ = call(["status", "--lang", "de"], self.path)
         doc = json.loads(out)
         self.assertEqual((rc, doc["state"]), (0, "warning"))
-        self.assertTrue(doc["summary"].startswith("Befunde in 3 Bereichen"), doc["summary"])
+        self.assertTrue(doc["summary"].startswith("Befunde in 4 Bereichen"), doc["summary"])
         self.assertEqual(doc["version"], gapsstatus.version())
         self.assertNotIn("i18n", doc)
         self.assertEqual(gapsstatus.problems(doc), [])
         rc, out, _ = call(["status"], self.path)
-        self.assertTrue(json.loads(out)["summary"].startswith("Findings in 3 areas"))
+        self.assertTrue(json.loads(out)["summary"].startswith("Findings in 4 areas"))
         for lang, first in (("de-DE", "Befunde"), ("de_AT", "Befunde"), ("--lang=de", "Befunde"),
                             ("fr", "Findings"), ("pt-BR", "Findings")):
             argv = ["status", lang] if lang.startswith("--") else ["status", "--lang", lang]

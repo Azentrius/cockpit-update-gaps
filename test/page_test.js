@@ -18,8 +18,8 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     const { d, calls } = boot();
     await settle();
     assert.deepStrictEqual(ids(d, "#ug-cards > section"),
-        ["ug-card-held", "ug-card-pro", "ug-card-restart", "ug-card-local", "ug-card-auto", "ug-card-outside"]);
-    assert.strictEqual(d.querySelectorAll("#ug-sum-found .ug-chip").length, 6);
+        ["ug-card-held", "ug-card-pro", "ug-card-restart", "ug-card-cpu", "ug-card-local", "ug-card-auto", "ug-card-outside"]);
+    assert.strictEqual(d.querySelectorAll("#ug-sum-found .ug-chip").length, 7);
     assert.match(text(d.getElementById("ug-sum-updates")), /No regular updates/);
     assert.match(text(d.getElementById("ug-meta")), /^Checked 5 minutes ago · package lists 7 hours ago$/);
     const held = d.getElementById("ug-card-held");
@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.3.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.4.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -519,6 +519,80 @@ test("cards open and close through their title; the browser keeps which are clos
     const broken = boot({ storage: { "update-gaps:collapsed": "{not json" } });
     await settle();
     assert.ok(!broken.d.getElementById("ug-card-held-body").hidden);
+});
+
+test("CPU, firmware, snaps: a VM, a physical server, and what the hosts do not have", async () => {
+    // public-host (noble-held): a VM where the kernel reports tsa without microcode.
+    let { d } = boot();
+    await settle();
+    const cpu = text(d.getElementById("ug-card-cpu"));
+    assert.match(cpu, /Transient Scheduler Attacks \(AMD\)\s*tsa Vulnerable: Clear CPU buffers attempted, no microcode the provider/);
+    assert.match(cpu, /Virtual machine \(kvm\): the hypervisor supplies the microcode/);
+    assert.match(cpu, /CPU: AMD EPYC-Genoa Processor, 8 threads, microcode 0x1000065\./);
+    assert.match(cpu, /ask the provider whether their hosts have it/);
+    assert.match(cpu, /4 more with a mitigation, 10 not affected\./);
+    assert.match(text(d.getElementById("ug-unchecked-list")),
+        /Firmware: fwupd is not installed; in a virtual machine the provider looks after the firmware\./);
+    assert.match(text(d.getElementById("ug-clean-list")), /Snaps: no snaps installed/);
+    assert.doesNotMatch(text(d.getElementById("ug-unchecked-list")), /Snaps/);
+    // build-host (resolute-stale-lists): a physical server, nothing vulnerable.
+    ({ d } = boot({ state: scan("resolute-stale-lists") }));
+    await settle();
+    assert.ok(!d.getElementById("ug-card-cpu"));
+    assert.match(text(d.getElementById("ug-clean-list")),
+        /CPU vulnerabilities: nothing reported as vulnerable \(6 with a mitigation, 11 not affected\)/);
+    assert.match(text(d.getElementById("ug-unchecked-list")), /Firmware: fwupd is not installed, so firmware and BIOS updates are not checked\./);
+    // What the hosts do not have: a physical server without the microcode package, protections off,
+    // a firmware update, a held snap and a failed refresh.
+    const s = scan("resolute-stale-lists");
+    const c = (k) => s.checks.find((x) => x.check === k);
+    Object.assign(c("cpu"), {
+        state: "found", mitigations_off: ["mitigations=off"],
+        microcode_package: { name: "amd64-microcode", installed: null, candidate: "3.20251202.1ubuntu2", available: true },
+        findings: [{ name: "mds", text: "Mitigation: Clear CPU buffers; SMT vulnerable", kind: "partial", microcode: false, fix: "here" }],
+    });
+    Object.assign(c("firmware"), {
+        state: "found", machine: "metal", reason: undefined, tool: undefined,
+        findings: [{ kind: "update", device: "UEFI dbx", vendor: "Linux Foundation", version: "371", new: "<b>377</b>",
+                     urgency: "high", issues: ["CVE-2026-12345"] },
+                   { kind: "metadata-old", remote: "lvfs", days: 40 }, { kind: "refresh-off", timer: "disabled" }],
+        source: ["fwupdmgr get-updates --json"],
+    });
+    Object.assign(c("snaps"), {
+        state: "found", installed: 2,
+        findings: [{ kind: "held", snap: "lxd", until: null },
+                   { kind: "old-base", snap: "lxd", base: "core20", release: "20.04 LTS", ended: "2025-05-29", esm_until: "2030-04-23" },
+                   { kind: "refresh-failed", id: "42", when: "2026-10-19T10:00:00Z", summary: "Auto-refresh snap \"lxd\"",
+                     error: "cannot refresh: <x>" }],
+        source: ["snapd REST API (/run/snapd.socket)"],
+    });
+    ({ d } = boot({ state: s }));
+    await settle();
+    assert.deepStrictEqual(ids(d, "#ug-cards > section").filter((x) => /cpu|firmware|snaps/.test(x)),
+        ["ug-card-cpu", "ug-card-firmware", "ug-card-snaps"]);
+    const cpu2 = text(d.getElementById("ug-card-cpu"));
+    assert.match(cpu2, /Protections switched off The kernel was started with mitigations=off/);
+    assert.match(cpu2, /amd64-microcode is not installed Without amd64-microcode the CPU runs the microcode of the BIOS only/);
+    assert.match(cpu2, /Microarchitectural Data Sampling \(Intel\)\s*mds Mitigation: Clear CPU buffers; SMT vulnerable this server/);
+    assert.match(cpu2, /Physical server: board ASRockRack B450D4U-V1L, BIOS L2\.12 of 30 Aug 2024\./);
+    const fw = d.getElementById("ug-card-firmware");
+    assert.match(text(fw), /UEFI dbx\s*Linux Foundation 371 <b>377<\/b> high CVE-2026-12345/);
+    assert.ok(!fw.querySelector("b"), "values from fwupd are escaped");
+    assert.match(text(fw), /The metadata of lvfs are 40 days old/);
+    assert.match(text(fw), /fwupd-refresh\.timer is disabled/);
+    const sn = d.getElementById("ug-card-snaps");
+    assert.match(text(sn), /lxd is held \(snap refresh --hold\) until further notice\./);
+    assert.match(text(sn), /lxd builds on core20 \(Ubuntu 20\.04 LTS\), whose standard support ended on 29 May 2025\. With Ubuntu Pro \(ESM\) until 23 Apr 2030\./);
+    assert.match(text(sn), /Auto-refresh snap "lxd" \(snap change 42\)/);
+    assert.ok(!sn.querySelector("x"), "an error of snapd is escaped");
+    assert.match(text(sn), /2 snaps installed\./);
+    assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+    // The same in German.
+    ({ d } = boot({ state: s, language: "de" }));
+    await settle();
+    assert.match(text(d.getElementById("ug-card-cpu")), /Schutz abgeschaltet/);
+    assert.match(text(d.getElementById("ug-card-firmware")), /Die Metadaten von lvfs sind 40 Tage alt/);
+    assert.match(text(d.getElementById("ug-card-snaps")), /lxd ist zurückgehalten \(snap refresh --hold\) bis auf Weiteres\./);
 });
 
 test("texts: every key in both languages, same plural shape, no em dash", () => {

@@ -106,6 +106,11 @@ assert set(sel) == {"sources", "upstream"}, sel
 print("radar would ask about:", sorted(sel["sources"]), sorted(sel["upstream"]))
 for k in ("cve", "upstream", "newer"):
     assert c[k]["state"] == "skipped" and c[k]["reason"] in ("radar-off", "not-applicable"), c[k]
+# Stage 3 in a container: the CPU and the firmware are the host's, and there are no snaps.
+for k in ("cpu", "firmware"):
+    assert c[k]["state"] == "skipped" and c[k]["reason"] == "container", c[k]
+assert c["snaps"]["state"] == "none" and c["snaps"]["installed"] == 0, c["snaps"]
+assert not {"cpu", "firmware", "snaps"} & set(items), items
 print("SCENARIO OK")
 EOF
 test ! -e /tmp/ug-fake-apt-ran || { echo "the helper ran apt-get from /usr/local/bin"; exit 1; }

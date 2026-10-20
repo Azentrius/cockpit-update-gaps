@@ -252,6 +252,12 @@ def main():
         broken = [f"{k}: {c.get('state')} {c.get('error') or c.get('reason') or ''}" for k, c in checks.items()
                   if c.get("state") in ("error", "timeout")]
         note("every check ran (no error, no time-out) in the real service", not broken, "; ".join(broken)[:400])
+        hw = {k: checks.get(k) or {} for k in ("cpu", "firmware", "snaps")}
+        note("CPU, firmware and snaps in the real service: the runner is a VM; fwupd and snapd as the runner has them",
+             hw["cpu"].get("machine") == "vm" and hw["cpu"].get("state") in ("found", "none")
+             and hw["firmware"].get("state") in ("found", "none", "skipped") and hw["snaps"].get("state") in ("found", "none"),
+             "; ".join(f"{k} {c.get('state')} {c.get('machine') or c.get('reason') or ''} "
+                       f"{[f.get('name') or f.get('kind') for f in c.get('findings') or []]}" for k, c in hw.items())[:400])
         held = frame.locator("#ug-card-held")
         note("the held package of the setup in its card", held.count() == 1 and E["HELD"] in (held.text_content() or ""),
              (held.text_content() or "no card")[:160] if held.count() else "no card")

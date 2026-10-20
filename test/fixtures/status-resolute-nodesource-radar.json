@@ -5,7 +5,7 @@
  "version": "0.1.0",
  "checked_at": "2026-10-19T20:55:00Z",
  "state": "info",
- "summary": "Findings in 3 areas: Security issues not fixed yet, Fixes only with Ubuntu Pro, Package lists.",
+ "summary": "Findings in 4 areas: Security issues not fixed yet, CPU vulnerabilities, Fixes only with Ubuntu Pro, Package lists.",
  "items": [
   {
    "id": "cve",
@@ -31,6 +31,16 @@
    "state": "ok",
    "title": "Restart",
    "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "cpu",
+   "state": "info",
+   "title": "CPU vulnerabilities",
+   "value": "1",
+   "detail": "tsa; only the provider can fix it (virtual machine)",
+   "link": "#/cpu",
    "checked_at": "2026-10-19T20:55:00Z",
    "stale_after": 86400
   },
@@ -73,7 +83,7 @@
  ],
  "i18n": {
   "de": {
-   "summary": "Befunde in 3 Bereichen: Noch nicht behobene Sicherheitslücken, Fixes nur mit Ubuntu Pro, Paketlisten.",
+   "summary": "Befunde in 4 Bereichen: Noch nicht behobene Sicherheitslücken, CPU-Schwachstellen, Fixes nur mit Ubuntu Pro, Paketlisten.",
    "items": {
     "cve": {
      "title": "Noch nicht behobene Sicherheitslücken",
@@ -84,6 +94,10 @@
     },
     "restart": {
      "title": "Neustart"
+    },
+    "cpu": {
+     "title": "CPU-Schwachstellen",
+     "detail": "tsa; beheben kann es nur der Anbieter (virtuelle Maschine)"
     },
     "pro": {
      "title": "Fixes nur mit Ubuntu Pro",

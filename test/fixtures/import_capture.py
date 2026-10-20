@@ -33,7 +33,10 @@ import gapslib as L  # noqa: E402
 
 KEEP = {"unattended-upgrades", "needrestart", "openssh-server", "sudo", "restic", "skopeo", "apt", "dpkg",
         "libc6", "systemd", "openssl", "python3-pip", "python3-wheel", "docker.io", "containerd", "runc",
-        "linux-generic", "ubuntu-pro-client", "distro-info-data", "nodejs"}
+        "linux-generic", "ubuntu-pro-client", "distro-info-data", "nodejs", "intel-microcode", "amd64-microcode",
+        "fwupd", "snapd"}
+VULN = "/sys/devices/system/cpu/vulnerabilities"
+SNAPD = ("snapd-snaps.json", "snapd-system-info.json", "snapd-changes.json")    # answers of snapd's API
 KEEP_PREFIX = ("cockpit", "linux-image-", "docker-", "containerd")
 TARGET_FIELDS = ("Site", "Release", "Filename", "Sourcesentry", "Identifier", "Component", "Architecture",
                  "Origin", "Label", "Suite", "Codename", "Target-Of", "Optional")
@@ -176,6 +179,41 @@ def main(argv):
         if text is not None:
             meta["files"][f"/usr/share/distro-info/{c}.csv"] = text
             put(f"/usr/share/distro-info/{c}.csv")
+
+    # The machine, the CPU, firmware and snaps (stage 3). UUIDs on the kernel command line go.
+    def command(name, text, rc=None):
+        with open(os.path.join(out, "commands", name), "w") as f:
+            f.write(anon(text))
+        if rc is not None:
+            with open(os.path.join(out, "commands", os.path.splitext(name)[0] + ".rc"), "w") as f:
+                f.write(rc)
+
+    for src, path in (("cpuinfo.txt", "/proc/cpuinfo"), ("cmdline.txt", "/proc/cmdline")):
+        text = read(cap, src)
+        if text is not None:
+            meta["files"][path] = re.sub(r"\b(UUID|PARTUUID)=[0-9A-Fa-f-]+", r"\1=0000", text)
+    for sub, base in (("vulnerabilities", VULN), ("dmi", "/sys/class/dmi/id")):
+        d = os.path.join(cap, sub)
+        if os.path.isdir(d):
+            names = sorted(os.listdir(d))
+            if sub == "vulnerabilities":
+                meta["dirs"][base] = names
+            for n in names:
+                meta["files"][f"{base}/{n}"] = read(cap, f"{sub}/{n}")
+    if read(cap, "systemd-detect-virt.txt") is not None:
+        command("systemd-detect-virt.txt", read(cap, "systemd-detect-virt.txt"))
+    if read(cap, "snap.txt") is not None:
+        meta["dirs"]["/snap"] = (read(cap, "snap.txt") or "").split()
+        for n in (read(cap, "snap-current.txt") or "").split():
+            put(f"/snap/{n}/current", kind="link", target="1")
+        put("/usr/bin/snap", mode="755")
+    for src in SNAPD:
+        if read(cap, src) is not None:
+            command(src, read(cap, src))
+    if read(cap, "fwupd-updates.json") is not None:
+        command("fwupdmgr-get-updates.txt", read(cap, "fwupd-updates.json"), (read(cap, "fwupd-updates.rc") or "0").strip())
+        command("fwupdmgr-get-remotes.txt", read(cap, "fwupd-remotes.json") or "")
+        command("systemctl-is-enabled-fwupd-refresh.txt", read(cap, "fwupd-refresh.txt") or "")
 
     # Software outside the package manager, with neutral names.
     names, opt_dirs = {}, []

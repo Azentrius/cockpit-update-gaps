@@ -210,6 +210,23 @@ class Fetch(unittest.TestCase):
         self.assertEqual((state["state"], state["limited"]), ("error", True))
 
 
+class Limit(unittest.TestCase):
+    def test_oldest_first_and_the_rest_kept(self):
+        old = {"a": {"fetched": "2026-10-19T00:00:00Z", "published": ["a"]},
+               "b": {"fetched": "2026-10-10T00:00:00Z", "published": ["b"]}}
+        asked = []
+
+        def ask(key, prev):
+            asked.append(key)
+            return {"fetched": "2026-10-20T00:00:00Z", "published": [key + "-new"]}
+        out, state = radar_mod.collect(["a", "b", "c"], old, ask, sleep=lambda s: None, limit=2)
+        self.assertEqual(sorted(asked), ["b", "c"])           # never asked first, then the oldest
+        self.assertEqual(out["a"], old["a"])                    # kept as it was, not stale
+        self.assertEqual((state["state"], state["deferred"]), ("ok", 1))
+        out, state = radar_mod.collect(["a", "b"], old, ask, sleep=lambda s: None)
+        self.assertEqual((sorted(out), state["deferred"]), (["a", "b"], 0))
+
+
 class Radar(unittest.TestCase):
     def run_radar(self, answers, old=None, state_dir=None):
         with tempfile.TemporaryDirectory() as d:

@@ -243,7 +243,9 @@ ETags, a 30-second limit and a size limit:
 
 Together with the server's IP address; no versions, no host names, no accounts. A request that
 fails keeps the source's previous answers with `stale: true`; a `403` or `429` ends the requests
-to that service for this run.
+to that service for this run. Launchpad gets at most 100 source packages per run, those with the
+oldest answers first (never asked first); the others keep their answers until a later run
+(`deferred` in the service's state).
 
 **Selected** are the source packages of a fixed list of binary packages when they come from the
 distribution (`cockpit`, `cockpit-bridge`, `openssh-server`, `sudo`, `docker.io`, `docker-ce`,

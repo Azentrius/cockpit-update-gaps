@@ -9,6 +9,9 @@ Cards open and close, and the page remembers which are closed.
 - **Remembered in the browser:** which cards are closed is kept in this browser
   (`localStorage`, key `update-gaps:collapsed`), not on the server; new cards come open. A chip of
   the overview or a link of the Status Board opens the card it leads to.
+- **Radar:** at most 100 source packages per run go to Launchpad, those with the oldest answers
+  first; the others keep their answers until a later run. A host with many packages installed by
+  hand (seen on a CI runner) took longer than ten minutes before.
 
 ## 0.2.0 – 2026-10-20
 

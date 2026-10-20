@@ -325,10 +325,15 @@ def main():
         own.evaluate("() => { window.ugNotReloaded = true; }")
 
         def at_card(card, how):
+            # At the top, below the card's scroll margin, or as far as the page scrolls.
+            top = "e => e.getBoundingClientRect().top"
             ok = poll(page, lambda: page.url.endswith("/update-gaps#/" + card) and frame.locator("#ug-card-" + card).evaluate(
-                "e => Math.abs(e.getBoundingClientRect().top) < 2 || scrollY + innerHeight >= document.documentElement.scrollHeight - 2"), 30)
-            note(f"a link {how}: the card {card}, the page not loaded again",
-                 bool(ok) and own.evaluate("() => window.ugNotReloaded === true"), page.url.split("9090", 1)[-1])
+                "e => (e.getBoundingClientRect().top > -2 && e.getBoundingClientRect().top < 150)"
+                " || scrollY + innerHeight >= document.documentElement.scrollHeight - 2"), 30)
+            kept = own.evaluate("() => window.ugNotReloaded === true")
+            note(f"a link {how}: the card {card}, the page not loaded again", bool(ok) and kept,
+                 f"{page.url.split('9090', 1)[-1]}, card at {round(frame.locator('#ug-card-' + card).evaluate(top))} px, "
+                 f"{'not loaded again' if kept else 'loaded again'}")
 
         own.evaluate("p => cockpit.jump(p)", "/update-gaps#/held")
         at_card("held", "while the page is shown (cockpit.jump)")

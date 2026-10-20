@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.4.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.4.1");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);

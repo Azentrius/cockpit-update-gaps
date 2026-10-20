@@ -11,19 +11,31 @@
   <description>
     <p>
       The page shows where updates are missing although Cockpit's Software Updates lists none:
-      held packages, fixes that only come with Ubuntu Pro, pending restarts, missing or old
-      package lists, packages without a source, sources the automatic updates leave out,
+      held packages, fixes that only come with Ubuntu Pro, pending restarts, CPU vulnerabilities
+      the kernel reports, firmware updates (with fwupd), snaps that are not refreshed, missing or
+      old package lists, packages without a source, sources the automatic updates leave out,
       backports not installed, software outside the package manager and the end of support.
       For every finding it says why Software Updates does not show it and what you can do.
       It only reads.
     </p>
+    <p>
+      Once set up, network data add security issues Ubuntu has not fixed yet, fixes released
+      upstream and newer versions elsewhere in Ubuntu, fetched once a day by an unprivileged
+      service.
+    </p>
     <p xml:lang="de">
       Die Seite zeigt, wo Updates fehlen, obwohl Software-Updates in Cockpit nichts meldet:
-      gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, fehlende oder alte
-      Paketlisten, Pakete ohne Paketquelle, Quellen außerhalb der automatischen Updates, nicht
-      installierte Backports, Software außerhalb des Paketmanagers und das Ende der
+      gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, CPU-Schwachstellen laut
+      Kernel, Firmware-Updates (mit fwupd), Snaps, die nicht aktualisiert werden, fehlende oder
+      alte Paketlisten, Pakete ohne Paketquelle, Quellen außerhalb der automatischen Updates,
+      nicht installierte Backports, Software außerhalb des Paketmanagers und das Ende der
       Unterstützung. Zu jedem Befund steht, warum Software-Updates ihn nicht zeigt und was Sie
       tun können. Sie liest nur.
+    </p>
+    <p xml:lang="de">
+      Einmal eingerichtet, kommen Netzdaten hinzu: Sicherheitslücken, die Ubuntu noch nicht
+      behoben hat, Fixes bei Upstream und neuere Versionen anderswo in Ubuntu, einmal am Tag von
+      einem unprivilegierten Dienst geholt.
     </p>
   </description>
   <extends>org.cockpit_project.cockpit</extends>

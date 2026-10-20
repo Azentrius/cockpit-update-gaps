@@ -6,8 +6,10 @@ the information comes from, why “Software Updates” does not show it and what
 section never means “safe”: the page always says what it did not check and how old its data is.
 
 The add-on only reads. A local service without network access checks the server and writes the
-state; the page shows it. The only change the page can make is to switch the add-on's own regular
-check on or off, after showing what that does.
+state; the page shows it. Network data (security issues Ubuntu has not fixed yet, upstream
+releases) come from a separate unprivileged service, only once set up. The only changes the page
+can make are to switch the add-on's own regular check and its network data on or off, after
+showing what that does.
 
 **Contents**
 
@@ -59,8 +61,9 @@ VMs and home directories, and whether a security issue applies to the configurat
 
 - **Header:** when the server was checked and when apt last updated its package lists; “Refresh”
   checks again (with administrative access) or reads the last state (without).
-- **Overview:** the regular updates, the areas with findings (a click scrolls to the card) and the
-  regular check: off, or every 6 hours with the next run.
+- **Overview:** the regular updates, the areas with findings (a click scrolls to the card), the
+  regular check (off, or every 6 hours with the next run) and the network data (off, or daily with
+  the time of the last fetch).
 - **Cards:** one per area with findings, in a fixed order, each opened and closed through its title (the
   browser remembers which are closed): what keeps a fix back first, then the
   state of the system, then what the automatic updates cover, then the inventory. Each card has
@@ -72,7 +75,8 @@ VMs and home directories, and whether a security issue applies to the configurat
   administrative access.
 - **In Cockpit's menu:** the entry “Update Gaps” shows the same state with Cockpit's own icon
   (blue: something to know, yellow: something to do or a state older than 24 hours, red: support
-  ended) and the summary as its tooltip; nothing found, no icon. For this Cockpit loads the page
+  ended, or with the network data a security issue Ubuntu rates critical) and the summary as its
+  tooltip; nothing found, no icon. For this Cockpit loads the page
   hidden after the login; until you open it, it only reads `/var/lib/update-gaps/status.json` and
   checks nothing.
 
@@ -83,17 +87,24 @@ flowchart LR
     subgraph B["Browser"]
         P["Cockpit page<br/>plugin/gaps.js"]
     end
-    subgraph H["Server: root helpers in /usr/lib/cockpit-update-gaps"]
-        CTL["gaps-ctl.sh<br/>status / scan / install|remove timer"]
-        SVC["update-gaps-scan.service<br/>gaps-scan.py, no network"]
+    subgraph H["Server: helpers in /usr/lib/cockpit-update-gaps"]
+        CTL["gaps-ctl.sh<br/>status / scan / radar / install|remove timer|radar"]
+        SVC["update-gaps-scan.service<br/>gaps-scan.py, root, no network"]
+        RAD["update-gaps-radar.service<br/>gaps-radar.py, DynamicUser, network"]
     end
     ST[("scan.json, status.json<br/>/var/lib/update-gaps")]
-    SYS["apt, dpkg, needrestart, pro,<br/>apt's lists, the journal"]
+    RJ[("radar.json<br/>/var/lib/update-gaps-radar")]
+    SYS["apt, dpkg, needrestart, pro, apt's lists,<br/>the journal, /sys, fwupd, snapd"]
+    NET["Canonical CVE OVAL, Launchpad,<br/>GitHub releases"]
     SB["Status Board and other tools"]
     STV["gaps-status.py status"]
     P -->|"cockpit.file read (no root needed)"| ST
     P -->|"cockpit.spawn"| CTL
     CTL -->|"systemctl start"| SVC
+    CTL -->|"systemctl start"| RAD
+    RAD --> NET
+    RAD --> RJ
+    RJ -->|"read as data"| SVC
     SVC --> SYS
     SVC --> ST
     SB -->|"cockpit.spawn (no root needed)"| STV
@@ -102,16 +113,20 @@ flowchart LR
 
 | Part | Installed to | Job |
 |---|---|---|
-| `plugin/` | `/usr/share/cockpit/update-gaps/` | the page (plain JavaScript, no build step), English and German |
+| `plugin/` | `/usr/share/cockpit/update-gaps/` | the page (plain JavaScript, no build step), English and German; `menu-status.js` puts the state next to the menu entry |
 | `lib/gaps-scan.py` | `/usr/lib/cockpit-update-gaps/` | every check, writes the state atomically |
 | `lib/gapscheck.py`, `gapslib.py`, `gapsproc.py` | `/usr/lib/cockpit-update-gaps/` | the checks, the parsers, commands with time limits |
-| `lib/gaps-ctl.sh` | `/usr/lib/cockpit-update-gaps/` | status for the page, “Refresh”, the timer |
+| `lib/gaps-radar.py`, `gapsradar.py` | `/usr/lib/cockpit-update-gaps/` | the network data: what to ask about, fetching, parsing (never as root) |
+| `lib/gaps-ctl.sh` | `/usr/lib/cockpit-update-gaps/` | status for the page, “Refresh”, the timers |
 | `lib/gaps-status.py`, `gapsstatus.py` | `/usr/lib/cockpit-update-gaps/` | the add-on's state for the Status Board, in English or German |
 | `systemd/update-gaps-scan.service`, `.timer` | `/usr/lib/systemd/system/` | the check, hardened and without network; the timer is off until set up from the page |
+| `systemd/update-gaps-radar.service`, `.timer` | `/usr/lib/systemd/system/` | the network data, once a day as a user of its own; off until set up from the page |
 
 After every check the service also writes `status.json`: a short summary in the status format
-all Azentrius add-ons share (held packages with newer versions, a pending restart, fixes only with
-Ubuntu Pro, package lists, the end of support, regular updates, each with its state). The Status
+all Azentrius add-ons share (unfixed security issues with the network data, held packages with
+newer versions, a pending restart, CPU vulnerabilities, fixes only with Ubuntu Pro, package lists,
+the end of support, firmware and snaps when there is a finding, regular updates, each with its
+state). The Status
 Board finds the command in the page's `manifest.json` (`azentrius.status`) and runs
 `gaps-status.py status --lang en|de`, which needs no administrative access; a link of an item
 (`#/held`) opens this page at its card.
@@ -179,10 +194,11 @@ sudo apt install ./cockpit-update-gaps_X.Y.Z-1_all.deb
 The package must be installed on each server you look at in Cockpit, also behind a Cockpit
 bastion (the page is served by that server's bridge). After the first install, open the page with
 administrative access: it checks the server once by itself. Set up the regular check there if you
-want the state kept current.
+want the state kept current, and the network data if you want them (see the security model for
+what leaves the server).
 
-Uninstall: `sudo apt remove cockpit-update-gaps`. It stops the timer and removes the state;
-`/etc/update-gaps.conf` stays.
+Uninstall: `sudo apt remove cockpit-update-gaps`. It stops both timers and removes the state and
+the network data; `/etc/update-gaps.conf` stays.
 
 ## Settings
 
@@ -229,9 +245,14 @@ Cockpit session. More in [CONTRIBUTING.md](CONTRIBUTING.md).
 
 ## Known limits
 
-- Only apt systems (Debian, Ubuntu) are checked.
+- Only apt systems (Debian, Ubuntu) are checked. The network data cover Ubuntu; on Debian only the
+  upstream releases are asked.
 - Whether a newer version of a held package from a third-party source fixes security issues is not
-  known locally: the page says where to look.
+  known locally: the page says where to look, and with the network data it names the fixes in the
+  releases of a fixed list of projects.
+- In a virtual machine the page sees the CPU as the hypervisor presents it: whether the provider's
+  hosts have newer microcode, it cannot tell.
+- Firmware only through fwupd, and only for devices whose vendor publishes on the LVFS.
 - `needrestart` sees services only as root; without it the page compares the running kernel with
   the newest installed one and reads the reboot flag.
 - The time of the last `apt update` comes from apt's success stamp (Ubuntu) or the mtime of apt's

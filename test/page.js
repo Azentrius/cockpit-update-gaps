@@ -1,5 +1,5 @@
 // SPDX-License-Identifier: Apache-2.0
-// The real page (i18n.js + gaps.js) in jsdom with a scripted Cockpit stub, for
+// The real page (i18n.js, menu-status.js, gaps.js) in jsdom with a scripted Cockpit stub, for
 // the page tests. boot() returns the window, the calls the page made and a
 // handle on the stubbed state file; settle() waits until every stubbed answer
 // has arrived and the page has handled it (no fixed delays).
@@ -12,9 +12,10 @@ const FIX = path.join(__dirname, "fixtures");
 // jsdom loads no external scripts; the page's own scripts are run below with eval, after the
 // script elements are taken out of the document.
 const html = fs.readFileSync(path.join(PLUGIN, "index.html"), "utf8");
-const js =["icons.js", "i18n.js", "gaps.js"].map((f) => fs.readFileSync(path.join(PLUGIN, f), "utf8")).join("\n");
+const js =["icons.js", "i18n.js", "menu-status.js", "gaps.js"].map((f) => fs.readFileSync(path.join(PLUGIN, f), "utf8")).join("\n");
 const NOW = "2026-10-19T21:00:00Z";
 const STATE = "/var/lib/update-gaps/scan.json";
+const STATUS_FILE = "/var/lib/update-gaps/status.json";
 
 function scan(name) {
     return JSON.parse(fs.readFileSync(path.join(FIX, "scan-" + name + ".json"), "utf8"));
@@ -58,7 +59,7 @@ function proc(out, { chunks = [], fail = null, gate = null } = {}) {
 }
 
 function boot({ language = "en", state = scan("noble-held"), status = STATUS, now = NOW, monitor = true,
-                onSpawn = null, location = [] } = {}) {
+                onSpawn = null, location = [], hidden = false, statusFile = null } = {}) {
     const dom = new JSDOM(html, { runScripts: "outside-only", url: "https://localhost:9090/update-gaps/" });
     const w = dom.window;
     w.document.querySelectorAll("script").forEach((s) => s.remove());
@@ -66,15 +67,18 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
     w.HTMLDialogElement.prototype.close = function () { this.removeAttribute("open"); };
     w.Element.prototype.scrollIntoView = function () { w.__scrolled = this.id; };
     w.Date.now = () => Date.parse(now);
-    const calls = { spawn: [], reads: [], jumps: [] };
+    const calls = { spawn: [], reads: [], jumps: [], notes: [] };
     const files = { [STATE]: state, "/etc/hostname": "server\n",
-                    "/usr/share/cockpit/image-updates/manifest.json": monitor ? "{}" : null };
+                    "/usr/share/cockpit/image-updates/manifest.json": monitor ? "{}" : null,
+                    [STATUS_FILE]: statusFile };
     const watchers = [];
     const listeners = {};
     w.cockpit = {
         language,
         location: { path: location },
+        hidden,
         addEventListener(ev, cb) { (listeners[ev] = listeners[ev] || []).push(cb); },
+        removeEventListener(ev, cb) { listeners[ev] = (listeners[ev] || []).filter((x) => x !== cb); },
         file(p) {
             return {
                 read() {
@@ -95,10 +99,12 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
             return proc("", { chunks: ["ok\n"] });
         },
         jump(p) { calls.jumps.push(p); },
-        transport: { wait() {} },
+        transport: { wait() {}, control(c, o) { calls.notes.push([c, JSON.parse(JSON.stringify(o))]); } },
     };
     w.eval(js);
-    return { w, d: w.document, calls, files, watchers, listeners };
+    // The shell's hint: cockpit.js changes cockpit.hidden and tells its listeners.
+    const hint = (h) => { w.cockpit.hidden = h; (listeners.visibilitychange || []).slice().forEach((cb) => cb()); };
+    return { w, d: w.document, calls, files, watchers, listeners, hint };
 }
 
 // The visible text, with a space between table cells and list items as a reader sees them.
@@ -109,4 +115,4 @@ function text(el) {
     return c.textContent.replace(/\s+/g, " ").trim();
 }
 
-module.exports = { boot, settle, scan, proc, text, STATUS, STATE, NOW, PLUGIN };
+module.exports = { boot, settle, scan, proc, text, STATUS, STATE, STATUS_FILE, NOW, PLUGIN, FIX };

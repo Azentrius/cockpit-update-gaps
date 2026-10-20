@@ -63,6 +63,11 @@ applies to the configuration of the server.
   of time on this server, with the reason.
 - Hints at the top: a state older than 24 hours, packages changed after the last check, no
   administrative access.
+- **In Cockpit's menu:** the entry “Update Gaps” shows the same state with Cockpit's own icon
+  (blue: something to know, yellow: something to do or a state older than 24 hours, red: support
+  ended) and the summary as its tooltip; nothing found, no icon. For this Cockpit loads the page
+  hidden after the login; until you open it, it only reads `/var/lib/update-gaps/status.json` and
+  checks nothing.
 
 ## Architecture
 

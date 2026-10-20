@@ -139,6 +139,35 @@ def open_page(page):
     return frame, label
 
 
+MENU_TYPES = {"danger": "error", "warning": "warning", "info": "info"}   # Cockpit's page status types
+
+
+def shown_status(page):
+    """The status the page sent the shell for its menu entry (the shell keeps every page's in the
+    session storage); "unset" before the first."""
+    stored = json.loads(page.evaluate("() => sessionStorage.getItem('cockpit:page_status')") or "{}")
+    return stored.get("localhost", {}).get("update-gaps", "unset")
+
+
+def check_menu(page, lang, what):
+    """The icon and its tooltip as the status verb says, as a user without sudo (the file is
+    fresh, so nothing is out of date): its state (ok and none: no icon) and its summary."""
+    verb = json.loads(root("cat", "/usr/share/cockpit/update-gaps/manifest.json"))["azentrius"]["status"]
+    doc = json.loads(root("runuser", "-u", E["PLAIN_USER"], "--", *verb, "--lang", lang))
+    want = {"type": MENU_TYPES[doc["state"]], "title": doc["summary"]} if doc["state"] in MENU_TYPES else None
+    icon = page.locator('a[href$="/update-gaps"] .nav-item-status')
+    poll(page, lambda: shown_status(page) == want and icon.count() == (1 if want else 0), 60)
+    got = shown_status(page)
+    return note(f"{what}: the status icon in the menu as `status --lang {lang}` says",
+                got == want and icon.count() == (1 if want else 0),
+                f"state {doc['state']}, sent {json.dumps(got, ensure_ascii=False)}, icons {icon.count()}")
+
+
+def own_frame(page):
+    """The add-on's frame, to run code in it."""
+    return next(f for f in page.frames if f.name.endswith("/update-gaps"))
+
+
 def state():
     try:
         return json.loads(root("cat", STATE))
@@ -197,6 +226,14 @@ def main():
         # 2. As an administrator: the first check by itself.
         ctx, page = login(browser, E["ADMIN_USER"], E["ADMIN_PW"])
         note("administrator: administrative access", admin_access(page, E["ADMIN_PW"]))
+        # Loaded hidden for the menu right after the login: it checks nothing by itself until shown.
+        page.wait_for_selector(FRAME, state="attached")
+        poll(page, lambda: shown_status(page) != "unset", 60)
+        page.wait_for_timeout(3000)
+        sig = (page.frame_locator(FRAME).locator("#ug-sig-version").text_content() or "").strip()
+        note("after the login: the page loaded hidden for the menu, not started, no check yet",
+             not page.locator(FRAME).is_visible() and sig == "Update Gaps" and state() is None and shown_status(page) is None,
+             f"signature '{sig}', state {'none' if state() is None else 'written'}, sent {shown_status(page)!r}")
         frame, label = open_page(page)
         note("the page in the menu, this build's version",
              label == "Update Gaps" and E["NEW_VERSION"] in (frame.locator("#ug-sig-version").text_content() or ""),
@@ -238,6 +275,7 @@ def main():
              and items.get("restart") == "warning" and st.get("state") in ("warning", "danger")
              and "Neustart" in json.dumps(st, ensure_ascii=False),
              f"{mode}; {st.get('state')}: {st.get('summary')}; {items}"[:400])
+        check_menu(page, "en", "after the first check")
 
         # 3. Refresh: a new check.
         time.sleep(1.5)
@@ -262,6 +300,8 @@ def main():
 
         # 5. Without administrative access (a user without sudo, German browser).
         ctx, page = login(browser, E["PLAIN_USER"], E["PLAIN_PW"], locale="de-DE")
+        page.wait_for_selector(FRAME, state="attached")
+        check_menu(page, "de", "without administrative access, German, before the page is opened")
         frame, label = open_page(page)
         poll(page, lambda: "Anzeige ohne administrativen Zugriff" in (frame.locator("#ug-status").text_content() or ""), 60)
         note("without administrative access: the last state, the hint, no action",
@@ -278,6 +318,25 @@ def main():
             "e => e.getBoundingClientRect().top < 150 || scrollY + innerHeight >= document.documentElement.scrollHeight - 2"), 30)
         note("a link of the status (#/restart) opens the page at its card", bool(at))
         shot(page, "linked-card")
+
+        # 7. The Status Board jumps with cockpit.jump; Cockpit keeps the loaded page and only changes
+        # its location: to another card while it is shown, and into it while it is hidden.
+        own = own_frame(page)
+        own.evaluate("() => { window.ugNotReloaded = true; }")
+
+        def at_card(card, how):
+            ok = poll(page, lambda: page.url.endswith("/update-gaps#/" + card) and frame.locator("#ug-card-" + card).evaluate(
+                "e => Math.abs(e.getBoundingClientRect().top) < 2 || scrollY + innerHeight >= document.documentElement.scrollHeight - 2"), 30)
+            note(f"a link {how}: the card {card}, the page not loaded again",
+                 bool(ok) and own.evaluate("() => window.ugNotReloaded === true"), page.url.split("9090", 1)[-1])
+
+        own.evaluate("p => cockpit.jump(p)", "/update-gaps#/held")
+        at_card("held", "while the page is shown (cockpit.jump)")
+        own.evaluate("p => cockpit.jump(p)", "/system")
+        poll(page, lambda: not page.locator(FRAME).is_visible(), 30)
+        system = next((f for f in page.frames if f.name.endswith("/system")), own)
+        system.evaluate("p => cockpit.jump(p)", "/update-gaps#/restart")
+        at_card("restart", "into the page while it is hidden")
         ctx.close()
         browser.close()
 

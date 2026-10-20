@@ -56,6 +56,7 @@
         language: "en",
         location: { path: path() },
         addEventListener(ev, cb) { if (ev === "locationchanged") listeners.push(cb); },
+        removeEventListener() {},
         locale(po) {
             if (po && po[""] && po[""].language) this.language = po[""].language;
         },
@@ -80,6 +81,7 @@
             return fakeProcess("", ["+ systemctl " + (argv[1] === "install" ? "enable" : "disable") + " --now update-gaps-scan.timer\n", "Done.\n"]);
         },
         jump() {},
-        transport: { wait() {} },
+        // control: the menu icon (menu-status.js), which a plain browser has no menu for.
+        transport: { wait() {}, control() {} },
     };
 })();

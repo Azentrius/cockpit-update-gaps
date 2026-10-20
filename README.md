@@ -32,6 +32,9 @@ check on or off, after showing what that does.
 | **Held packages** and what they miss | `apt-mark showhold`, `apt-cache policy` | a package on hold is never upgraded, and PackageKit does not list it |
 | **Fixes only with Ubuntu Pro** | `pro security-status --format json` | without Ubuntu Pro apt has no source for `esm-apps` and `esm-infra` |
 | **Restart pending** | `needrestart -b -r l`, `/var/run/reboot-required` | on Debian and Ubuntu Cockpit does not tell when a restart is pending |
+| **CPU vulnerabilities** the kernel reports, microcode, BIOS | `/sys/devices/system/cpu/vulnerabilities`, `/proc/cpuinfo`, `systemd-detect-virt`, the microcode package, `/sys/class/dmi/id` | a protection that needs microcode is no package update; in a VM only the provider can fix it |
+| **Firmware updates** (with fwupd) | `fwupdmgr get-updates` from fwupd's local metadata | Cockpit has no page for firmware |
+| **Snaps that are not refreshed**: held, put off, failing, on an old base | snapd's API, asked only when snaps are installed | Software Updates shows no snaps |
 | **Package lists** missing, left over, old, expired, apt-daily errors | `apt-get indextargets`, `/var/lib/apt/lists`, apt's success stamp, the journal of `apt-daily.service` | the page compares with the lists on the server; without them the update is missing too |
 | **Packages without a source** | `apt-cache policy` | without a source there is no newer version |
 | **Left out of automatic updates** | `apt-config dump` (`Allowed-Origins`, `Origins-Pattern`, `Package-Blacklist`), the origins of the sources | for apt, Cockpit shows nothing about automatic updates |
@@ -48,9 +51,9 @@ Updates” for them.
 **Not checked** (always listed on the page): container images (the add-on
 [Image Update Monitor](https://github.com/Azentrius/cockpit-image-update-monitor) checks them),
 security issues and upstream versions of packages outside the selection (with the network data
-set up) or of all packages (without), Snaps, Flatpaks, pip/npm/gem/cargo installs,
-AppImages, firmware, software in containers, VMs and home directories, and whether a security issue
-applies to the configuration of the server.
+set up) or of all packages (without), Flatpaks, pip/npm/gem/cargo installs, AppImages, firmware
+without fwupd, newer snap versions in the Store (snapd refreshes by itself), software in containers,
+VMs and home directories, and whether a security issue applies to the configuration of the server.
 
 ## Reading the page
 
@@ -130,7 +133,9 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
   `PrivateNetwork=yes`, `IPAddressDeny=any`, `ProtectSystem=strict` and more
   (`systemd-analyze security` exposure 4.9, checked in CI). “Refresh” starts the same service, so
   every scan runs in the same sandbox. It may write only its own folder, `/var/lib/update-gaps`;
-  `pro security-status` runs as `nobody`, since as root it writes its own log and lock.
+  `pro security-status` runs as `nobody`, since as root it writes its own log and lock. fwupd is
+  asked over D-Bus for the metadata it already has, snapd over its socket and only when snaps are
+  installed (a request would start snapd, which then goes to the Store on its own).
 - **Fixed commands.** The helpers run fixed argument lists with a PATH that leaves `/usr/local`
   out (a program there can never stand in for apt), in the C locale and with time limits. The page
   calls only fixed verbs.
@@ -148,8 +153,9 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
 - Debian 12 or newer, or Ubuntu 22.04 or newer, with systemd and **Cockpit 264** or newer
 - **Python 3.8** or newer (standard library only)
 - Optional, used when present (the page says what is missing): `needrestart` (services on old
-  libraries), `ubuntu-pro-client` (Ubuntu Pro), `distro-info-data` (end of support),
-  `unattended-upgrades`
+  libraries), `ubuntu-pro-client` (Ubuntu Pro), `distro-info-data` (end of support, snap bases),
+  `unattended-upgrades`, `fwupd` (firmware), `systemd-detect-virt` (from systemd: tells a VM
+  from a physical server)
 
 Fedora, RHEL and openSUSE are not checked yet: the package installs there, and the page says so.
 

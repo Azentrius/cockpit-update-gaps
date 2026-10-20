@@ -78,7 +78,7 @@ install without a state checks once by itself when an administrator opens the pa
 | `found` | checked, with findings | the check's own |
 | `none` | checked, nothing found (never “safe”) | the check's own |
 | `partial` | checked in part, nothing found in that part | `missing`: `services`, `needrestart`, `journal` |
-| `skipped` | not checked | `reason`: `needs-root`, `tool-missing` (+ `tool`), `not-applicable`, `unsupported-os`, `unknown-release` |
+| `skipped` | not checked | `reason`: `needs-root`, `tool-missing` (+ `tool`), `not-applicable`, `unsupported-os`, `unknown-release`, `container` |
 | `timeout` | a command ran longer than its limit | `limit_s`, `command` |
 | `error` | the check failed | `error` (short, credentials removed); `reason: "settings"` for `/etc/update-gaps.conf` |
 
@@ -170,6 +170,68 @@ read (no link followed, no FIFO opened) to tell a script from a program.
 `standard_until` (Ubuntu: `eol-server`, else `eol`), `extended_until` (Ubuntu `eol-esm`, Debian
 `eol-lts`), `days_left`; `found` with `kind` `soon` (180 days or less) or `ended`.
 
+### Stage 3: the machine (0.4.0)
+
+Local, like stage 1: files, `systemd-detect-virt`, fwupd over D-Bus and snapd over its socket; no
+network. The machine is `metal`, `vm`, `container` or `unknown` (`systemd-detect-virt`; without it
+`/.dockerenv` or `/run/.containerenv` mean a container). In a container `cpu` and `firmware` are
+`skipped` with `reason: "container"`: they are the host's.
+
+**`cpu`** (`/sys/devices/system/cpu/vulnerabilities/*`, `/proc/cpuinfo`, `/proc/cmdline`,
+`systemd-detect-virt`; on a physical server also `/sys/class/dmi/id` and the microcode package):
+`machine`, `virt`, `cpu` (`vendor`, `model`, `threads`, `revisions[]` of the loaded microcode),
+`mitigated` and `not_affected` (counts), `mitigations_off[]` (words of the kernel command line that
+switch a protection off: `mitigations=off`, `nopti`, `<name>=off` …), `microcode_pending` (from
+`restart`: newer microcode waits for a restart; the finding stays there), `findings[]`:
+
+```json
+{"name": "tsa", "text": "Vulnerable: Clear CPU buffers attempted, no microcode", "kind": "vulnerable",
+ "microcode": true, "fix": "provider"}
+```
+
+`text` is the kernel's, quoted (control characters out, at most 300 characters). `kind`:
+`vulnerable` (starts with “Vulnerable”), `partial` (a mitigation, but something still vulnerable,
+such as “SMT vulnerable”), `unknown`; mitigated and unaffected ones are only counted. `fix`:
+`provider` in a VM when the text names microcode or the hypervisor (only the provider can fix it),
+else `here`. On a physical server `firmware` (`sys_vendor`, `product_name`, `board_vendor`,
+`board_name`, `bios_vendor`, `bios_version`, `bios_date`; placeholders of the board maker left out,
+no serial numbers) and `microcode_package` (`name` for the CPU's vendor, `installed`, `candidate`,
+and when not installed `available`: `false` when no source offers it, on Debian the component
+`non-free-firmware`). `found` with a finding, a protection switched off or a missing microcode
+package; `skipped`/`not-applicable` without the folder (another architecture, an old kernel).
+
+**`firmware`** (`fwupdmgr get-updates --json --no-unreported-check --no-metadata-check`,
+`fwupdmgr get-remotes --json`, `systemctl is-enabled fwupd-refresh.timer`): only the metadata fwupd
+already has (it fetches them itself); `skipped`/`tool-missing` with `tool: "fwupd"` and `machine`
+when fwupd is not installed (the page then says that firmware is not checked, and in a VM that the
+provider looks after it). `machine`, `timer`, `remotes[]` (`id`, `enabled`, `kind`, `age_days`),
+`findings[]`:
+
+| `kind` | Fields | Meaning |
+|---|---|---|
+| `update` | `device`, `vendor`, `version`, `new`, `urgency` (`critical`, `high`, `medium`, `low` or `null`), `issues[]` (CVE and GHSA ids) | fwupd has a newer release for the device (the newest per device) |
+| `metadata-old` | `remote`, `days` | the metadata of an enabled download remote are older than 30 days |
+| `refresh-off` | `timer` | `fwupd-refresh.timer` is not enabled |
+| `no-remote` | | no download remote is enabled |
+
+Exit 2 of `get-updates` means nothing to update; any other but 0 is an `error`.
+
+**`snaps`** (snapd's REST API over `/run/snapd.socket`: `/v2/snaps`, `/v2/system-info`,
+`/v2/changes?select=all`; `/usr/share/distro-info/ubuntu.csv`): snapd is asked only when `/snap`
+holds a snap with a `current` revision, because a request starts snapd through its socket.
+Without snaps `none` with `installed: 0` and `snapd` (whether `/usr/bin/snap` is there). Otherwise
+`installed`, `snaps[]` (`name`, `version`, `channel`, `type`, `base`), `findings[]`:
+
+| `kind` | Fields | Meaning |
+|---|---|---|
+| `held` | `snap`, `until` (`null`: until further notice) | `snap refresh --hold` for one snap |
+| `refresh-held` | `until` | refreshes held for every snap |
+| `inhibited` | `snap`, `until` | the refresh waits because the app runs (`refresh-inhibit`) |
+| `refresh-failed` | `id`, `when`, `summary`, `error` | an auto-refresh ended with `Error` in the last 7 days (at most 5) |
+| `old-base` | `snap`, `base`, `release`, `ended`, `esm_until` | an app snap builds on a base whose Ubuntu release is out of standard support (`core` 16.04 … `core26` 26.04) |
+
+A newer version in the Store is no finding: snapd refreshes by itself several times a day.
+
 ## `status.json` and `gaps-status.py status` (status contract)
 
 The status format all Azentrius add-ons share (schema 1), for the Status Board and other tools. The
@@ -196,17 +258,21 @@ exit 0, as does every finding, `danger` included.
             "checked_at": "2026-10-19T20:55:00Z", "stale_after": 86400}, …]}
 ```
 
-The items, in this order. A check that does not apply here (`pro` outside Ubuntu, every check
-without apt) has no item; one that was skipped, failed or ran out of time is `none` with “not
-checked” or “check failed”; a partial check adds “partly checked” to its detail.
+The items, in this order (`cve` of stage 2 first, see there). A check that does not apply here
+(`pro` outside Ubuntu, every check without apt, `cpu` in a container) has no item, nor do
+`firmware` and `snaps` without a finding; one that was skipped, failed or ran out of time is `none`
+with “not checked” or “check failed”; a partial check adds “partly checked” to its detail.
 
 | `id` | `ok` | `info` | `warning` | `danger` | `value` |
 |---|---|---|---|---|---|
 | `held` | nothing held, or held without a newer version | | a held package has a newer version | | packages with a newer version |
 | `restart` | nothing pending | | kernel, microcode, services on old libraries or the reboot flag | | |
+| `cpu` | nothing reported as vulnerable | only vulnerabilities the provider of a VM can fix | a vulnerability this server can fix, a protection switched off, no microcode package on a physical server | | findings |
 | `pro` | no fix only with Ubuntu Pro | fixes only with Ubuntu Pro | | | packages |
 | `lists` | no finding | only left-over lists or messages of apt-daily | a source without lists, lists older than 48 hours, an expired Release file, apt-daily failed | | |
 | `eol` | standard support continues | | ends within 180 days | ended | days left |
+| `firmware` (only with a finding) | | old metadata, the refresh timer off, no download remote | a firmware update | | updates |
+| `snaps` (only with a finding) | | held, put off, a base out of support | a failed refresh | | findings |
 | `updates` | none | regular updates (no link: Software Updates shows them) | | | updates |
 
 The add-on's state is the worst of `danger`, `warning` and `info`; without any of them `ok` when an
@@ -357,14 +423,14 @@ public state and logs below `$XDG_CACHE_HOME`.
 
 | File | Checks |
 |---|---|
-| `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy`, `apt-get -s`, needrestart, deb822, `apt-config`, dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed |
-| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current |
+| `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy`, `apt-get -s`, needrestart, deb822, `apt-config`, dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed; stage 3: CPU vulnerabilities sorted, `/proc/cpuinfo`, the kernel command line, DMI values and dates, the JSON of fwupd, snapd's times |
+| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current; stage 3: the VMs of the recorded hosts where only the provider can fix `tsa`, an Intel VM, a physical server with and without its microcode package (Debian without `non-free-firmware`), protections switched off, containers (also without `systemd-detect-virt`), fwupd with an update, old metadata and the refresh timer off, nothing to update, a failing fwupdmgr; snaps held, put off, failing and on an old base, snapd not asked without snaps, snapd not answering |
 | `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item |
-| `test/status_test.py` | the status (schema 1) of every recorded host in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status` |
-| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden |
+| `test/status_test.py` | the status (schema 1) of every recorded host in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status`; the items `cpu` (info in a VM, a warning for this server), `firmware` and `snaps` (only with a finding) |
+| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |
-| `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local` |
-| `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card; since 0.2.0 the page loaded hidden after the login without checking, the menu icon as `gaps-status.py status` says (English, and German before the page is opened), `cockpit.jump` into the loaded page (another card while it is shown, a card while it is hidden, no reload); no JavaScript or resource errors beyond Cockpit's own |
+| `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local`; `cpu` and `firmware` skipped in the container, no snaps |
+| `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card; since 0.2.0 the page loaded hidden after the login without checking, the menu icon as `gaps-status.py status` says (English, and German before the page is opened), `cockpit.jump` into the loaded page (another card while it is shown, a card while it is hidden, no reload); since 0.4.0 `cpu`, `firmware` and `snaps` in the real service (the runner is a VM); no JavaScript or resource errors beyond Cockpit's own |
 | `tools/check-units.sh` | `systemd-analyze verify`, and `systemd-analyze security` exposure at most 5.0 |
 | `tools/check-version.sh`, `tools/check-design-files.sh` | version, changelog, shared design files |
 

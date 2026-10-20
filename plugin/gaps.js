@@ -24,14 +24,15 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.3.0";
+    const VERSION = "0.4.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
     const MONITOR_MANIFEST = "/usr/share/cockpit/image-updates/manifest.json";
     const FORMAT = 1;          // newest scan.json format this page knows
     const STALE_H = 24;        // a state older than this gets a hint
-    const CARDS = ["held", "pro", "cve", "upstream", "restart", "lists", "local", "auto", "backports", "newer", "outside", "eol"];
+    const CARDS = ["held", "pro", "cve", "upstream", "restart", "cpu", "firmware", "snaps", "lists", "local", "auto", "backports",
+                   "newer", "outside", "eol"];
     const RADAR_CHECKS = ["cve", "upstream", "newer"];   // stage 2: they read the radar's network data
     const ALL = ["updates"].concat(CARDS);
 
@@ -325,6 +326,12 @@
     function pkgList(names, more) {
         return `<span class="ug-pkgs">${(names || []).map(esc).join(", ")}${more ? " " + esc(t("held.more", { n: more })) : ""}</span>`;
     }
+    // A CPU vulnerability: its common name (when the page knows it) and the kernel's name.
+    function vulnName(name) {
+        const key = "vuln." + name;
+        return I18N.en[key] ? esc(t(key)) + `<span class="az-cell-sub">${code(name)}</span>` : code(name);
+    }
+    function until(iso) { return iso ? fmtDate(iso) : t("snaps.forever"); }
 
     // --- Cards -------------------------------------------------------------
     const RENDER = {
@@ -372,6 +379,82 @@
             return card("restart", t("restart.count"),
                 explain("restart") + `<dl class="ug-kv">${kv.map(([a, b]) => `<dt>${esc(a)}</dt><dd>${b}</dd>`).join("")}</dl>` +
                 notes + sourceLine(c));
+        },
+
+        cpu(c) {
+            const parts = [];
+            const off = c.mitigations_off || [];
+            if (off.length) parts.push(alertHtml("warning", t("cpu.offTitle"), tr("cpu.off", { words: off.join(" ") })));
+            const pkg = c.microcode_package;
+            if (pkg && !pkg.installed) {
+                const debian = ((doc && doc.os && doc.os.id) || "") === "debian";
+                const key = pkg.available === false ? (debian ? "cpu.pkgDebian" : "cpu.pkgNone") : "cpu.pkgMissing";
+                parts.push(alertHtml("warning", t("cpu.pkgTitle", { name: pkg.name }), tr(key, { name: pkg.name })));
+            }
+            if ((c.findings || []).length) {
+                parts.push(table(["col.vulnerability", "col.kernel", "col.fixBy"], c.findings.map((f) => [
+                    cell(vulnName(f.name)),
+                    cell(esc(f.text)),
+                    cell(esc(t(f.fix === "provider" ? "cpu.fix.provider" : "cpu.fix.here"))),
+                ])));
+            }
+            const cpu = c.cpu || {};
+            const fw = c.firmware || {};
+            const lines = [];
+            if (cpu.model) lines.push(tr("cpu.cpuLine", { model: cpu.model, n: cpu.threads || "?", rev: (cpu.revisions || []).join(", ") || "?" }));
+            if (c.machine === "vm") lines.push(tr("cpu.vm", { virt: c.virt || "?" }));
+            else if (c.machine === "metal") {
+                lines.push(tr("cpu.metal", { board: [fw.board_vendor, fw.board_name].filter(Boolean).join(" ") || fw.sys_vendor || "?",
+                                             bios: fw.bios_version || "?", date: fw.bios_date ? fmtDay(fw.bios_date) : "?",
+                                             pkg: (pkg && pkg.name) || "intel-microcode / amd64-microcode" }));
+            }
+            if (c.microcode_pending) lines.push(rich(t("cpu.pending")));
+            lines.push(esc(t("cpu.counts", { m: c.mitigated || 0, n: c.not_affected || 0 })));
+            const extra = c.machine === "vm" ? esc(t("cpu.todoVm")) : c.machine === "metal" ? rich(t("cpu.todoMetal")) : "";
+            return card("cpu", (c.findings || []).length ? t("cpu.count", { n: c.findings.length }) : "",
+                explain("cpu", extra) + parts.join("") + lines.map((l) => `<p class="ug-note">${l}</p>`).join("") + sourceLine(c));
+        },
+
+        firmware(c) {
+            const ups = (c.findings || []).filter((f) => f.kind === "update");
+            const parts = [];
+            if (ups.length) {
+                parts.push(table(["col.device", "col.installed", "col.available", "col.urgency", "col.fixes"], ups.map((f) => [
+                    cell(esc(f.device) + (f.vendor ? `<span class="az-cell-sub">${esc(f.vendor)}</span>` : "")),
+                    ver(f.version),
+                    ver(f.new),
+                    cell(f.urgency ? esc(t("firmware.urgency." + f.urgency)) : `<span class="az-cell-sub">${esc(t("firmware.urgency.none"))}</span>`),
+                    cell((f.issues || []).length ? f.issues.map(esc).join(", ") : `<span class="az-cell-sub">${esc(t("upstream.noFixes"))}</span>`),
+                ])));
+            }
+            const other = (c.findings || []).filter((f) => f.kind !== "update").map((f) => {
+                if (f.kind === "metadata-old") return tr("firmware.metadataOld", { remote: f.remote, n: f.days });
+                if (f.kind === "refresh-off") return tr("firmware.refreshOff", { state: f.timer });
+                if (f.kind === "no-remote") return rich(t("firmware.noRemote"));
+                return esc(f.kind);
+            });
+            if (other.length) parts.push(`<ul class="ug-plain-list">${other.map((i) => `<li>${i}</li>`).join("")}</ul>`);
+            return card("firmware", ups.length ? t("firmware.count", { n: ups.length }) : "", explain("firmware") + parts.join("") + sourceLine(c));
+        },
+
+        snaps(c) {
+            const items = (c.findings || []).map((f) => {
+                if (f.kind === "held") return tr("snaps.held", { snap: f.snap, until: until(f.until) });
+                if (f.kind === "refresh-held") return tr("snaps.allHeld", { until: until(f.until) });
+                if (f.kind === "inhibited") return tr("snaps.inhibited", { snap: f.snap, until: f.until ? fmtDate(f.until) : "?" });
+                if (f.kind === "old-base") {
+                    return tr("snaps.oldBase", { snap: f.snap, base: f.base, release: f.release, date: fmtDay(f.ended) }) +
+                           (f.esm_until ? " " + tr("snaps.esm", { date: fmtDay(f.esm_until) }) : "");
+                }
+                if (f.kind === "refresh-failed") {
+                    return tr("snaps.failed", { when: fmtDate(f.when), summary: f.summary, id: f.id }) +
+                           (f.error ? `<pre class="ug-lines">${esc(f.error)}</pre>` : "");
+                }
+                return esc(f.kind);
+            });
+            return card("snaps", t("snaps.count", { n: items.length }),
+                explain("snaps") + `<ul class="ug-plain-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>` +
+                `<p class="ug-note">${esc(t("snaps.installed", { n: c.installed || 0 }))}</p>` + sourceLine(c));
         },
 
         lists(c) {
@@ -542,6 +625,9 @@
         if (k === "updates") parts.push(esc(t("clean.updates")));
         if (k === "lists" && c.last_update) parts.push(esc(t("clean.lists", { ago: ago(c.last_update.ts) })));
         if (k === "eol" && c.standard_until) parts.push(esc(t("eol.supported", { date: fmtDay(c.standard_until) })));
+        if (k === "cpu" && c.state === "none") parts.push(esc(t("clean.cpu", { m: c.mitigated || 0, n: c.not_affected || 0 })));
+        if (k === "firmware" && c.state === "none") parts.push(esc(t("clean.firmware")));
+        if (k === "snaps" && c.state === "none" && !c.installed) parts.push(esc(t(c.snapd ? "clean.snapsNone" : "clean.snapdNone")));
         if (c.state === "partial") {
             parts.push(esc(t("clean.partly", { what: "" })) + (c.missing || []).map((m) => rich(t("missing." + m))).join(" "));
         }
@@ -564,6 +650,9 @@
         if (c.state === "timeout") return tr("reason.timeout", { s: c.limit_s || "?" });
         if (c.state === "error" && c.reason === "settings") return tr("reason.settings", { msg: c.error || "" });
         if (c.state === "error") return tr("reason.error", { msg: c.error || "" });
+        if (c.check === "firmware" && c.reason === "tool-missing" && c.tool === "fwupd") {
+            return rich(t(c.machine === "vm" ? "reason.fwupd-vm" : "reason.fwupd"));
+        }
         return tr("reason." + (c.reason || "error"), { tool: c.tool || "", msg: c.error || "" });
     }
 

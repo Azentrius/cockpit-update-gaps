@@ -5,7 +5,7 @@
  "version": "0.1.0",
  "checked_at": "2026-10-19T20:55:00Z",
  "state": "warning",
- "summary": "Findings in 3 areas: Held packages, Restart, Fixes only with Ubuntu Pro.",
+ "summary": "Findings in 4 areas: Held packages, Restart, CPU vulnerabilities, Fixes only with Ubuntu Pro.",
  "items": [
   {
    "id": "held",
@@ -23,6 +23,16 @@
    "title": "Restart",
    "detail": "kernel 6.8.0-147 installed, 6.8.0-146 running; requested by linux-base, linux-image-6.8.0-147-generic; 5 services on old libraries: dbus.service, NetworkManager.service (+3)",
    "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "cpu",
+   "state": "info",
+   "title": "CPU vulnerabilities",
+   "value": "1",
+   "detail": "tsa; only the provider can fix it (virtual machine)",
+   "link": "#/cpu",
    "checked_at": "2026-10-19T20:55:00Z",
    "stale_after": 86400
   },
@@ -64,7 +74,7 @@
  ],
  "i18n": {
   "de": {
-   "summary": "Befunde in 3 Bereichen: Gehaltene Pakete, Neustart, Fixes nur mit Ubuntu Pro.",
+   "summary": "Befunde in 4 Bereichen: Gehaltene Pakete, Neustart, CPU-Schwachstellen, Fixes nur mit Ubuntu Pro.",
    "items": {
     "held": {
      "title": "Gehaltene Pakete",
@@ -73,6 +83,10 @@
     "restart": {
      "title": "Neustart",
      "detail": "Kernel 6.8.0-147 installiert, 6.8.0-146 läuft; angefordert von linux-base, linux-image-6.8.0-147-generic; 5 Dienste mit alten Bibliotheken: dbus.service, NetworkManager.service (+3)"
+    },
+    "cpu": {
+     "title": "CPU-Schwachstellen",
+     "detail": "tsa; beheben kann es nur der Anbieter (virtuelle Maschine)"
     },
     "pro": {
      "title": "Fixes nur mit Ubuntu Pro",

@@ -20,6 +20,7 @@ import os
 import sys
 import tempfile
 import unittest
+from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
@@ -249,6 +250,206 @@ class Degraded(unittest.TestCase):
         self.assertIsNone(doc["pm"])
         self.assertTrue(all(c["state"] == "skipped" and c["reason"] == "unsupported-os" for c in doc["checks"]))
         self.assertEqual(fs.calls, [], "nothing runs on a system without apt")
+
+
+VULN = gapscheck.CPU_VULN
+# vpn-host on 2026-10-20 (Intel Xeon Skylake, Hetzner vServer), as the kernel reported it.
+VPN_HOST_VULN = {
+    "gather_data_sampling": "Unknown: Dependent on hypervisor status",
+    "itlb_multihit": "KVM: Mitigation: VMX unsupported",
+    "l1tf": "Mitigation: PTE Inversion",
+    "mds": "Mitigation: Clear CPU buffers; SMT Host state unknown",
+    "meltdown": "Mitigation: PTI",
+    "mmio_stale_data": "Vulnerable: Clear CPU buffers attempted, no microcode; SMT Host state unknown",
+    "spectre_v2": "Mitigation: IBRS; IBPB: conditional; STIBP: disabled; RSB filling; PBRSB-eIBRS: Not affected",
+    "srbds": "Not affected",
+}
+
+
+def with_vulns(fs, vulns):
+    fs.meta["dirs"][VULN] = sorted(vulns)
+    for k, v in vulns.items():
+        fs.meta["files"][f"{VULN}/{k}"] = v + "\n"
+    return fs
+
+
+def dpkg_plus(scenario, line):
+    with open(os.path.join(HERE, "fixtures", scenario, "commands", "dpkg-query-W.txt"), encoding="utf-8") as f:
+        return gapsproc.Result(0, f.read() + line + "\n", "")
+
+
+class Cpu(unittest.TestCase):
+    def test_vm_with_tsa_is_the_providers(self):
+        c = scan("noble-held")[1]["cpu"]
+        self.assertEqual((c["state"], c["machine"], c["virt"]), ("found", "vm", "kvm"))
+        self.assertEqual(c["findings"], [{"name": "tsa", "text": "Vulnerable: Clear CPU buffers attempted, no microcode",
+                                          "kind": "vulnerable", "microcode": True, "fix": "provider"}])
+        self.assertEqual((c["mitigated"], c["not_affected"]), (4, 10))
+        self.assertEqual(c["cpu"], {"vendor": "AuthenticAMD", "model": "AMD EPYC-Genoa Processor", "threads": 8,
+                                    "revisions": ["0x1000065"]})
+        self.assertNotIn("microcode_package", c, "in a VM the package is not the point")
+        self.assertNotIn("firmware", c)
+
+    def test_physical_server_clean(self):
+        c = scan("resolute-stale-lists")[1]["cpu"]
+        self.assertEqual((c["state"], c["machine"], c["findings"]), ("none", "metal", []))
+        self.assertEqual(c["firmware"], {"sys_vendor": "Hetzner", "board_vendor": "ASRockRack", "board_name": "B450D4U-V1L",
+                                         "bios_vendor": "American Megatrends International, LLC.",
+                                         "bios_version": "L2.12", "bios_date": "2024-08-30"})
+        self.assertEqual(c["microcode_package"], {"name": "amd64-microcode", "installed": "3.20251202.1ubuntu2",
+                                                  "candidate": "3.20251202.1ubuntu2"})
+        self.assertFalse(c["microcode_pending"], "needrestart: the microcode is current")
+
+    def test_intel_vm(self):
+        fs = with_vulns(FakeSystem("resolute-nodesource"), VPN_HOST_VULN)
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
+        got = {f["name"]: (f["kind"], f["fix"]) for f in c["findings"]}
+        self.assertEqual(got, {"gather_data_sampling": ("unknown", "provider"),
+                               "mmio_stale_data": ("vulnerable", "provider")})
+        self.assertEqual((c["mitigated"], c["not_affected"]), (5, 1))
+
+    def test_metal_without_the_microcode_package(self):
+        intel = "processor\t: 0\nvendor_id\t: GenuineIntel\nmodel name\t: Intel(R) Xeon(R) E-2276G\nmicrocode\t: 0xf8\n"
+        policy = "intel-microcode:\n  Installed: (none)\n  Candidate: 3.20260210.1ubuntu2\n  Version table:\n"
+        fs = FakeSystem("resolute-stale-lists", files={"/proc/cpuinfo": intel},
+                        results={"apt-cache-policy-intel-microcode": gapsproc.Result(0, policy, "")})
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
+        self.assertEqual(c["state"], "found")
+        self.assertEqual(c["microcode_package"], {"name": "intel-microcode", "installed": None,
+                                                  "candidate": "3.20260210.1ubuntu2", "available": True})
+        none = policy.replace("Candidate: 3.20260210.1ubuntu2", "Candidate: (none)")
+        fs = FakeSystem("resolute-stale-lists", files={"/proc/cpuinfo": intel},
+                        results={"apt-cache-policy-intel-microcode": gapsproc.Result(0, none, "")})
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
+        self.assertIs(c["microcode_package"]["available"], False)
+
+    def test_partial_and_switched_off_on_metal(self):
+        fs = with_vulns(FakeSystem("resolute-stale-lists", files={"/proc/cmdline": "BOOT_IMAGE=/vmlinuz ro mitigations=off nosmt\n"}),
+                        {"mds": "Mitigation: Clear CPU buffers; SMT vulnerable", "spectre_v2": "Vulnerable"})
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
+        self.assertEqual(c["state"], "found")
+        self.assertEqual(c["mitigations_off"], ["mitigations=off"])
+        self.assertEqual([(f["name"], f["kind"], f["fix"]) for f in c["findings"]],
+                         [("mds", "partial", "here"), ("spectre_v2", "vulnerable", "here")])
+
+    def test_container_is_the_hosts(self):
+        r = {"systemd-detect-virt": gapsproc.Result(0, "docker\n", "")}
+        c = scan("noble-held", results=r)[1]
+        self.assertEqual((c["cpu"]["state"], c["cpu"]["reason"]), ("skipped", "container"))
+        self.assertEqual((c["firmware"]["state"], c["firmware"]["reason"]), ("skipped", "container"))
+        # docker run without systemd: no systemd-detect-virt, but /.dockerenv
+        fs = FakeSystem("noble-held", missing={"systemd-detect-virt"})
+        fs.meta["stat"]["/.dockerenv"] = {"type": "file", "mtime": 1, "mode": "755"}
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
+        self.assertEqual((c["state"], c["reason"], c["virt"]), ("skipped", "container", "container-other"))
+
+    def test_without_systemd_detect_virt_or_the_files(self):
+        c = scan("noble-held", missing={"systemd-detect-virt"})[1]["cpu"]
+        self.assertEqual((c["state"], c["machine"]), ("found", "unknown"))
+        self.assertEqual(c["findings"][0]["fix"], "here", "unknown machine: not blamed on a provider")
+        fs = FakeSystem("noble-held")
+        del fs.meta["dirs"][VULN]
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
+        self.assertEqual((c["state"], c["reason"]), ("skipped", "not-applicable"))
+
+
+FWUPD_UPDATES = json.dumps({"Devices": [
+    {"Name": "UEFI dbx", "Vendor": "Linux Foundation", "Version": "371", "Plugin": "uefi_dbx",
+     "Releases": [{"Version": "377", "Urgency": "high", "Issues": ["CVE-2026-12345", "not-an-id"]},
+                  {"Version": "376"}]},
+    {"Name": "No release", "Version": "1", "Releases": []},
+]})
+
+
+def fwupd(updates=(0, FWUPD_UPDATES), mtime=1792400000, timer="enabled"):
+    remotes = json.dumps({"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": "true", "ModificationTime": mtime},
+                                      {"Id": "vendor-directory", "Kind": "directory", "Enabled": "true"}]})
+    return {"dpkg-query-W": dpkg_plus("resolute-stale-lists", "fwupd\t2.1.1-1ubuntu3.1\tfwupd\tii \tamd64"),
+            "fwupdmgr-get-updates": gapsproc.Result(updates[0], updates[1], ""),
+            "fwupdmgr-get-remotes": gapsproc.Result(0, remotes, ""),
+            "systemctl-is-enabled-fwupd-refresh": gapsproc.Result(0 if timer == "enabled" else 1, timer + "\n", "")}
+
+
+class Firmware(unittest.TestCase):
+    def test_without_fwupd(self):
+        c = scan("resolute-stale-lists")[1]["firmware"]
+        self.assertEqual((c["state"], c["reason"], c["tool"], c["machine"]), ("skipped", "tool-missing", "fwupd", "metal"))
+
+    def test_updates_old_metadata_timer_off(self):
+        old = 1792400000 - 40 * 86400
+        c = scan("resolute-stale-lists", results=fwupd(mtime=old, timer="disabled"))[1]["firmware"]
+        self.assertEqual(c["state"], "found")
+        self.assertEqual(c["findings"][0], {"kind": "update", "device": "UEFI dbx", "vendor": "Linux Foundation",
+                                            "version": "371", "new": "377", "urgency": "high",
+                                            "issues": ["CVE-2026-12345"]})
+        kinds = [f["kind"] for f in c["findings"]]
+        self.assertEqual(kinds, ["update", "metadata-old", "refresh-off"])
+        self.assertGreaterEqual(c["findings"][1]["days"], 40)
+
+    def test_nothing_to_update(self):
+        now = int(datetime.strptime("2026-10-19T20:55:00Z", "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc).timestamp())
+        c = scan("resolute-stale-lists", results=fwupd(updates=(2, "No updatable devices\n"), mtime=now - 86400))[1]["firmware"]
+        self.assertEqual((c["state"], c["findings"]), ("none", []))
+        self.assertEqual(c["timer"], "enabled")
+
+    def test_fwupdmgr_fails(self):
+        c = scan("resolute-stale-lists", results=fwupd(updates=(1, "")))[1]["firmware"]
+        self.assertEqual(c["state"], "error")
+
+
+NOW_SNAP = "2026-10-19T20:55:00Z"
+SNAPD = {
+    "/v2/snaps": [
+        {"name": "lxd", "type": "app", "base": "core20", "version": "5.0.4", "tracking-channel": "5.0/stable",
+         "hold": "2316-10-19T20:00:00Z"},
+        {"name": "certbot", "type": "app", "base": "core24", "version": "5.1",
+         "refresh-inhibit": {"proceed-time": "2026-10-25T10:00:00.123456789+02:00"}},
+        {"name": "core20", "type": "base", "version": "20251001"},
+        {"name": "../evil", "type": "app"},
+    ],
+    "/v2/system-info": {"refresh": {"timer": "00:00~24:00/4", "hold": "2026-04-01T00:00:00Z"}},
+    "/v2/changes?select=all": [
+        {"id": "41", "kind": "auto-refresh", "status": "Error", "summary": "Auto-refresh snap \"lxd\"",
+         "spawn-time": "2026-10-19T08:00:00Z", "err": "cannot refresh"},
+        {"id": "12", "kind": "auto-refresh", "status": "Error", "summary": "old", "spawn-time": "2026-09-01T08:00:00Z"},
+        {"id": "40", "kind": "auto-refresh", "status": "Done", "spawn-time": "2026-10-19T04:00:00Z"},
+    ],
+}
+
+
+def snapfs(snapd=SNAPD):
+    fs = FakeSystem("noble-held", snapd=snapd, now=NOW_SNAP)
+    fs.meta["dirs"]["/snap"] = ["README", "bin", "certbot", "core20", "lxd"]
+    for n in ("certbot", "core20", "lxd"):
+        fs.meta["stat"][f"/snap/{n}/current"] = {"type": "link", "mtime": 1792400000, "target": "1"}
+    return fs
+
+
+class Snaps(unittest.TestCase):
+    def test_no_snaps_no_snapd(self):
+        fs = FakeSystem("noble-held")
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"snaps"})["checks"]}["snaps"]
+        self.assertEqual((c["state"], c["installed"], c["snapd"]), ("none", 0, True))
+        self.assertFalse([x for x in fs.calls if x.startswith("snapd")], "snapd is not asked: it would start")
+
+    def test_findings(self):
+        fs = snapfs()
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"snaps"})["checks"]}["snaps"]
+        self.assertEqual((c["state"], c["installed"]), ("found", 3))
+        self.assertEqual(c["findings"], [
+            {"kind": "held", "snap": "lxd", "until": None},
+            {"kind": "old-base", "snap": "lxd", "base": "core20", "release": "20.04 LTS", "ended": "2025-05-29",
+             "esm_until": "2030-04-23"},
+            {"kind": "inhibited", "snap": "certbot", "until": "2026-10-25T08:00:00Z"},
+            {"kind": "refresh-failed", "id": "41", "when": "2026-10-19T08:00:00Z", "summary": "Auto-refresh snap \"lxd\"",
+             "error": "cannot refresh"},
+        ])
+        self.assertEqual([s["name"] for s in c["snaps"]], ["lxd", "certbot", "core20"], "a bad name is dropped")
+
+    def test_snapd_does_not_answer(self):
+        c = {x["check"]: x for x in gapscheck.scan(snapfs(snapd={}), only={"snaps"})["checks"]}["snaps"]
+        self.assertEqual(c["state"], "error")
+        self.assertIn("snapd", c["error"])
 
 
 class Settings(unittest.TestCase):

@@ -86,6 +86,58 @@
    "took_ms": 0
   },
   {
+   "check": "cpu",
+   "machine": "vm",
+   "virt": "kvm",
+   "cpu": {
+    "vendor": "AuthenticAMD",
+    "model": "AMD EPYC-Genoa Processor",
+    "threads": 2,
+    "revisions": [
+     "0x1000065"
+    ]
+   },
+   "findings": [
+    {
+     "name": "tsa",
+     "text": "Vulnerable: No microcode",
+     "kind": "vulnerable",
+     "microcode": true,
+     "fix": "provider"
+    }
+   ],
+   "mitigated": 4,
+   "not_affected": 12,
+   "mitigations_off": [],
+   "source": [
+    "/sys/devices/system/cpu/vulnerabilities",
+    "/proc/cpuinfo",
+    "/proc/cmdline",
+    "systemd-detect-virt"
+   ],
+   "microcode_pending": false,
+   "state": "found",
+   "took_ms": 0
+  },
+  {
+   "check": "firmware",
+   "state": "skipped",
+   "reason": "tool-missing",
+   "tool": "fwupd",
+   "machine": "vm",
+   "took_ms": 0
+  },
+  {
+   "check": "snaps",
+   "state": "none",
+   "snapd": true,
+   "installed": 0,
+   "source": [
+    "/snap"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "lists",
    "state": "partial",
    "findings": [],

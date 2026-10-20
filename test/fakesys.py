@@ -22,7 +22,7 @@ MODES = {"file": stat.S_IFREG, "dir": stat.S_IFDIR, "link": stat.S_IFLNK, "other
 
 
 class FakeSystem:
-    def __init__(self, scenario, uid=None, missing=(), results=None, files=None, now=None):
+    def __init__(self, scenario, uid=None, missing=(), results=None, files=None, now=None, snapd=None):
         self.dir = os.path.join(FIXTURES, scenario)
         with open(os.path.join(self.dir, "meta.json")) as f:
             self.meta = json.load(f)
@@ -32,6 +32,7 @@ class FakeSystem:
         self.missing = set(missing)
         self.results = dict(results or {})
         self._now = now or self.meta["now"]
+        self._snapd = snapd     # {API path: result}; None: snapd answers nothing
         self.calls = []
 
     # -- commands
@@ -43,8 +44,18 @@ class FakeSystem:
             return "dpkg-query-S"
         if a == ["apt-cache", "policy"]:
             return "apt-cache-policy"
+        if a[:2] == ["apt-cache", "policy"] and len(a) == 3 and a[2].endswith("-microcode"):
+            return "apt-cache-policy-" + a[2]
         if a[:2] == ["apt-cache", "policy"]:
             return "apt-cache-policy-installed"
+        if a == ["systemd-detect-virt"]:
+            return "systemd-detect-virt"
+        if a[:2] == ["fwupdmgr", "get-updates"]:
+            return "fwupdmgr-get-updates"
+        if a[:2] == ["fwupdmgr", "get-remotes"]:
+            return "fwupdmgr-get-remotes"
+        if a == ["systemctl", "is-enabled", "fwupd-refresh.timer"]:
+            return "systemctl-is-enabled-fwupd-refresh"
         if a == ["apt-mark", "showhold"]:
             return "apt-mark-showhold"
         if a == ["apt-mark", "showmanual"]:
@@ -79,7 +90,12 @@ class FakeSystem:
             if os.path.exists(p):
                 with open(p, encoding="utf-8") as f:
                     text = f.read()
-                return gapsproc.Result(1 if key == "dpkg-query-S" else 0, text, "")
+                rc = 1 if key == "dpkg-query-S" else 0
+                rcp = os.path.join(self.dir, "commands", key + ".rc")     # an exit code the capture recorded
+                if os.path.exists(rcp):
+                    with open(rcp, encoding="utf-8") as f:
+                        rc = int(f.read().strip() or 0)
+                return gapsproc.Result(rc, text, "")
         return gapsproc.Result(None, missing=True)
 
     def run_unprivileged(self, argv, limit=120):
@@ -129,3 +145,19 @@ class FakeSystem:
 
     def kernel(self):
         return self.meta.get("kernel", "")
+
+    SNAPD_FILES = {"/v2/snaps": "snapd-snaps.json", "/v2/system-info": "snapd-system-info.json",
+                   "/v2/changes?select=all": "snapd-changes.json"}
+
+    def snapd(self, path, limit=20):
+        """The answers of snapd: given to the constructor, or recorded by capture.sh."""
+        self.calls.append("snapd " + path)
+        if self._snapd is not None:
+            if path not in self._snapd:
+                raise ConnectionRefusedError(f"snapd: no answer for {path}")
+            return self._snapd[path]
+        p = os.path.join(self.dir, "commands", self.SNAPD_FILES.get(path, "-"))
+        if not os.path.exists(p):
+            raise ConnectionRefusedError(f"snapd: no answer for {path}")
+        with open(p, encoding="utf-8") as f:
+            return json.load(f).get("result")

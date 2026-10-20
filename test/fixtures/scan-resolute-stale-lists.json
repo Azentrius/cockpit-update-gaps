@@ -97,6 +97,65 @@
    "took_ms": 0
   },
   {
+   "check": "cpu",
+   "machine": "metal",
+   "virt": "none",
+   "cpu": {
+    "vendor": "AuthenticAMD",
+    "model": "AMD Ryzen 5 3600 6-Core Processor",
+    "threads": 12,
+    "revisions": [
+     "0x8701034"
+    ]
+   },
+   "findings": [],
+   "mitigated": 6,
+   "not_affected": 11,
+   "mitigations_off": [],
+   "source": [
+    "/sys/devices/system/cpu/vulnerabilities",
+    "/proc/cpuinfo",
+    "/proc/cmdline",
+    "systemd-detect-virt",
+    "/sys/class/dmi/id",
+    "apt-cache policy amd64-microcode"
+   ],
+   "firmware": {
+    "sys_vendor": "Hetzner",
+    "board_vendor": "ASRockRack",
+    "board_name": "B450D4U-V1L",
+    "bios_vendor": "American Megatrends International, LLC.",
+    "bios_version": "L2.12",
+    "bios_date": "2024-08-30"
+   },
+   "microcode_package": {
+    "name": "amd64-microcode",
+    "installed": "3.20251202.1ubuntu2",
+    "candidate": "3.20251202.1ubuntu2"
+   },
+   "microcode_pending": false,
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "firmware",
+   "state": "skipped",
+   "reason": "tool-missing",
+   "tool": "fwupd",
+   "machine": "metal",
+   "took_ms": 0
+  },
+  {
+   "check": "snaps",
+   "state": "none",
+   "snapd": true,
+   "installed": 0,
+   "source": [
+    "/snap"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "lists",
    "state": "found",
    "findings": [

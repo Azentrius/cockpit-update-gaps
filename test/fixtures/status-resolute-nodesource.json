@@ -5,7 +5,7 @@
  "version": "0.1.0",
  "checked_at": "2026-10-19T20:55:00Z",
  "state": "info",
- "summary": "Findings in 2 areas: Fixes only with Ubuntu Pro, Package lists.",
+ "summary": "Findings in 3 areas: CPU vulnerabilities, Fixes only with Ubuntu Pro, Package lists.",
  "items": [
   {
    "id": "held",
@@ -21,6 +21,16 @@
    "state": "ok",
    "title": "Restart",
    "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "cpu",
+   "state": "info",
+   "title": "CPU vulnerabilities",
+   "value": "1",
+   "detail": "tsa; only the provider can fix it (virtual machine)",
+   "link": "#/cpu",
    "checked_at": "2026-10-19T20:55:00Z",
    "stale_after": 86400
   },
@@ -63,13 +73,17 @@
  ],
  "i18n": {
   "de": {
-   "summary": "Befunde in 2 Bereichen: Fixes nur mit Ubuntu Pro, Paketlisten.",
+   "summary": "Befunde in 3 Bereichen: CPU-Schwachstellen, Fixes nur mit Ubuntu Pro, Paketlisten.",
    "items": {
     "held": {
      "title": "Gehaltene Pakete"
     },
     "restart": {
      "title": "Neustart"
+    },
+    "cpu": {
+     "title": "CPU-Schwachstellen",
+     "detail": "tsa; beheben kann es nur der Anbieter (virtuelle Maschine)"
     },
     "pro": {
      "title": "Fixes nur mit Ubuntu Pro",

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.4.0 – 2026-10-20
+
+The machine itself: CPU vulnerabilities the kernel reports, firmware updates from fwupd and snaps
+that are not refreshed. All local, no network.
+
+- **CPU vulnerabilities:** what `/sys/devices/system/cpu/vulnerabilities` reports as vulnerable,
+  only partly mitigated or unknown, quoted word for word with a common name, plus the CPU and its
+  loaded microcode. In a virtual machine a missing microcode is the provider's to fix (the
+  hypervisor supplies it): the Status Board shows it as information, not as a warning. On a
+  physical server the card names the board and BIOS, and warns when the microcode package for the
+  CPU is missing (on Debian it is in `non-free-firmware`). Protections switched off on the kernel
+  command line (`mitigations=off` and others) are a warning everywhere.
+- **Firmware:** with fwupd installed, the updates in its local metadata (device, versions,
+  urgency, CVEs), metadata older than 30 days and `fwupd-refresh.timer` switched off. Without
+  fwupd “Not checked” says so; in a VM the provider looks after the firmware.
+- **Snaps:** held snaps, refreshes held for all, put off while an app runs or failed in the last
+  seven days, and app snaps on a base whose Ubuntu release is out of support. snapd is asked only
+  when snaps are installed, since a request would start it through its socket.
+- In a container the CPU and the firmware are the host's: both are skipped there.
+- “Not checked” no longer lists snaps and firmware as such.
+
 ## 0.3.0 – 2026-10-20
 
 Cards open and close, and the page remembers which are closed.

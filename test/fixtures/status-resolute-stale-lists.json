@@ -26,6 +26,15 @@
    "stale_after": 86400
   },
   {
+   "id": "cpu",
+   "state": "ok",
+   "title": "CPU vulnerabilities",
+   "value": "0",
+   "link": "#/cpu",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
    "id": "pro",
    "state": "info",
    "title": "Fixes only with Ubuntu Pro",
@@ -72,6 +81,9 @@
     "restart": {
      "title": "Neustart",
      "detail": "Kernel 7.0.0-38 installiert, 7.0.0-34 läuft; angefordert von linux-base, linux-image-7.0.0-38-generic; 2 Dienste mit alten Bibliotheken: dbus.service, NetworkManager.service"
+    },
+    "cpu": {
+     "title": "CPU-Schwachstellen"
     },
     "pro": {
      "title": "Fixes nur mit Ubuntu Pro",

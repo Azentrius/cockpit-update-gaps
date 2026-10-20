@@ -75,6 +75,21 @@ T = {
         "eol.until": "standard support until {date}",
         "eol.soon": "standard support ends on {date}",
         "eol.ended": "standard support ended on {date}",
+        "cpu.title": "CPU vulnerabilities",
+        "cpu.provider": "only the provider can fix it (virtual machine)",
+        "cpu.off": "protection switched off: {names}",
+        "cpu.package": "{name} is not installed",
+        "firmware.title": "Firmware",
+        "firmware.updates": {"one": "{n} update: {names}", "other": "{n} updates: {names}"},
+        "firmware.metadata": "the metadata of fwupd are {days} days old",
+        "firmware.refresh": "fwupd-refresh.timer is off",
+        "firmware.remote": "no download source enabled in fwupd",
+        "snaps.title": "Snaps",
+        "snaps.held": "held: {names}",
+        "snaps.allheld": "refreshes held for every snap",
+        "snaps.inhibited": "refresh put off: {names}",
+        "snaps.failed": {"one": "{n} failed refresh", "other": "{n} failed refreshes"},
+        "snaps.base": "base out of support: {names}",
         "partly": "partly checked",
         "failed": "check failed",
         "skipped": "not checked",
@@ -120,6 +135,21 @@ T = {
         "eol.until": "Standard-Unterstützung bis {date}",
         "eol.soon": "Standard-Unterstützung endet am {date}",
         "eol.ended": "Standard-Unterstützung endete am {date}",
+        "cpu.title": "CPU-Schwachstellen",
+        "cpu.provider": "beheben kann es nur der Anbieter (virtuelle Maschine)",
+        "cpu.off": "Schutz abgeschaltet: {names}",
+        "cpu.package": "{name} ist nicht installiert",
+        "firmware.title": "Firmware",
+        "firmware.updates": {"one": "{n} Update: {names}", "other": "{n} Updates: {names}"},
+        "firmware.metadata": "die Metadaten von fwupd sind {days} Tage alt",
+        "firmware.refresh": "fwupd-refresh.timer ist aus",
+        "firmware.remote": "in fwupd ist keine Download-Quelle aktiv",
+        "snaps.title": "Snaps",
+        "snaps.held": "zurückgehalten: {names}",
+        "snaps.allheld": "Aktualisierungen für alle Snaps zurückgehalten",
+        "snaps.inhibited": "Aktualisierung aufgeschoben: {names}",
+        "snaps.failed": {"one": "{n} fehlgeschlagene Aktualisierung", "other": "{n} fehlgeschlagene Aktualisierungen"},
+        "snaps.base": "Basis ohne Unterstützung: {names}",
         "partly": "teilweise geprüft",
         "failed": "Prüfung fehlgeschlagen",
         "skipped": "nicht geprüft",
@@ -174,10 +204,12 @@ def _kernel(k):
 
 
 def items_of(doc, lang):
-    """The items of a scan, most important first: held packages, restart, Pro,
-    package lists, support of the release, regular updates. A check that does
-    not apply here (not Ubuntu, no apt) has no item; one that did not run is
-    `none`."""
+    """The items of a scan, most important first: unfixed security issues,
+    held packages, restart, CPU vulnerabilities, Pro, package lists, support
+    of the release, firmware, snaps, regular updates. A check that does not
+    apply here (not Ubuntu, no apt, a container) has no item, nor do firmware
+    and snaps without a finding; one that did not run is `none`. A CPU
+    vulnerability only the provider of a VM can fix is info, not a warning."""
     checks = {c.get("check"): c for c in doc.get("checks") or [] if isinstance(c, dict)}
     at = doc.get("generated")
     out = []
@@ -264,14 +296,62 @@ def items_of(doc, lang):
                 ([t(lang, "cve.missing", n=len(missing))] if missing else [])
         return item("cve", state, len(opened), "; ".join(parts))
 
-    for cid, fn in (("cve", cve), ("held", held), ("restart", restart), ("pro", pro), ("lists", lists), ("eol", eol),
-                    ("updates", updates)):
+    def cpu(c):
+        f = c.get("findings") or []
+        off = c.get("mitigations_off") or []
+        pkg = c.get("microcode_package") or {}
+        no_pkg = bool(pkg) and not pkg.get("installed")
+        here = off or no_pkg or any(x.get("fix") != "provider" for x in f)
+        parts = [_names([x.get("name") for x in f])] if f else []
+        if f and not here:
+            parts.append(t(lang, "cpu.provider"))
+        if off:
+            parts.append(t(lang, "cpu.off", names=_names(off)))
+        if no_pkg:
+            parts.append(t(lang, "cpu.package", name=pkg.get("name")))
+        return item("cpu", "warning" if here else "info" if f else "ok", len(f), "; ".join(parts))
+
+    def firmware(c):
+        f = c.get("findings") or []
+        ups = [x for x in f if x.get("kind") == "update"]
+        parts = [t(lang, "firmware.updates", n=len(ups), names=_names([x.get("device") for x in ups], 3))] if ups else []
+        for x in f:
+            if x.get("kind") == "metadata-old":
+                parts.append(t(lang, "firmware.metadata", days=x.get("days")))
+            elif x.get("kind") == "refresh-off":
+                parts.append(t(lang, "firmware.refresh"))
+            elif x.get("kind") == "no-remote":
+                parts.append(t(lang, "firmware.remote"))
+        return item("firmware", "warning" if ups else "info", len(ups), "; ".join(parts))
+
+    def snaps(c):
+        f = c.get("findings") or []
+        by = {}
+        for x in f:
+            by.setdefault(x.get("kind"), []).append(x)
+        parts = []
+        if by.get("refresh-held"):
+            parts.append(t(lang, "snaps.allheld"))
+        if by.get("held"):
+            parts.append(t(lang, "snaps.held", names=_names([x.get("snap") for x in by["held"]])))
+        if by.get("inhibited"):
+            parts.append(t(lang, "snaps.inhibited", names=_names([x.get("snap") for x in by["inhibited"]])))
+        if by.get("refresh-failed"):
+            parts.append(t(lang, "snaps.failed", n=len(by["refresh-failed"])))
+        if by.get("old-base"):
+            parts.append(t(lang, "snaps.base", names=_names([f"{x.get('snap')} ({x.get('base')})" for x in by["old-base"]])))
+        return item("snaps", "warning" if by.get("refresh-failed") else "info", len(f), "; ".join(parts))
+
+    for cid, fn in (("cve", cve), ("held", held), ("restart", restart), ("cpu", cpu), ("pro", pro), ("lists", lists),
+                    ("eol", eol), ("firmware", firmware), ("snaps", snaps), ("updates", updates)):
         c = checks.get(cid)
         if not c:
             continue
         st = c.get("state")
-        if st == "skipped" and c.get("reason") in ("not-applicable", "unsupported-os", "radar-off"):
+        if st == "skipped" and c.get("reason") in ("not-applicable", "unsupported-os", "radar-off", "container"):
             continue
+        if cid in ("firmware", "snaps") and st in ("none", "skipped"):
+            continue          # an item only when there is something to see
         if st in ("error", "timeout", "skipped"):
             out.append(item(cid, "none", detail=t(lang, "skipped" if st == "skipped" else "failed"),
                             link=cid != "updates"))

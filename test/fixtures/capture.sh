@@ -59,5 +59,35 @@ for d in /usr/local/bin /usr/local/sbin /opt/*/bin; do
 done > outside.txt
 for c in ubuntu debian; do [ -f "/usr/share/distro-info/$c.csv" ] && cp "/usr/share/distro-info/$c.csv" "distro-info-$c.csv"; done
 for p in $(cat apt-mark-showhold.txt); do zgrep -h -E " (install|upgrade) $p:" /var/log/dpkg.log* 2> /dev/null; done | sort > dpkg-log-held.txt
+# The machine, the CPU, firmware and snaps (no serial numbers: only the DMI fields the scan reads).
+systemd-detect-virt > systemd-detect-virt.txt 2> /dev/null
+cp /proc/cpuinfo cpuinfo.txt
+cat /proc/cmdline > cmdline.txt
+mkdir vulnerabilities dmi
+for f in /sys/devices/system/cpu/vulnerabilities/*; do [ -f "$f" ] && cat "$f" > "vulnerabilities/$(basename "$f")"; done
+for k in sys_vendor product_name board_vendor board_name bios_vendor bios_version bios_date; do
+  cat "/sys/class/dmi/id/$k" > "dmi/$k" 2> /dev/null || rm -f "dmi/$k"
+done
+if command -v snap > /dev/null; then
+  ls -1 /snap > snap.txt 2> /dev/null
+  for c in /snap/*/current; do [ -e "$c" ] && basename "$(dirname "$c")"; done > snap-current.txt
+  # snapd answers only when snaps are installed; a request starts it through its socket otherwise.
+  if [ -s snap-current.txt ]; then
+    for p in snaps system-info "changes?select=all"; do
+      python3 -c 'import http.client, socket, sys
+class C(http.client.HTTPConnection):
+    def connect(self):
+        self.sock = socket.socket(socket.AF_UNIX); self.sock.connect("/run/snapd.socket")
+c = C("localhost"); c.request("GET", "/v2/" + sys.argv[1]); sys.stdout.write(c.getresponse().read().decode())' "$p" \
+        > "snapd-${p%%\?*}.json" 2> /dev/null
+    done
+  fi
+fi
+if command -v fwupdmgr > /dev/null; then
+  timeout 60 fwupdmgr get-updates --json --no-unreported-check --no-metadata-check < /dev/null > fwupd-updates.json 2> /dev/null
+  echo "$?" > fwupd-updates.rc
+  timeout 60 fwupdmgr get-remotes --json < /dev/null > fwupd-remotes.json 2> /dev/null
+  systemctl is-enabled fwupd-refresh.timer > fwupd-refresh.txt 2>&1
+fi
 tar -czf "$dest" -C "$out" .
 echo "$dest"

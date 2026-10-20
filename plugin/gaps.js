@@ -24,7 +24,7 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.2.0";
+    const VERSION = "0.3.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
@@ -259,11 +259,39 @@
     }
 
     // --- Building blocks of a card -----------------------------------------
+    // A card opens and closes through its title (a disclosure button). Which cards are closed is
+    // kept in this browser only (localStorage), not on the server; a card is open by default.
+    const FOLD_KEY = "update-gaps:collapsed";
+    const collapsed = (() => {
+        try {
+            const v = JSON.parse(window.localStorage.getItem(FOLD_KEY) || "[]");
+            return new Set(Array.isArray(v) ? v.filter((k) => CARDS.includes(k)) : []);
+        } catch (e) {
+            return new Set();
+        }
+    })();
+    function saveFolds() {
+        try { window.localStorage.setItem(FOLD_KEY, JSON.stringify([...collapsed].sort())); } catch (e) { /* not kept */ }
+    }
+    function setOpen(check, open) {
+        if (open) collapsed.delete(check); else collapsed.add(check);
+        saveFolds();
+        const btn = document.querySelector(`#ug-card-${check} .ug-toggle`);
+        if (btn) btn.setAttribute("aria-expanded", String(open));
+        const body = $(`ug-card-${check}-body`);
+        if (body) body.hidden = !open;
+        const sec = $("ug-card-" + check);
+        if (sec) sec.classList.toggle("is-collapsed", !open);
+    }
+
     function card(check, count, inner) {
-        return `<section class="az-card ug-card" id="ug-card-${check}" aria-labelledby="ug-card-${check}-title">` +
-               `<div class="az-card__header"><h2 class="az-card__title" id="ug-card-${check}-title">${esc(t("chk." + check))}</h2>` +
+        const open = !collapsed.has(check);
+        return `<section class="az-card ug-card${open ? "" : " is-collapsed"}" id="ug-card-${check}" aria-labelledby="ug-card-${check}-title">` +
+               `<div class="az-card__header"><h2 class="az-card__title" id="ug-card-${check}-title">` +
+               `<button type="button" class="ug-toggle" data-fold="${check}" aria-expanded="${open}" aria-controls="ug-card-${check}-body">` +
+               `<span class="ug-fold">${icon("angle-right")}</span><span>${esc(t("chk." + check))}</span></button></h2>` +
                (count ? `<span class="az-label az-label--info">${esc(count)}</span>` : "") + "</div>" +
-               `<div class="az-card__body">${inner}</div></section>`;
+               `<div class="az-card__body" id="ug-card-${check}-body"${open ? "" : " hidden"}>${inner}</div></section>`;
     }
     function explain(check, extraTodo) {
         return `<div class="ug-explain"><p><strong>${esc(t("card.why"))}</strong>${rich(t(check + ".why"))}</p>` +
@@ -645,7 +673,10 @@
         const first = ((cockpit.location && cockpit.location.path) || [])[0] || "";
         if (!/^[a-z]{1,20}$/.test(first)) return;
         const card = $("ug-card-" + first);
-        if (card) card.scrollIntoView({ block: "start" });
+        if (card) {
+            setOpen(first, true);
+            card.scrollIntoView({ block: "start" });
+        }
     }
 
     // "Refresh": with administrative access a new check through the service,
@@ -767,9 +798,13 @@
                      t("btn.radarSetup"), [CTL, "install", "radar"]);
         } else if (el.id === "ug-radar-now") dlg.open(t("dlg.radar.now.title"), t("dlg.radar.now.desc"), t("btn.radarNow"), [CTL, "radar"]);
         else if (el.id === "ug-radar-off") dlg.open(t("dlg.radar.remove.title"), t("dlg.radar.remove.desc"), t("btn.switchOff"), [CTL, "remove", "radar"]);
+        else if (el.dataset.fold) setOpen(el.dataset.fold, el.getAttribute("aria-expanded") !== "true");
         else if (el.dataset.go) {
             const card = $("ug-card-" + el.dataset.go);
-            if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });
+            if (card) {
+                setOpen(el.dataset.go, true);
+                card.scrollIntoView({ behavior: "smooth", block: "start" });
+            }
         }
     });
     $("ug-dialog-confirm").addEventListener("click", () => dlg.run());

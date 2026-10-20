@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.2.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.3.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -477,6 +477,48 @@ test("network data: set up through the dialog, fetch now, switched off, old data
     const u = boot({ state: scan("noble-held-radar"), status: { ...STATUS, root: false, radar: "inactive" } });
     await settle();
     assert.ok(!u.d.getElementById("ug-radar-setup"), "without administrative access no button");
+});
+
+test("cards open and close through their title; the browser keeps which are closed", async () => {
+    const r = boot();
+    await settle();
+    const btn = r.d.querySelector("#ug-card-held .ug-toggle");
+    const body = r.d.getElementById("ug-card-held-body");
+    assert.strictEqual(btn.getAttribute("aria-expanded"), "true");
+    assert.strictEqual(btn.getAttribute("aria-controls"), "ug-card-held-body");
+    assert.ok(!body.hidden);
+    btn.click();
+    assert.strictEqual(btn.getAttribute("aria-expanded"), "false");
+    assert.ok(body.hidden);
+    assert.ok(r.d.getElementById("ug-card-held").classList.contains("is-collapsed"));
+    assert.deepStrictEqual(JSON.parse(r.w.localStorage.getItem("update-gaps:collapsed")), ["held"]);
+    r.d.querySelector("#ug-card-pro .ug-toggle").click();
+    assert.deepStrictEqual(JSON.parse(r.w.localStorage.getItem("update-gaps:collapsed")), ["held", "pro"]);
+    // The overview, "No findings" and "Not checked" do not fold.
+    ["ug-summary", "ug-clean", "ug-unchecked"].forEach((id) => assert.ok(!r.d.querySelector(`#${id} .ug-toggle`), id));
+
+    // A new visit (the same browser): closed cards stay closed, a re-render keeps them so.
+    const again = boot({ storage: { "update-gaps:collapsed": JSON.stringify(["held", "pro", "nonsense"]) } });
+    await settle();
+    assert.ok(again.d.getElementById("ug-card-held-body").hidden);
+    assert.ok(again.d.getElementById("ug-card-pro-body").hidden);
+    assert.ok(!again.d.getElementById("ug-card-restart-body").hidden);
+    again.d.getElementById("ug-refresh").click();
+    await settle();
+    assert.ok(again.d.getElementById("ug-card-held-body").hidden, "still closed after a new check");
+    // A chip of the overview and a link of the status open the card they lead to.
+    again.d.querySelector('#ug-sum-found [data-go="pro"]').click();
+    assert.ok(!again.d.getElementById("ug-card-pro-body").hidden);
+    assert.deepStrictEqual(JSON.parse(again.w.localStorage.getItem("update-gaps:collapsed")), ["held"]);
+    const linked = boot({ location: ["held"], storage: { "update-gaps:collapsed": '["held"]' } });
+    await settle();
+    assert.ok(!linked.d.getElementById("ug-card-held-body").hidden);
+    assert.strictEqual(linked.w.__scrolled, "ug-card-held");
+
+    // Broken or blocked storage: every card open, nothing fails.
+    const broken = boot({ storage: { "update-gaps:collapsed": "{not json" } });
+    await settle();
+    assert.ok(!broken.d.getElementById("ug-card-held-body").hidden);
 });
 
 test("texts: every key in both languages, same plural shape, no em dash", () => {

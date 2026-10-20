@@ -59,7 +59,7 @@ function proc(out, { chunks = [], fail = null, gate = null } = {}) {
 }
 
 function boot({ language = "en", state = scan("noble-held"), status = STATUS, now = NOW, monitor = true,
-                onSpawn = null, location = [], hidden = false, statusFile = null } = {}) {
+                onSpawn = null, location = [], hidden = false, statusFile = null, storage = {} } = {}) {
     const dom = new JSDOM(html, { runScripts: "outside-only", url: "https://localhost:9090/update-gaps/" });
     const w = dom.window;
     w.document.querySelectorAll("script").forEach((s) => s.remove());
@@ -101,6 +101,7 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
         jump(p) { calls.jumps.push(p); },
         transport: { wait() {}, control(c, o) { calls.notes.push([c, JSON.parse(JSON.stringify(o))]); } },
     };
+    Object.keys(storage).forEach((k) => w.localStorage.setItem(k, storage[k]));
     w.eval(js);
     // The shell's hint: cockpit.js changes cockpit.hidden and tells its listeners.
     const hint = (h) => { w.cockpit.hidden = h; (listeners.visibilitychange || []).slice().forEach((cb) => cb()); };

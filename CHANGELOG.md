@@ -1,5 +1,15 @@
 # Changelog
 
+## 0.3.0 – 2026-10-20
+
+Cards open and close, and the page remembers which are closed.
+
+- **Cards fold:** every card with findings opens and closes through its title (a button with
+  `aria-expanded`, by keyboard too). The overview, “No findings” and “Not checked” stay open.
+- **Remembered in the browser:** which cards are closed is kept in this browser
+  (`localStorage`, key `update-gaps:collapsed`), not on the server; new cards come open. A chip of
+  the overview or a link of the Status Board opens the card it leads to.
+
 ## 0.2.0 – 2026-10-20
 
 Network data: security issues Ubuntu has not fixed yet, fixes upstream and newer versions elsewhere

@@ -126,7 +126,10 @@ def fetch(url, etag=None, opener=None, max_bytes=MAX_BYTES):
                 raise FetchError(f"answer larger than {max_bytes} bytes")
             return body, resp.headers.get("ETag")
     except urllib.error.HTTPError as e:
-        e.close()
+        try:
+            e.close()               # the answer's body; Python 3.8 fails here when there is none
+        except Exception:  # noqa: BLE001
+            pass
         if e.code == 304:
             return None, etag
         if e.code in (403, 429):

@@ -24,7 +24,7 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.1.0";
+    const VERSION = "0.2.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
@@ -540,14 +540,16 @@
     }
 
     // The status of the add-on (gaps-status.py) links its items as #/<check>, for
-    // the Status Board: once the cards are there, scroll to that card, once per
-    // link (Cockpit keeps the page loaded and only changes its location).
+    // the Status Board: once the cards are there and the page is shown, scroll to
+    // that card, once per link (Cockpit keeps the page loaded and only changes its
+    // location; it may change it while the page is still hidden).
     let linkHandled = false;
     if (typeof cockpit.addEventListener === "function") {
         cockpit.addEventListener("locationchanged", () => { linkHandled = false; goToLinkedCard(); });
+        cockpit.addEventListener("visibilitychange", goToLinkedCard);
     }
     function goToLinkedCard() {
-        if (linkHandled || !doc) return;
+        if (linkHandled || !doc || cockpit.hidden) return;
         linkHandled = true;
         const first = ((cockpit.location && cockpit.location.path) || [])[0] || "";
         if (!/^[a-z]{1,20}$/.test(first)) return;
@@ -660,7 +662,6 @@
 
     // --- Init ------------------------------------------------------------------
     applyStaticTexts();
-    renderSignature();
     $("ug-refresh").addEventListener("click", scan);
     document.addEventListener("click", (e) => {
         const target = e.target instanceof Element ? e.target : null;
@@ -678,8 +679,17 @@
     $("ug-dialog-confirm").addEventListener("click", () => dlg.run());
     $("ug-dialog-cancel").addEventListener("click", () => dlg.close());
     $("ug-dialog").addEventListener("cancel", (e) => { if (dlg.running) e.preventDefault(); });
-    reloadOnChange(stateFile);
-    safeLoad();
+    // Cockpit loads this page hidden right after the login, for the status icon in
+    // its menu (menu-status.js). What reads or runs on the server, the first check
+    // above all, starts only once the page is shown.
+    function start() {
+        renderSignature();
+        reloadOnChange(stateFile);
+        safeLoad();
+    }
+    const menu = window.UpdateGapsMenuStatus;
+    if (menu) menu.shown.then(start);
+    else start();
 
     cockpit.transport.wait(function () {});
 })();

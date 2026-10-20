@@ -5,7 +5,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
-const { boot, settle, scan, proc, text, STATUS, STATE, PLUGIN } = require("./page");
+const { boot, settle, scan, proc, text, STATUS, STATE, PLUGIN, FIX } = require("./page");
 
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.1.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.2.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -286,6 +286,114 @@ test("a link of the status (#/held) scrolls to its card; anything else is ignore
     r = boot({ location: ["held"], state: null, status: { ...STATUS, root: false, state_file: false } });
     await settle();
     assert.strictEqual(r.w.__scrolled, undefined, "no state, no card");
+});
+
+// --- The status icon in Cockpit's menu (menu-status.js) and the hidden start ---
+const statusFixture = (name) => JSON.parse(fs.readFileSync(path.join(FIX, "status-" + name + ".json"), "utf8"));
+const lastNote = (calls) => (calls.notes.length ? calls.notes[calls.notes.length - 1][1].page_status : "unset");
+const TYPES = { danger: "error", warning: "warning", info: "info" };
+
+test("menu icon: the state of status.json, the summary in the page's language", async () => {
+    for (const name of ["noble-held", "resolute-nodesource", "resolute-stale-lists"]) {
+        const st = statusFixture(name);
+        for (const language of ["en", "de"]) {
+            // The fixtures' time, an hour on: not out of date.
+            const now = new Date(Date.parse(st.checked_at) + 3600e3).toISOString();
+            const { calls } = boot({ language, now, statusFile: JSON.stringify(st) });
+            await settle();
+            const summary = language === "de" ? st.i18n.de.summary : st.summary;
+            const want = TYPES[st.state] ? { type: TYPES[st.state], title: summary } : null;
+            assert.deepStrictEqual(lastNote(calls), want, `${name} ${language}`);
+            assert.strictEqual(calls.notes.length, 1, "sent once");
+        }
+    }
+    const { calls } = boot();
+    await settle();
+    assert.deepStrictEqual(calls.notes, [["notify", { page_status: null }]], "no status.json: no icon, but sent");
+    const broken = boot({ statusFile: "{broken" });
+    await settle();
+    assert.strictEqual(lastNote(broken.calls), null, "unreadable: no icon");
+});
+
+test("menu icon: judged as the Status Board does", async () => {
+    const st = statusFixture("noble-held");
+    const at = Date.parse(st.checked_at);
+    const icon = (doc, hours, language = "en") =>
+        boot({ language, now: new Date(at + hours * 3600e3).toISOString() }).w.UpdateGapsMenuStatus.statusOf(doc, at + hours * 3600e3);
+    const plain = (o) => JSON.parse(JSON.stringify(o));
+    // Never better than an item.
+    const worse = plain(st);
+    worse.state = "ok";
+    worse.items[4].state = "danger";
+    assert.deepStrictEqual(plain(icon(worse, 1)), { type: "error", title: st.summary });
+    // An item older than its stale_after (24 hours) is at least a warning; the tooltip says since when.
+    const ok = plain(st);
+    ok.state = "ok";
+    ok.items.forEach((i) => { i.state = "ok"; });
+    assert.strictEqual(icon(ok, 23), null, "23 hours: nothing to show");
+    const when = (loc) => new Date(at).toLocaleString(loc, { dateStyle: "medium", timeStyle: "short" });
+    assert.deepStrictEqual(plain(icon(ok, 25)), { type: "warning", title: `${st.summary} (as of ${when("en-GB")}, out of date)` });
+    assert.deepStrictEqual(plain(icon(ok, 25, "de")),
+                           { type: "warning", title: `${st.i18n.de.summary} (Stand ${when("de-DE")}, veraltet)` });
+    const old = plain(st);
+    old.state = "danger";
+    assert.strictEqual(icon(old, 30).type, "error", "a danger stays a danger when out of date");
+    // What the board ignores.
+    const odd = plain(ok);
+    odd.items.forEach((i) => { i.checked_at = i.checked_at.replace("Z", ""); });
+    assert.strictEqual(icon(odd, 48), null, "a time without a zone is not judged");
+    [null, 3, "x", { ...st, schema: 2 }, { ...st, items: "x" }].forEach((d) => assert.strictEqual(icon(d, 1), null));
+    assert.strictEqual(icon({ ...st, summary: "x".repeat(300), i18n: undefined }, 1).title.length, 200, "cut as the board cuts it");
+});
+
+test("menu icon: checked again the moment an item turns out of date", async () => {
+    const st = statusFixture("noble-held");
+    st.state = "ok";
+    st.items.forEach((i) => { i.state = "ok"; });
+    const at = Date.parse(st.checked_at);
+    const r = boot({ now: new Date(at + 20 * 3600e3).toISOString(), statusFile: JSON.stringify(st) });
+    const timers = [];
+    r.w.setTimeout = (fn, ms) => { timers.push({ fn, ms }); return timers.length; };
+    r.watchers.find((x) => x.p.endsWith("/status.json")).cb(JSON.stringify(st), "tag-2");
+    await settle();
+    assert.strictEqual(lastNote(r.calls), null);
+    assert.deepStrictEqual(timers.map((x) => x.ms), [4 * 3600e3 + 1000], "again when it is 24 hours old");
+    r.w.Date.now = () => at + 24 * 3600e3 + 1000;
+    timers[0].fn();
+    assert.strictEqual(lastNote(r.calls).type, "warning", "out of date: a warning");
+});
+
+test("preloaded hidden: only the icon; the page starts once it is shown", async () => {
+    const st = statusFixture("noble-held");
+    const r = boot({ hidden: true, statusFile: JSON.stringify(st), state: null, status: { ...STATUS, root: true, state_file: false } });
+    await settle();
+    assert.deepStrictEqual(lastNote(r.calls), { type: "warning", title: st.summary });
+    assert.deepStrictEqual([r.calls.spawn.length, r.calls.reads], [0, []], "hidden: no helper, no other file");
+    assert.strictEqual(text(r.d.getElementById("ug-sig-version")).includes("0.2.0"), false, "hidden: not started");
+    r.hint(false);
+    await settle();
+    assert.ok(r.calls.spawn.some((c) => c.argv.join(" ").endsWith("gaps-ctl.sh status")), "shown: the page loads");
+    assert.ok(r.calls.spawn.some((c) => c.argv.join(" ").endsWith("gaps-ctl.sh scan")), "and only now checks by itself");
+    r.hint(true);
+    r.hint(false);
+    await settle();
+    assert.strictEqual(r.calls.spawn.filter((c) => c.argv.join(" ").endsWith("gaps-ctl.sh status")).length, 2,
+                       "shown again: no second start (the second status call is the reload after the scan)");
+});
+
+test("a link that comes while the page is hidden scrolls once it is shown", async () => {
+    const r = boot();
+    await settle();
+    r.hint(true);
+    r.w.cockpit.location = { path: ["restart"] };
+    r.listeners.locationchanged.forEach((cb) => cb());
+    assert.strictEqual(r.w.__scrolled, undefined, "hidden: nothing scrolls");
+    r.hint(false);
+    assert.strictEqual(r.w.__scrolled, "ug-card-restart", "shown: the card");
+    r.w.__scrolled = undefined;
+    r.hint(true);
+    r.hint(false);
+    assert.strictEqual(r.w.__scrolled, undefined, "shown again: the link was followed already");
 });
 
 test("the state file's watch reloads on a new tag only, never twice at once", async () => {

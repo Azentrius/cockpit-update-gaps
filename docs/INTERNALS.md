@@ -9,7 +9,7 @@ document together; the page tolerates fields it does not know and checks without
 | Path | Content | Owner / mode |
 |---|---|---|
 | `/usr/share/cockpit/update-gaps/` | the page (package `cockpit-update-gaps`) | root, 644 |
-| `/usr/lib/cockpit-update-gaps/` | helpers: `gaps-scan.py`, `gaps-ctl.sh`, `gaps-status.py` (755), `gapscheck.py`, `gapslib.py`, `gapsproc.py`, `gapsstatus.py` (644) | root |
+| `/usr/lib/cockpit-update-gaps/` | helpers: `gaps-scan.py`, `gaps-ctl.sh`, `gaps-status.py`, `gaps-radar.py` (755), `gapscheck.py`, `gapslib.py`, `gapsproc.py`, `gapsstatus.py`, `gapsradar.py` (644) | root |
 | `/usr/lib/systemd/system/update-gaps-scan.{service,timer}` | the scan and its timer (every 6 h, `*-*-* 00/6:37:00`); the timer is off until `gaps-ctl.sh install timer` | root, 644 |
 | `/var/lib/update-gaps/scan.json` | the state, written atomically by the service (`StateDirectory`) | root, 644 (folder 755) |
 | `/var/lib/update-gaps/status.json` | the add-on's status for the Status Board, written atomically by the service after `scan.json` | root, 644 |
@@ -27,6 +27,7 @@ document together; the page tolerates fields it does not know and checks without
 | status | `gaps-ctl.sh status`, `superuser: "try"` | read | one JSON object, below |
 | “Refresh” | `gaps-ctl.sh scan`, `superuser: "require"` | runs the service, waits | text, two languages |
 | the regular check | `gaps-ctl.sh install timer` / `remove timer`, `superuser: "require"`, through the dialog | changes the add-on's timer | text, two languages, live |
+| the network data | `gaps-ctl.sh install radar` / `remove radar` / `radar`, `superuser: "require"`, through the dialog | changes the radar's timer, or fetches now (see Stage 2) | text, two languages, live |
 
 `GAPS_LANG=de|en` (environment) selects the language of `gaps-ctl.sh`'s messages; `gaps-scan.py`
 prints no prose. Without administrative access “Refresh” only reads the state again. A fresh

@@ -28,18 +28,24 @@ python3 tools/preview/build.py   # the page with test data: tools/preview/out/up
 ```
 
 The offline tests need no root and no network: the helpers run against fake `apt`, `dpkg`,
-`needrestart` and `pro` commands that print recorded output from real systems (`test/fixtures/`). The
+`needrestart`, `pro`, `fwupdmgr` and snapd answers and recorded files of `/sys` and `/proc` from real
+systems (`test/fixtures/`), and the radar against a stub instead of the network services. The
 `test` workflow runs the lint, the tests and the package build on every push and pull request; it has
 to be green before a merge.
 
 ## How the add-on is built
 
 - **Read only.** The helpers never run `apt update`, install, remove or restart anything. They write
-  only the add-on's own state (`/var/lib/update-gaps/scan.json`) and lock. The only change from the
-  page is setting up the add-on's own timer, and it runs as show → confirm → live output → result.
+  only the add-on's own state (`/var/lib/update-gaps/scan.json`) and lock. The only changes from the
+  page are setting up the add-on's own timers (the regular check, the network data), and they run as
+  show → confirm → live output → result. The add-on never installs anything, not even a tool it
+  could use (fwupd, needrestart): the page says what it could not check.
 - **Root code only in `lib/`**, installed to `/usr/lib/cockpit-update-gaps` (root-owned). Nothing is
   ever run or imported from a directory others can write.
-- **Root never on the network.** The scan service runs with `PrivateNetwork=yes`.
+- **Root never on the network, network never as root.** The scan service runs with
+  `PrivateNetwork=yes`; the network data come from the radar, an unprivileged service of its own
+  (`DynamicUser`), whose file the scan reads as data only. The scan does not wake services that go
+  to the network on their own either: snapd is asked only when snaps are installed.
 - **Fixed verbs.** The page calls the helpers only with fixed commands. Every argument is checked in the
   helper. New verbs go into `docs/INTERNALS.md`.
 - **Quote, do not judge.** A finding says what is missing, where the information comes from, why

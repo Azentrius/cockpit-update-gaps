@@ -1,5 +1,18 @@
 # Changelog
 
+## 0.4.1 – 2026-10-21
+
+The descriptions catch up with what the add-on checks since 0.2.0 and 0.4.0.
+
+- **Package and AppStream description:** they name the CPU vulnerabilities, firmware updates and
+  snaps, and the network data; Cockpit's list of applications shows the same text.
+- **README:** the network data in the introduction and the overview, the radar in the
+  architecture and the parts, the items the Status Board gets, red in the menu also for a
+  security issue Ubuntu rates critical, uninstalling with both timers, and the new known limits
+  (network data for Ubuntu, microcode in a VM, firmware only through the LVFS).
+- **INTERNALS and CONTRIBUTING:** the radar's helpers and calls in the overview tables; the
+  add-on never installs a tool it could use; snapd is not woken without snaps.
+
 ## 0.4.0 – 2026-10-20
 
 The machine itself: CPU vulnerabilities the kernel reports, firmware updates from fwupd and snaps

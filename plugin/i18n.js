@@ -24,6 +24,7 @@ window.UpdateGapsI18n = {
         "meta.user": "a user without administrative access",
 
         "ago.now": "just now",
+        "menu.stale": "{summary} (as of {when}, out of date)",
         "ago.min": { one: "{n} minute ago", other: "{n} minutes ago" },
         "ago.h": { one: "{n} hour ago", other: "{n} hours ago" },
         "ago.d": { one: "{n} day ago", other: "{n} days ago" },
@@ -314,6 +315,7 @@ window.UpdateGapsI18n = {
         "meta.user": "Benutzer ohne administrativen Zugriff",
 
         "ago.now": "gerade eben",
+        "menu.stale": "{summary} (Stand {when}, veraltet)",
         "ago.min": { one: "vor {n} Minute", other: "vor {n} Minuten" },
         "ago.h": { one: "vor {n} Stunde", other: "vor {n} Stunden" },
         "ago.d": { one: "vor {n} Tag", other: "vor {n} Tagen" },

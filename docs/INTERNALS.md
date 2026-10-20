@@ -322,8 +322,29 @@ public state and logs below `$XDG_CACHE_HOME`.
   Values from the system go through `tr()`/`esc()`: escaped, and a backtick in a value cannot open a
   `<code>` of the text.
 - Loading: `safeLoad()` never runs twice at once; the state file's watch reloads only on a new tag.
-- `#/<check>` (a status item's `link`) scrolls to that card once the cards are there, again on
-  `locationchanged` (Cockpit keeps the page loaded and only changes its location).
+- `#/<check>` (a status item's `link`) scrolls to that card once the cards are there and the page
+  is shown (`cockpit.hidden` false, again on `visibilitychange`), again on `locationchanged`
+  (Cockpit keeps the page loaded and only changes its location, sometimes while it is hidden).
+- **Status in Cockpit's menu** (since 0.2.0): the entry “Update Gaps” carries Cockpit's own status
+  icon for the host whose menu is shown: `danger` as `error`, `warning` as `warning`, `info` as
+  `info`; `ok` and `none` show none. The tooltip is the summary of `status.json` in the session
+  language (German from `i18n.de.summary`), cut to 200 characters.
+  - The page sends it with `cockpit.transport.control("notify", {page_status: {type, title}})`; the
+    shell files it under the page of the frame that sends it and keeps it in
+    `sessionStorage["cockpit:page_status"]`, so only the page behind the entry can set it.
+    `"preload": ["index"]` in `manifest.json` makes the shell load the page right after the login,
+    hidden.
+  - `menu-status.js` watches `/var/lib/update-gaps/status.json` (`cockpit.file`, no administrative
+    access needed, the file is 644) and reads nothing else. It judges the status as the Status Board
+    does: the worst of the document's state and the items' (`danger` > `warning` > `info`), and an
+    item whose `checked_at` (with a zone) lies more than `stale_after` seconds back makes it at least
+    a warning, with “(as of <time>, out of date)” after the summary; it is checked again the moment
+    the first item turns old. A missing or unreadable file shows no icon. A status is sent only when
+    it changed, the first one always.
+  - `gaps.js` waits for `UpdateGapsMenuStatus.shown`, the first time `cockpit.hidden` is false, before
+    it reads the state file, asks `gaps-ctl.sh status`, checks by itself or writes the signature. The
+    flag holds once the first answer about `status.json` is back (the shell's hint comes right after
+    `init`, and its messages arrive in order); without any answer the page decides after 3 seconds.
 - Version: `const VERSION` in `gaps.js`; `index.html` loads every file with `?v=<version>`;
   `tools/check-version.sh` keeps them and `CHANGELOG.md` in step.
 
@@ -335,10 +356,10 @@ public state and logs below `$XDG_CACHE_HOME`.
 | `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current |
 | `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item |
 | `test/status_test.py` | the status (schema 1) of every recorded host in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status` |
-| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key |
+| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |
 | `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local` |
-| `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card, no JavaScript or resource errors beyond Cockpit's own |
+| `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card; since 0.2.0 the page loaded hidden after the login without checking, the menu icon as `gaps-status.py status` says (English, and German before the page is opened), `cockpit.jump` into the loaded page (another card while it is shown, a card while it is hidden, no reload); no JavaScript or resource errors beyond Cockpit's own |
 | `tools/check-units.sh` | `systemd-analyze verify`, and `systemd-analyze security` exposure at most 5.0 |
 | `tools/check-version.sh`, `tools/check-design-files.sh` | version, changelog, shared design files |
 

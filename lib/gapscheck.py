@@ -25,6 +25,7 @@ from datetime import datetime, timezone
 
 import gapslib as L
 import gapsproc
+import gapsradar as R
 
 LIMIT = 120             # seconds per command
 LISTS = "/var/lib/apt/lists"
@@ -34,6 +35,16 @@ OUTSIDE_GLOB = "/opt"   # /opt/*/bin
 MAX_ITEMS = 300         # entries per list in the state file; the rest is counted
 STALE_LISTS_H = 48      # package lists older than this are a finding
 EOL_SOON_DAYS = 180
+RADAR = "/var/lib/update-gaps-radar/radar.json"   # written by update-gaps-radar.service (DynamicUser)
+RADAR_MAX = 8 << 20
+RADAR_STALE_H = 72      # the radar runs daily; older data is called stale
+POCKETS = ("Release", "Security", "Updates", "Backports")
+VERSION_RE = re.compile(r"^[0-9][0-9A-Za-z.+~:-]{0,99}$")
+SERIES_RE = re.compile(r"^[a-z]{2,20}$")
+
+
+class RadarError(Exception):
+    """radar.json is there but not usable (too large, not JSON, other format)."""
 
 
 class CommandError(Exception):
@@ -204,6 +215,25 @@ class Context:
             s["file"] = L.SETTINGS_FILE
             return s
         return self._cached("settings", get)
+
+    def radar(self):
+        """radar.json of update-gaps-radar.service, or None when the radar is
+        not set up. The file comes from an unprivileged service: it is read as
+        data, size-limited, and every value used is checked where it is used."""
+        def get():
+            data = self.sys.read_bytes(RADAR, RADAR_MAX + 1)
+            if data is None:
+                return None
+            if len(data) > RADAR_MAX:
+                raise RadarError(f"{RADAR} is larger than {RADAR_MAX} bytes")
+            try:
+                doc = json.loads(data.decode("utf-8"))
+            except ValueError as e:
+                raise RadarError(f"{RADAR} is not JSON: {e}"[:200])
+            if not isinstance(doc, dict) or doc.get("format") != 1:
+                raise RadarError(f"{RADAR} has another format")
+            return doc
+        return self._cached("radar", get)
 
     def origin_of(self, key):
         """The release attributes and host of a source key."""
@@ -701,6 +731,214 @@ def check_eol(ctx):
     return out
 
 
+# ----------------------------------------------------------------- stage 2 --
+
+def _radar(ctx, service):
+    """(radar doc, fields every stage-2 check reports) or (None, the check's
+    result when there are no usable network data)."""
+    doc = ctx.radar()
+    if doc is None:
+        return None, {"state": "skipped", "reason": "radar-off"}
+    ident = (ctx.osr.get("ID") or "").lower()
+    if doc.get("distro") != ident or doc.get("codename") != (ctx.codename or None):
+        return None, {"state": "skipped", "reason": "radar-other-release"}
+    generated = doc.get("generated") if isinstance(doc.get("generated"), str) else None
+    age_h = None
+    if generated:
+        try:
+            dt = datetime.strptime(generated, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+            age_h = round((ctx.now - dt).total_seconds() / 3600, 1)
+        except ValueError:
+            generated = None
+    services = doc.get("services") if isinstance(doc.get("services"), dict) else {}
+    svc = services.get(service) if isinstance(services.get(service), dict) else {}
+    meta = {"radar": {"generated": generated, "age_h": age_h,
+                      "stale": age_h is None or age_h > RADAR_STALE_H,
+                      "service": svc.get("state") if svc.get("state") in ("ok", "partial", "error") else None,
+                      "limited": svc.get("limited") is True}}
+    return doc, meta
+
+
+def _answer(doc, section, key):
+    entries = doc.get(section)
+    entry = entries.get(key) if isinstance(entries, dict) else None
+    return entry if isinstance(entry, dict) else None
+
+
+def _installed_version(ctx, packages):
+    for name in packages:
+        pkg = ctx.pkg(name)
+        if pkg and pkg.get("installed"):
+            return pkg["installed"], pkg.get("candidate")
+    return None, None
+
+
+def _series_order(ctx):
+    text = ctx.sys.read("/usr/share/distro-info/ubuntu.csv")
+    rows = L.parse_distro_info(text) if text else []
+    return [(r.get("series") or "", r.get("version") or "") for r in rows]
+
+
+def _partial_if_unchecked(out, unchecked):
+    out["unchecked"] = unchecked[:MAX_ITEMS]
+    if unchecked and out["state"] == "none":
+        out["state"] = "partial"
+        out["missing"] = ["radar-entries"]
+    return out
+
+
+def check_newer(ctx):
+    """Newer versions of the selected Ubuntu source packages: for this release
+    in a pocket the sources here do not offer, or in a later release."""
+    if (ctx.osr.get("ID") or "").lower() != "ubuntu":
+        return {"state": "skipped", "reason": "not-applicable"}
+    doc, meta = _radar(ctx, "launchpad")
+    if doc is None:
+        return meta
+    order = _series_order(ctx)
+    names = [s for s, _ in order]
+    own = names.index(ctx.codename) if ctx.codename in names else None
+    release_of = dict(order)
+
+    def later(series):
+        if series not in names:
+            return True                       # distro-info knows every past release
+        return own is not None and names.index(series) > own
+
+    findings, unchecked = [], []
+    for src, packages in R.selection(ctx)["sources"].items():
+        entry = _answer(doc, "launchpad", src)
+        if entry is None or not isinstance(entry.get("published"), list):
+            unchecked.append(src)
+            continue
+        inst, cand = _installed_version(ctx, packages)
+        if not inst:
+            continue
+        mine, newer = [], []
+        for p in entry["published"]:
+            if not isinstance(p, dict):
+                continue
+            v, series, pocket = p.get("version"), p.get("series"), p.get("pocket")
+            if not (isinstance(v, str) and VERSION_RE.match(v) and isinstance(series, str)
+                    and SERIES_RE.match(series)):
+                continue
+            if pocket not in POCKETS or L.vercmp(v, inst) <= 0:
+                continue
+            if series == ctx.codename:
+                if not cand or L.vercmp(v, cand) > 0:
+                    mine.append({"version": v, "pocket": pocket})
+            elif later(series):
+                newer.append({"series": series, "release": release_of.get(series) or None, "version": v})
+        if mine or newer:
+            findings.append({"source": src, "packages": packages, "installed": inst,
+                             "here": max(mine, key=lambda x: (L.Version(x["version"]), x["pocket"] == "Security"))
+                             if mine else None,
+                             "later": max(newer, key=lambda x: L.Version(x["version"])) if newer else None,
+                             "stale": entry.get("stale") is True})
+    items, more = _cap(findings)
+    out = {"state": "found" if findings else "none", "findings": items,
+           "source": ["api.launchpad.net (radar)", "apt-cache policy", "/usr/share/distro-info/ubuntu.csv"],
+           **meta}
+    if more:
+        out["more"] = more
+    return _partial_if_unchecked(out, unchecked)
+
+
+CVE_KEYS = ("id", "priority", "cvss", "public", "description", "status", "version")
+
+
+def _cve(c):
+    """One CVE entry of radar.json, checked; None when it does not fit."""
+    if not isinstance(c, dict) or not (isinstance(c.get("id"), str) and R.CVE_RE.match(c["id"])):
+        return None
+    out = {k: c.get(k) for k in CVE_KEYS if isinstance(c.get(k), str)}
+    if out.get("priority") not in R.PRIORITIES:
+        out["priority"] = "untriaged"
+    if "version" in out and not VERSION_RE.match(out["version"]):
+        return None
+    out["description"] = out.get("description", "")[:300]
+    return out
+
+
+def check_cve(ctx):
+    """CVEs Ubuntu lists for the selected source packages of this release:
+    open ones (may need fixing, deferred, pending), and fixed ones whose fix
+    is newer than the installed version (Canonical's CVE OVAL)."""
+    if (ctx.osr.get("ID") or "").lower() != "ubuntu":
+        return {"state": "skipped", "reason": "not-applicable"}
+    doc, meta = _radar(ctx, "oval")
+    if doc is None:
+        return meta
+    if not isinstance(doc.get("oval"), dict):
+        return dict(meta, state="skipped", reason="radar-no-data")
+    findings, counts = [], {p: 0 for p in R.PRIORITIES}
+    for src, packages in R.selection(ctx)["sources"].items():
+        entry = _answer(doc, "oval", src) or {}
+        inst, cand = _installed_version(ctx, packages)
+        if not inst:
+            continue
+        open_ = [c for c in map(_cve, entry.get("open") or []) if c][:MAX_ITEMS]
+        newer = []
+        for c in map(_cve, entry.get("fixed") or []):
+            if c and c.get("version") and L.vercmp(c["version"], inst) > 0:
+                c["offered"] = bool(cand) and L.vercmp(cand, c["version"]) >= 0
+                c["pro"] = "esm" in c["version"]
+                newer.append(c)
+        if not open_ and not newer:
+            continue
+        for c in open_ + newer:
+            counts[c["priority"]] += 1
+        findings.append({"source": src, "packages": packages, "installed": inst,
+                         "open": open_, "fixed_newer": newer[:MAX_ITEMS]})
+    out = {"state": "found" if findings else "none", "findings": findings,
+           "counts": {k: v for k, v in counts.items() if v},
+           "selected": len(R.selection(ctx)["sources"]),
+           "source": ["security-metadata.canonical.com CVE OVAL (radar)", "dpkg-query"], **meta}
+    return out
+
+
+def check_upstream(ctx):
+    """Upstream releases newer than the installed version, with the CVE and
+    GHSA ids their notes name (GitHub, for the projects in gapsradar.UPSTREAM)."""
+    doc, meta = _radar(ctx, "github")
+    if doc is None:
+        return meta
+    findings, unchecked = [], []
+    for repo, packages in R.selection(ctx)["upstream"].items():
+        entry = _answer(doc, "github", repo)
+        if entry is None or not isinstance(entry.get("releases"), list):
+            unchecked.append(repo)
+            continue
+        inst, _ = _installed_version(ctx, packages)
+        if not inst:
+            continue
+        up = R.upstream_version(inst)
+        newer = []
+        for r in entry["releases"]:
+            if not isinstance(r, dict):
+                continue
+            v = r.get("version")
+            if not (isinstance(v, str) and VERSION_RE.match(v)) or L.vercmp(v, up) <= 0:
+                continue
+            fixes = [f for f in (r.get("fixes") or []) if isinstance(f, str) and R.FIX_ID_RE.fullmatch(f)]
+            newer.append({"version": v, "fixes": fixes,
+                          "published": r.get("published") if isinstance(r.get("published"), str) else None})
+        if not newer:
+            continue
+        newest = max(newer, key=lambda x: L.Version(x["version"]))
+        fixes = sorted({f for r in newer for f in r["fixes"]})
+        finding = {"repo": repo, "packages": packages, "installed": inst, "upstream": up,
+                   "newest": newest["version"], "newest_published": (newest["published"] or "")[:10] or None,
+                   "releases": len(newer), "fixes": fixes[:50],
+                   "distribution": R.from_distribution(ctx, packages[0]), "stale": entry.get("stale") is True}
+        if len(fixes) > 50:
+            finding["fixes_more"] = len(fixes) - 50
+        findings.append(finding)
+    out = {"state": "found" if findings else "none", "findings": findings,
+           "source": ["api.github.com releases (radar)", "dpkg-query"], **meta}
+    return _partial_if_unchecked(out, unchecked)
+
+
 CHECKS = (
     ("updates", check_updates),
     ("held", check_held),
@@ -712,6 +950,9 @@ CHECKS = (
     ("backports", check_backports),
     ("outside", check_outside),
     ("eol", check_eol),
+    ("cve", check_cve),
+    ("upstream", check_upstream),
+    ("newer", check_newer),
 )
 
 
@@ -727,6 +968,8 @@ def run_check(ctx, name, fn):
             res = {"state": "timeout", "limit_s": LIMIT, "command": " ".join(e.argv[:3])}
         else:
             res = {"state": "error", "error": L.strip_credentials(str(e))[:400]}
+    except RadarError as e:
+        res = {"state": "error", "reason": "radar", "error": str(e)[:400]}
     except L.SettingsError as e:
         res = {"state": "error", "reason": "settings", "error": str(e)[:400]}
     except Exception as e:  # noqa: BLE001 - one broken check must not hide the others

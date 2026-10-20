@@ -20,8 +20,8 @@ all:
 install:
 	install -d $(PAGE) $(HELPERS) $(UNITS)
 	install -m 644 plugin/* $(PAGE)/
-	install -m 755 lib/gaps-scan.py lib/gaps-status.py lib/gaps-ctl.sh $(HELPERS)/
-	install -m 644 lib/gapscheck.py lib/gapslib.py lib/gapsproc.py lib/gapsstatus.py $(HELPERS)/
+	install -m 755 lib/gaps-scan.py lib/gaps-status.py lib/gaps-radar.py lib/gaps-ctl.sh $(HELPERS)/
+	install -m 644 lib/gapscheck.py lib/gapslib.py lib/gapsproc.py lib/gapsradar.py lib/gapsstatus.py $(HELPERS)/
 	install -m 644 systemd/*.service systemd/*.timer $(UNITS)/
 	if [ -z "$(DESTDIR)" ]; then sh packaging/scripts/configure; fi
 
@@ -29,6 +29,7 @@ uninstall:
 	sh packaging/scripts/remove
 	rm -rf $(PAGE) $(HELPERS)
 	rm -f $(UNITS)/update-gaps-scan.service $(UNITS)/update-gaps-scan.timer
+	rm -f $(UNITS)/update-gaps-radar.service $(UNITS)/update-gaps-radar.timer
 	sh packaging/scripts/removed
 
 # Every offline test (helpers against recorded hosts, the page under jsdom, design, version).

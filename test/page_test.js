@@ -5,7 +5,7 @@
 const assert = require("assert");
 const fs = require("fs");
 const path = require("path");
-const { boot, settle, scan, proc, text, STATUS, STATE, PLUGIN } = require("./page");
+const { boot, settle, scan, proc, text, STATUS, STATE, NOW, PLUGIN } = require("./page");
 
 const tests = [];
 const test = (name, fn) => tests.push({ name, fn });
@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.1.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.2.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -301,6 +301,74 @@ test("the state file's watch reloads on a new tag only, never twice at once", as
     wch.cb(null, "tag-3");
     await settle();
     assert.ok(reads() - before >= 1 && reads() - before <= 2, "one load plus at most one queued");
+});
+
+test("network data: the stage-2 cards, their place in the overview, a link between them", async () => {
+    const { d } = boot({ state: scan("noble-held-radar"), status: { ...STATUS, radar: "active", radar_file: NOW } });
+    await settle();
+    const ids = [...d.querySelectorAll("#ug-cards > section")].map((s) => s.id.replace("ug-card-", ""));
+    assert.deepStrictEqual(ids.filter((k) => ["held", "pro", "cve", "upstream", "newer"].includes(k)),
+                           ["held", "pro", "cve", "upstream", "newer"]);
+    const cve = text(d.getElementById("ug-card-cve"));
+    assert.match(cve, /CVE-2026-4631/);
+    assert.match(cve, /may need fixing/);
+    assert.match(cve, /Checked for \d+ source packages/);
+    const up = d.getElementById("ug-card-upstream");
+    assert.match(text(up), /moby\/moby/);
+    assert.match(text(up), /CVE-2026-53493/);
+    assert.ok(up.querySelector(".az-label--warning"), "an upstream fix that is still open in Ubuntu is marked");
+    assert.match(text(d.getElementById("ug-card-newer")), /in tenacious|in stonking/);
+    assert.match(text(d.getElementById("ug-unchecked")), /only for the selected packages/);
+    assert.ok(!/network data are \d/i.test(text(d.getElementById("ug-status"))), "fresh data: no hint");
+});
+
+test("network data: set up through the dialog, fetch now, switched off, old data told", async () => {
+    let radar = "inactive";
+    const { d, calls } = boot({
+        status: () => ({ ...STATUS, radar, radar_file: radar === "active" ? NOW : null }),
+        onSpawn: (verb) => {
+            if (verb === "install radar") {
+                radar = "active";
+                return proc("", { chunks: ["+ systemctl enable --now update-gaps-radar.timer\n", "oval ok\n"] });
+            }
+            return null;
+        },
+    });
+    await settle();
+    assert.match(text(d.getElementById("ug-sum-radar")), /Network data: off\./);
+    assert.match(text(d.getElementById("ug-unchecked")), /Set up the network data/);
+    d.getElementById("ug-radar-setup").click();
+    const desc = text(d.getElementById("ug-dialog-desc"));
+    assert.match(desc, /security-metadata\.canonical\.com/);
+    assert.match(desc, /\(noble\)/);
+    assert.match(desc, /No versions, no host names/);
+    assert.ok(!calls.spawn.some((c) => c.argv[1] === "install"), "nothing runs before the confirmation");
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    const run = calls.spawn.find((c) => c.argv[1] === "install");
+    assert.deepStrictEqual([...run.argv].slice(1), ["install", "radar"]);
+    assert.strictEqual(run.opts.superuser, "require");
+    d.getElementById("ug-dialog-cancel").click();
+    assert.match(text(d.getElementById("ug-sum-radar")), /daily, last fetched/);
+    d.getElementById("ug-radar-now").click();
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    assert.ok(calls.spawn.some((c) => c.argv.length === 2 && c.argv[1] === "radar"));
+    d.getElementById("ug-dialog-cancel").click();
+    d.getElementById("ug-radar-off").click();
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    assert.ok(calls.spawn.some((c) => c.argv[1] === "remove" && c.argv[2] === "radar"));
+
+    const old = scan("noble-held-radar");
+    old.checks.forEach((c) => { if (c.radar) c.radar = { ...c.radar, stale: true, generated: "2026-10-10T00:00:00Z" }; });
+    const r = boot({ state: old, status: { ...STATUS, radar: "active", radar_file: "2026-10-10T00:00:00Z" } });
+    await settle();
+    assert.match(text(r.d.getElementById("ug-status")), /network data are 10 days old/i);
+    assert.match(text(r.d.getElementById("ug-card-cve")), /10 days old/);
+    const u = boot({ state: scan("noble-held-radar"), status: { ...STATUS, root: false, radar: "inactive" } });
+    await settle();
+    assert.ok(!u.d.getElementById("ug-radar-setup"), "without administrative access no button");
 });
 
 test("texts: every key in both languages, same plural shape, no em dash", () => {

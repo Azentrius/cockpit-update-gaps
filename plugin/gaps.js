@@ -24,14 +24,15 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.1.0";
+    const VERSION = "0.2.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
     const MONITOR_MANIFEST = "/usr/share/cockpit/image-updates/manifest.json";
     const FORMAT = 1;          // newest scan.json format this page knows
     const STALE_H = 24;        // a state older than this gets a hint
-    const CARDS = ["held", "pro", "restart", "lists", "local", "auto", "backports", "outside", "eol"];
+    const CARDS = ["held", "pro", "cve", "upstream", "restart", "lists", "local", "auto", "backports", "newer", "outside", "eol"];
+    const RADAR_CHECKS = ["cve", "upstream", "newer"];   // stage 2: they read the radar's network data
     const ALL = ["updates"].concat(CARDS);
 
     // --- i18n --------------------------------------------------------------
@@ -158,6 +159,11 @@
             } else if (status && status.dpkg_status_mtime && Date.parse(status.dpkg_status_mtime) > Date.parse(doc.generated)) {
                 out.push(alertHtml("info", t("status.changedTitle"), tr("status.changed", { when: fmtDate(doc.generated) })));
             }
+            const c = checksOf(doc);
+            const old = RADAR_CHECKS.map((k) => c[k]).find((x) => x && x.radar && x.radar.stale && x.radar.generated);
+            if (old && status && status.radar === "active") {
+                out.push(alertHtml("warning", t("status.radarOldTitle", { age: age(old.radar.generated) }), rich(t("status.radarOld"))));
+            }
         }
         $("ug-status").innerHTML = out.join("");
     }
@@ -205,6 +211,31 @@
               "</div>"
             : `<p>${esc(t("sum.foundNone"))}</p>`;
         renderTimer();
+        renderRadar();
+    }
+
+    // The network data (stage 2): off until set up from here, like the timer.
+    function renderRadar() {
+        const el = $("ug-sum-radar");
+        const rd = status && status.radar;
+        if (!el) return;
+        if (!rd) {
+            el.innerHTML = "";
+            return;
+        }
+        let text;
+        if (status.radar_running) text = t("radar.running");
+        else if (rd === "active") text = status.radar_file ? t("radar.on", { ago: ago(status.radar_file) }) : t("radar.onNever");
+        else if (rd === "inactive") text = t("radar.off");
+        else text = t("radar.missing");
+        const btns = [];
+        if (isAdmin() && rd === "inactive") {
+            btns.push(`<button type="button" class="az-btn az-btn--secondary az-btn--sm" id="ug-radar-setup">${icon("play")}<span>${esc(t("btn.radarSetup"))}</span></button>`);
+        } else if (isAdmin() && rd === "active" && !status.radar_running) {
+            btns.push(`<button type="button" class="az-btn az-btn--plain az-btn--sm" id="ug-radar-now">${icon("sync-alt")}<span>${esc(t("btn.radarNow"))}</span></button>`);
+            btns.push(`<button type="button" class="az-btn az-btn--plain az-btn--sm" id="ug-radar-off">${icon("stop")}<span>${esc(t("btn.switchOff"))}</span></button>`);
+        }
+        el.innerHTML = `${icon("exchange-alt")}<span>${esc(text)}</span>${btns.join("")}`;
     }
 
     function renderTimer() {
@@ -257,6 +288,11 @@
         const host = o.host || o.site || "";
         const what = [o.o, o.a || o.n].filter(Boolean).join(", ");
         return esc(host) + (what ? ` <span class="az-cell-sub">${esc(what)}</span>` : "");
+    }
+    // When the network data of a stage-2 card are old, the card says from when they are.
+    function radarNote(c) {
+        const r = c.radar || {};
+        return r.stale && r.generated ? `<p class="ug-note">${esc(t("status.radarOldTitle", { age: age(r.generated) }))}</p>` : "";
     }
     function pkgList(names, more) {
         return `<span class="ug-pkgs">${(names || []).map(esc).join(", ")}${more ? " " + esc(t("held.more", { n: more })) : ""}</span>`;
@@ -393,6 +429,60 @@
             return card("outside", t("outside.count", { n: total }), explain("outside") + `<div>${dirs}</div>` + hidden + sourceLine(c));
         },
 
+        cve(c) {
+            const rows = [];
+            c.findings.forEach((f) => {
+                (f.open || []).forEach((x) => rows.push([
+                    cell(esc(x.id) + `<span class="az-cell-sub">${esc(t("cve.page", { id: x.id }))}</span>`),
+                    cell(esc(t("cve.prio." + x.priority)) + (x.cvss ? ` <span class="az-cell-sub">${esc(t("cve.cvss", { score: x.cvss }))}</span>` : "")),
+                    cell(esc(f.source) + ` <span class="az-cell-sub">${ver(f.installed).html}</span>`),
+                    cell(esc(t("cve.status." + (x.status || "needs-fixing"))) +
+                         (x.description ? `<span class="az-cell-sub ug-desc">${esc(x.description)}</span>` : "")),
+                    cell(esc(fmtDay(x.public))),
+                ]));
+                (f.fixed_newer || []).forEach((x) => rows.push([
+                    cell(esc(x.id) + `<span class="az-cell-sub">${esc(t("cve.page", { id: x.id }))}</span>`),
+                    cell(esc(t("cve.prio." + x.priority)) + (x.cvss ? ` <span class="az-cell-sub">${esc(t("cve.cvss", { score: x.cvss }))}</span>` : "")),
+                    cell(esc(f.source) + ` <span class="az-cell-sub">${ver(f.installed).html}</span>`),
+                    cell(esc(t("cve.fixedIn", { version: x.version })) + `<span class="az-cell-sub">${esc(t(x.pro ? "cve.pro" : x.offered ? "cve.offered" : "cve.notOffered"))}</span>`),
+                    cell(esc(fmtDay(x.public))),
+                ]));
+            });
+            return card("cve", t("cve.count", { n: rows.length }),
+                explain("cve") + radarNote(c) + table(["col.cve", "col.priority", "col.source", "col.status", "col.published"], rows) +
+                `<p class="ug-note">${esc(t("cve.selected", { n: c.selected || 0 }))}</p>` + sourceLine(c));
+        },
+
+        upstream(c, all) {
+            const openIds = new Set();
+            ((all.cve && all.cve.findings) || []).forEach((f) => (f.open || []).forEach((x) => openIds.add(x.id)));
+            const rows = c.findings.map((f) => [
+                cell(esc(f.repo) + `<span class="az-cell-sub">${pkgList(f.packages)}</span>`),
+                ver(f.installed),
+                cell(esc(f.newest) + `<span class="az-cell-sub">${esc(fmtDay(f.newest_published))} · ${esc(t("upstream.releases", { n: f.releases }))}</span>`, "ug-ver"),
+                cell((f.fixes || []).length
+                    ? f.fixes.map((id) => esc(id) + (openIds.has(id) ? ` <span class="az-label az-label--warning">${esc(t("upstream.openInUbuntu"))}</span>` : "")).join(", ") +
+                      (f.fixes_more ? " " + esc(t("held.more", { n: f.fixes_more })) : "")
+                    : `<span class="az-cell-sub">${esc(t("upstream.noFixes"))}</span>`),
+                cell(f.distribution ? esc(t("upstream.distro")) : ""),
+            ]);
+            return card("upstream", t("upstream.count", { n: c.findings.length }),
+                explain("upstream") + radarNote(c) + table(["col.upstream", "col.installed", "col.newest", "col.fixes", "col.origin"], rows) + sourceLine(c));
+        },
+
+        newer(c) {
+            const rows = c.findings.map((f) => [
+                cell(esc(f.source) + `<span class="az-cell-sub">${pkgList(f.packages)}</span>`),
+                ver(f.installed),
+                cell(f.here ? esc(t("newer.here", { version: f.here.version, pocket: f.here.pocket })) : "", "ug-ver"),
+                cell(f.later ? esc(t(f.later.release ? "newer.laterRelease" : "newer.later",
+                                     { version: f.later.version, series: f.later.series, release: f.later.release })) : "", "ug-ver"),
+            ]);
+            const more = c.more ? `<p class="ug-note">${esc(t("held.more", { n: c.more }))}</p>` : "";
+            return card("newer", t("newer.count", { n: c.findings.length + (c.more || 0) }),
+                explain("newer") + radarNote(c) + table(["col.source", "col.installed", "col.here", "col.later"], rows) + more + sourceLine(c));
+        },
+
         eol(c) {
             const rel = c.release || c.codename || "?";
             const line = c.kind === "ended" ? tr("eol.ended", { release: rel, date: fmtDay(c.standard_until) })
@@ -464,7 +554,8 @@
             ? ` <button type="button" class="az-btn az-btn--link az-btn--sm" id="ug-open-monitor">${icon("external-link-alt")}<span>${esc(t("btn.openMonitor"))}</span></button>`
             : "";
         items.push(`<li>${rich(t("unchecked.images"))}${open}</li>`);
-        ["network", "other", "places", "applies"].forEach((k) => items.push(`<li>${rich(t("unchecked." + k))}</li>`));
+        const radarUsed = RADAR_CHECKS.some((k) => c[k] && !(c[k].state === "skipped" && c[k].reason === "radar-off"));
+        [radarUsed ? "networkOn" : "network", "other", "places", "applies"].forEach((k) => items.push(`<li>${rich(t("unchecked." + k))}</li>`));
         $("ug-unchecked-list").innerHTML = items.join("");
     }
 
@@ -670,6 +761,11 @@
         else if (el.id === "ug-open-monitor") cockpit.jump("/image-updates");
         else if (el.id === "ug-timer-setup") dlg.open(t("dlg.install.title"), t("dlg.install.desc"), t("btn.setup"), [CTL, "install", "timer"]);
         else if (el.id === "ug-timer-off") dlg.open(t("dlg.remove.title"), t("dlg.remove.desc"), t("btn.switchOff"), [CTL, "remove", "timer"]);
+        else if (el.id === "ug-radar-setup") {
+            dlg.open(t("dlg.radar.install.title"), t("dlg.radar.install.desc", { codename: (doc && doc.os && doc.os.codename) || "?" }),
+                     t("btn.radarSetup"), [CTL, "install", "radar"]);
+        } else if (el.id === "ug-radar-now") dlg.open(t("dlg.radar.now.title"), t("dlg.radar.now.desc"), t("btn.radarNow"), [CTL, "radar"]);
+        else if (el.id === "ug-radar-off") dlg.open(t("dlg.radar.remove.title"), t("dlg.radar.remove.desc"), t("btn.switchOff"), [CTL, "remove", "radar"]);
         else if (el.dataset.go) {
             const card = $("ug-card-" + el.dataset.go);
             if (card) card.scrollIntoView({ behavior: "smooth", block: "start" });

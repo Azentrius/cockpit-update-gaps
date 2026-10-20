@@ -574,6 +574,24 @@
    ],
    "state": "none",
    "took_ms": 0
+  },
+  {
+   "check": "cve",
+   "state": "skipped",
+   "reason": "radar-off",
+   "took_ms": 0
+  },
+  {
+   "check": "upstream",
+   "state": "skipped",
+   "reason": "radar-off",
+   "took_ms": 0
+  },
+  {
+   "check": "newer",
+   "state": "skipped",
+   "reason": "radar-off",
+   "took_ms": 0
   }
  ],
  "dpkg_status_mtime": "2026-10-19T18:42:39Z",

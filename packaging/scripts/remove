@@ -1,9 +1,10 @@
 # shellcheck shell=sh
-# Before cockpit-update-gaps is removed (as root; also `make uninstall`): stop its timer and scan.
+# Before cockpit-update-gaps is removed (as root; also `make uninstall`): stop its timers, the scan
+# and the radar.
 # SPDX-License-Identifier: Apache-2.0
 if [ -d /run/systemd/system ]; then
-    systemctl disable --now update-gaps-scan.timer > /dev/null 2>&1 || true
-    systemctl stop update-gaps-scan.service > /dev/null 2>&1 || true
+    systemctl disable --now update-gaps-scan.timer update-gaps-radar.timer > /dev/null 2>&1 || true
+    systemctl stop update-gaps-scan.service update-gaps-radar.service > /dev/null 2>&1 || true
 fi
 # Bytecode a Python run without -B may have left next to the helpers.
 rm -rf /usr/lib/cockpit-update-gaps/__pycache__

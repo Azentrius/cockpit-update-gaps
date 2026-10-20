@@ -3,7 +3,8 @@
 // (file:// or any static server) with test data: no Cockpit, no root.
 // build.py replaces __FIXTURES__ with test/fixtures/scan-*.json and __NOW__
 // with a fixed clock. URL parameters:
-//   ?scenario=noble-held | resolute-stale-lists | resolute-nodesource | resolute-nodesource-user | none
+//   ?scenario=noble-held | resolute-stale-lists | resolute-nodesource | resolute-nodesource-user | none,
+//             or noble-held-radar | resolute-nodesource-radar (with the network data of stage 2)
 //   &admin=0     a user without administrative access
 //   &timer=on    the regular check set up
 //   &lang=de     German (po.js stand-in)
@@ -17,6 +18,7 @@
     const scenario = q.get("scenario") || "noble-held";
     const admin = q.get("admin") !== "0" && !/-user$/.test(scenario);
     const timerOn = q.get("timer") === "on";
+    const radarOn = /-radar$/.test(scenario);
 
     function fakeProcess(out, chunks, fail) {
         let cb = null;
@@ -71,6 +73,8 @@
                 return fakeProcess(JSON.stringify({
                     root: admin, timer: timerOn ? "active" : "inactive", next: timerOn ? "2026-10-20T00:37:00Z" : null,
                     running: false, state_file: scenario !== "none", dpkg_status_mtime: "2026-10-19T18:42:30Z", settings: null,
+                    radar: radarOn ? "active" : "inactive", radar_next: null, radar_running: false,
+                    radar_file: radarOn ? new Date(NOW).toISOString() : null,
                 }), []);
             }
             if ((opts || {}).superuser === "require" && !admin) {

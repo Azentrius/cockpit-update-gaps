@@ -13,6 +13,9 @@ document together; the page tolerates fields it does not know and checks without
 | `/usr/lib/systemd/system/update-gaps-scan.{service,timer}` | the scan and its timer (every 6 h, `*-*-* 00/6:37:00`); the timer is off until `gaps-ctl.sh install timer` | root, 644 |
 | `/var/lib/update-gaps/scan.json` | the state, written atomically by the service (`StateDirectory`) | root, 644 (folder 755) |
 | `/var/lib/update-gaps/status.json` | the add-on's status for the Status Board, written atomically by the service after `scan.json` | root, 644 |
+| `/usr/lib/systemd/system/update-gaps-radar.{service,timer}` | the radar of stage 2 and its daily timer; off until `gaps-ctl.sh install radar` | root, 644 |
+| `/var/lib/update-gaps-radar/radar.json` | the network data, written atomically by the radar (`DynamicUser`; the link points to `/var/lib/private/update-gaps-radar`, which only root can enter) | dynamic user, 644 |
+| `/var/lib/update-gaps-radar/cve.oval.xml.bz2` | Canonical's CVE OVAL of the release as downloaded (kept for its ETag and to read again without a download) | dynamic user, 644 |
 | `/etc/update-gaps.conf` | settings (optional, see below) | root, not writable by others |
 | `/run/update-gaps-scan.lock` | `flock` lock of a scan as root (exit 75 while one runs) | root |
 
@@ -50,7 +53,7 @@ install without a state checks once by itself when an administrator opens the pa
 | 2 | not possible: the service or timer is missing |
 | 64 | wrong call |
 | 75 | a scan is running already |
-| 77 | no root rights (`gaps-ctl.sh scan`, `install timer`, `remove timer`); `gaps-status.py`: `status.json` exists but cannot be read |
+| 77 | no root rights (`gaps-ctl.sh scan`, `radar`, `install`/`remove timer`/`radar`); `gaps-status.py`: `status.json` exists but cannot be read; `gaps-radar.py`: started as root (it never runs as root) |
 
 ## `scan.json`
 
@@ -216,6 +219,77 @@ The file holds the English document plus the German texts under `i18n.de` (`summ
 in the language asked for, without `i18n`, with the version of the installed page (`const VERSION`
 in `gaps.js`). Examples from the recorded hosts: `test/fixtures/status-*.json`.
 
+## Stage 2: the network data (radar)
+
+Off until an administrator sets it up on the page (`gaps-ctl.sh install radar`: enables
+`update-gaps-radar.timer`, fetches once, scans). `gaps-ctl.sh radar` fetches and scans now,
+`gaps-ctl.sh remove radar` disables the timer; the data stay and count as old after 72 hours.
+`gaps-ctl.sh status` adds `radar` (`active`, `inactive`, `missing`), `radar_next`, `radar_running`
+and `radar_file` (the time of `radar.json`; only as root, since the file is below
+`/var/lib/private`).
+
+**The radar** (`gaps-radar.py`, `gapsradar.py`) runs as `update-gaps-radar.service`:
+`DynamicUser=yes`, no capabilities, `ProtectSystem=strict`, a system call filter,
+`RestrictAddressFamilies=AF_INET AF_INET6 AF_UNIX` (`systemd-analyze security` exposure 1.1). It
+refuses to run as root. It reads the package state (dpkg, `apt-mark showmanual`, `apt-cache
+policy`; readable by every user), works out the selection and asks, over HTTPS with a User-Agent,
+ETags, a 30-second limit and a size limit:
+
+| Service | Request | What leaves the server |
+|---|---|---|
+| security-metadata.canonical.com | `/oval/com.ubuntu.<codename>.cve.oval.xml.bz2` once a day (304 when unchanged), parsed as a stream; a `DOCTYPE` or `ENTITY` is refused | the release name |
+| api.launchpad.net | `getPublishedSources` per selected source package, one second apart | the names of the selected source packages |
+| api.github.com | `releases?per_page=30` per project of a fixed list, only when installed | which of those projects are installed |
+
+Together with the server's IP address; no versions, no host names, no accounts. A request that
+fails keeps the source's previous answers with `stale: true`; a `403` or `429` ends the requests
+to that service for this run.
+
+**Selected** are the source packages of a fixed list of binary packages when they come from the
+distribution (`cockpit`, `cockpit-bridge`, `openssh-server`, `sudo`, `docker.io`, `docker-ce`,
+`containerd`, `containerd.io`, `runc`, `restic`, `skopeo`, `nginx`, `caddy`, `wireguard-tools`)
+and packages installed by hand from Ubuntu's universe and multiverse (no security commitment);
+upstream projects: `cockpit-project/cockpit`, `moby/moby`, `containerd/containerd`,
+`opencontainers/runc`, `docker/compose`, `restic/restic`.
+
+```json
+{"format": 1, "generated": "2026-10-20T09:36:28Z", "distro": "ubuntu", "codename": "resolute",
+ "selection": {"sources": {"cockpit": ["cockpit"]}, "upstream": {"cockpit-project/cockpit": ["cockpit"]}},
+ "services": {"oval": {"state": "ok", "fetched": "…", "errors": [], "limited": false}, "launchpad": {…}, "github": {…}},
+ "oval": {"cockpit": {"open": [{"id": "CVE-2026-4631", "priority": "medium", "cvss": "9.8", "public": "2026-04-07",
+                                "description": "…", "status": "needs-fixing"}],
+                      "fixed": [{"id": "…", "version": "1:10.2p1-2ubuntu3.2", …}]}},
+ "launchpad": {"cockpit": {"fetched": "…", "published": [{"series": "noble", "pocket": "Backports", "version": "362-1~bpo24.04.1", "published": "…"}]}},
+ "github": {"cockpit-project/cockpit": {"fetched": "…", "releases": [{"tag": "368", "version": "368", "published": "…", "fixes": ["CVE-2026-91147"]}]}}}
+```
+
+**The scan reads it as data** (`gapscheck.py`, `Context.radar`): at most 8 MB, `format` 1, the same
+distribution and release as the host (else `skipped`, `radar-other-release`), and only the
+answers to its **own** selection; every version, series and id is checked by pattern before it is
+used. A file that is too large, not JSON or of another format makes the checks `error` with
+`reason: "radar"`. Each stage-2 check carries `radar` (`generated`, `age_h`, `stale` after 72
+hours, `service`, `limited`); without the radar it is `skipped`, `radar-off`.
+
+**`cve`** (Ubuntu only): `findings[]` per source package: `source`, `packages[]`, `installed`,
+`open[]` (`id`, `priority` as Ubuntu rates it, `cvss`, `public`, `description` (300 characters),
+`status`: `needs-fixing`, `deferred`, `pending`) and `fixed_newer[]` (fixes with a version above
+the installed one, `offered` when the candidate has it, `pro` for an `esm` version); `counts` per
+priority, `selected`.
+
+**`upstream`**: `findings[]` per project with newer releases: `repo`, `packages[]`, `installed`,
+`upstream` (the upstream part of the installed version), `newest`, `newest_published`, `releases`
+(how many are newer), `fixes[]` (CVE and GHSA ids in their notes), `distribution` (true when the
+package comes from the distribution, which may have backported fixes).
+
+**`newer`** (Ubuntu only): `findings[]`: `source`, `packages[]`, `installed`, `here` (a newer
+version for this release in a pocket the sources do not offer: `version`, `pocket`), `later` (the
+newest version in a later release: `series`, `release` when distro-info knows it, `version`).
+`Proposed` never counts.
+
+The status for the Status Board adds the item `cve` once the network data are set up: `info` for
+open CVEs, `warning` for a `high` one or a fix that does not reach the server, `danger` for a
+`critical` one; `value` is the number of open CVEs.
+
 ## Settings (`/etc/update-gaps.conf`)
 
 ```ini
@@ -259,6 +333,7 @@ public state and logs below `$XDG_CACHE_HOME`.
 |---|---|
 | `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy`, `apt-get -s`, needrestart, deb822, `apt-config`, dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed |
 | `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current |
+| `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item |
 | `test/status_test.py` | the status (schema 1) of every recorded host in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status` |
 | `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |

@@ -1,0 +1,1114 @@
+{
+ "format": 1,
+ "generated": "2026-10-19T20:55:00Z",
+ "root": true,
+ "pm": "apt",
+ "os": {
+  "id": "ubuntu",
+  "version_id": "26.04",
+  "codename": "resolute",
+  "name": "Ubuntu 26.04.1 LTS"
+ },
+ "checks": [
+  {
+   "check": "updates",
+   "count": 0,
+   "security": 0,
+   "kept_back": [],
+   "phased": [],
+   "source": [
+    "apt-get -s dist-upgrade"
+   ],
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "held",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "apt-mark showhold",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "pro",
+   "state": "found",
+   "findings": [
+    {
+     "package": "restic",
+     "version": "0.18.1-3ubuntu1+esm1",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "0.18.1-3ubuntu1"
+    }
+   ],
+   "attached": false,
+   "services": [],
+   "counts": {
+    "esm_apps_packages": 0,
+    "esm_apps_updates": 1,
+    "esm_infra_packages": 0,
+    "esm_infra_updates": 0,
+    "installed_packages": 688,
+    "main_packages": 660,
+    "multiverse_packages": 0,
+    "restricted_packages": 0,
+    "standard_security_updates": 0,
+    "third_party_packages": 4,
+    "universe_packages": 23,
+    "unknown_packages": 1
+   },
+   "source": [
+    "pro security-status --format json"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "restart",
+   "source": [
+    "needrestart -b -r l"
+   ],
+   "kernel": {
+    "running": "7.0.0-38-generic",
+    "expected": "7.0.0-38-generic",
+    "state": 1
+   },
+   "microcode": null,
+   "services": [],
+   "reboot_required": null,
+   "tool": "needrestart 3.11",
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "lists",
+   "state": "found",
+   "findings": [
+    {
+     "kind": "apt-daily",
+     "result": "success",
+     "lines": [
+      "E: Sub-process nm-online returned an error code (1)"
+     ]
+    }
+   ],
+   "last_update": {
+    "ts": "2026-10-19T14:26:57Z",
+    "src": "update-success-stamp",
+    "age_h": 6.5
+   },
+   "apt_daily": {
+    "finished": "2026-10-19T20:35:28Z",
+    "result": "success"
+   },
+   "indexes": [
+    {
+     "file": "deb.nodesource.com_node%5f24.x_dists_nodistro_InRelease",
+     "date": "2026-10-14T17:12:03Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute-backports_InRelease",
+     "date": "2026-10-17T23:35:41Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute-updates_InRelease",
+     "date": "2026-10-18T13:08:42Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_resolute_InRelease",
+     "date": "2026-04-23T17:07:15Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_security_dists_resolute-security_InRelease",
+     "date": "2026-10-17T23:34:23Z",
+     "valid_until": null
+    },
+    {
+     "file": "packages.azentrius.com_apt_dists_stable_InRelease",
+     "date": "2026-10-18T21:11:43Z",
+     "valid_until": null
+    }
+   ],
+   "stale_after_h": 48,
+   "source": [
+    "apt-get indextargets",
+    "/var/lib/apt/lists",
+    "/var/lib/apt/periodic"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "local",
+   "state": "found",
+   "findings": [
+    {
+     "package": "hc-utils",
+     "version": "0.0.8",
+     "arch": "all",
+     "cause": "no-source"
+    }
+   ],
+   "source": [
+    "apt-cache policy",
+    "dpkg-query"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "auto",
+   "state": "found",
+   "findings": [
+    {
+     "kind": "source",
+     "site": "https://deb.nodesource.com/node_24.x",
+     "host": "deb.nodesource.com",
+     "o": ". nodistro",
+     "a": "nodistro",
+     "n": "nodistro",
+     "l": ". nodistro",
+     "c": "main",
+     "packages": [
+      "nodejs"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://packages.azentrius.com/apt",
+     "host": "packages.azentrius.com",
+     "o": "Azentrius",
+     "a": "stable",
+     "n": "stable",
+     "l": "Azentrius",
+     "c": "main",
+     "packages": [
+      "azentrius-repository",
+      "cockpit-cronjobs",
+      "cockpit-image-update-monitor"
+     ]
+    }
+   ],
+   "installed": true,
+   "periodic": {
+    "update_lists": "1",
+    "unattended": "1"
+   },
+   "timer": "enabled",
+   "allowed": [
+    "Ubuntu:resolute",
+    "Ubuntu:resolute-security",
+    "UbuntuESMApps:resolute-apps-security",
+    "UbuntuESM:resolute-infra-security",
+    "Ubuntu:resolute-updates"
+   ],
+   "patterns": [],
+   "blacklist": [],
+   "source": [
+    "apt-config dump",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "backports",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "outside",
+   "state": "found",
+   "dirs": [
+    {
+     "dir": "/usr/local/bin",
+     "files": [
+      {
+       "name": "local-1",
+       "mtime": "2026-09-09T10:32:45Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    },
+    {
+     "dir": "/usr/local/sbin",
+     "files": [
+      {
+       "name": "local-1.sh",
+       "mtime": "2026-09-14T20:38:55Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "local-2.sh",
+       "mtime": "2026-09-14T20:45:55Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app1/bin",
+     "files": [
+      {
+       "name": "tool-1",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-2",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-3",
+       "mtime": "2026-09-15T18:45:23Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-4",
+       "mtime": "2026-09-19T10:19:51Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-5",
+       "mtime": "2026-09-08T12:38:38Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-6",
+       "mtime": "2026-09-15T18:04:55Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-7",
+       "mtime": "2026-09-10T21:34:22Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-8",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-9",
+       "mtime": "2026-09-08T12:38:37Z",
+       "kind": "script",
+       "interpreter": "python3"
+      }
+     ]
+    }
+   ],
+   "hidden": 0,
+   "hidden_paths": [],
+   "settings": null,
+   "source": [
+    "/usr/local/bin",
+    "/usr/local/sbin",
+    "/opt/*/bin",
+    "dpkg -S"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "eol",
+   "release": "26.04 LTS",
+   "codename": "resolute",
+   "standard_until": "2031-05-29",
+   "extended_until": "2036-04-23",
+   "days_left": 1683,
+   "source": [
+    "/usr/share/distro-info/ubuntu.csv"
+   ],
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "cve",
+   "state": "found",
+   "findings": [
+    {
+     "source": "cockpit",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge",
+      "cockpit-networkmanager",
+      "cockpit-packagekit",
+      "cockpit-storaged"
+     ],
+     "installed": "360-1",
+     "open": [
+      {
+       "id": "CVE-2026-91148",
+       "priority": "medium",
+       "public": "2026-10-02",
+       "description": "[Unknown description]",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-91142",
+       "priority": "medium",
+       "cvss": "3.6",
+       "public": "2026-09-18",
+       "description": "A flaw was found in Cockpit. An integer overflow vulnerability in the `do_lastlog()` function, specifically in the offset calculation for `lastlog` entries on ILP32 (Integer, Long, Pointer 32-bit) builds, can be exploited. A low-privileged authenticated user with a specially provisioned large User I",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-91147",
+       "priority": "medium",
+       "cvss": "5.9",
+       "public": "2026-09-18",
+       "description": "A flaw was found in `cockpit-ws`. This vulnerability allows a remote, unauthenticated attacker to cause a Denial of Service (DoS) by sending a specially crafted request. When the `WebService.UrlRoot` is configured and a request is made to the exact URL-root prefix without a trailing slash, `cockpit-",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-91149",
+       "priority": "medium",
+       "cvss": "7.5",
+       "public": "2026-09-18",
+       "description": "A flaw was found in Cockpit. An unauthenticated remote attacker can exploit this vulnerability by initiating and sustaining numerous simultaneous connections to the `cockpit-tls` service. This forces the service to create an unbounded number of detached threads, consuming system resources such as me",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-39275",
+       "priority": "medium",
+       "cvss": "6.1",
+       "public": "2026-08-26",
+       "description": "Cross Site Scripting vulnerability in Cockpit CMS v.2.13.5 and before allows a remote attacker to execute arbitrary code via the item.php, field-select.js and tags.js components",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-76235",
+       "priority": "medium",
+       "cvss": "7.5",
+       "public": "2026-08-19",
+       "description": "A memory leak flaw was found in cockpit-ws. The login page handler leaks a heap allocation on every unauthenticated request that carries a CockpitLang cookie, allowing a remote unauthenticated attacker to exhaust memory on the host and cause a denial of service.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-4802",
+       "priority": "medium",
+       "cvss": "8.0",
+       "public": "2026-05-11",
+       "description": "A flaw was found in Cockpit. This vulnerability allows a remote attacker to achieve arbitrary command execution on the host by exploiting unsanitized user-controlled parameters within crafted links in the system logs user interface (UI). An attacker can inject shell metacharacters and command substi",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-4631",
+       "priority": "medium",
+       "cvss": "9.8",
+       "public": "2026-04-07",
+       "description": "Cockpit's remote login feature passes user-supplied hostnames and usernames from the web interface to the SSH client without validation or sanitization. An attacker with network access to the Cockpit web service can craft a single HTTP request to the login endpoint that injects malicious SSH options",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-31891",
+       "priority": "medium",
+       "cvss": "7.7",
+       "public": "2026-03-18",
+       "description": "Cockpit is a headless content management system. Any Cockpit CMS instance running version 2.13.4 or earlier with API access enabled is potentially affected by a a SQL Injection vulnerability in the MongoLite Aggregation Optimizer. Any deployment where the `/api/content/aggregate/{model}` endpoint is",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    },
+    {
+     "source": "containerd-app",
+     "packages": [
+      "containerd"
+     ],
+     "installed": "2.2.2-0ubuntu1.1",
+     "open": [
+      {
+       "id": "CVE-2026-95837",
+       "priority": "medium",
+       "cvss": "7.8",
+       "public": "2026-10-12",
+       "description": "containerd is an open-source container runtime. From 2.1.0 until 2.2.7 and 2.3.4, containerd's CRI CreateContainer checkpoint restore is vulnerable because CRIU restores process security state from checkpoint data instead of enforcing the destination ContainerConfig. An attacker who can create a con",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-95838",
+       "priority": "medium",
+       "cvss": "4.6",
+       "public": "2026-10-12",
+       "description": "containerd is an open-source container runtime. Prior to 1.7.35, 2.0.12, 2.2.8, and 2.3.5, containerd's layer unpack handler repeatedly traverses directories for certain opaque whiteout configurations. A malicious image layer can trigger repeated directory traversals while opaque whiteouts are proce",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-53493",
+       "priority": "medium",
+       "cvss": "6.9",
+       "public": "2026-09-25",
+       "description": "containerd is an open-source container runtime. Prior to versions 1.7.36, 2.0.13, 2.2.9, 2.3.6, and 2.4.1, a crafted OCI index graph can force very high CPU/memory usage during PullImage (before container start), causing long ContainerCreating stalls and, at larger sizes, node/runtime instability. V",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-53495",
+       "priority": "medium",
+       "cvss": "6.8",
+       "public": "2026-09-14",
+       "description": "containerd is an open-source container runtime. Prior to 1.7.35, 2.0.12, 2.2.8, and 2.3.5, containerd on Linux with the CRI plugin enabled can indefinitely block the drainExecSyncIO goroutine in internal/cri/server/container_execsync.go when CRI ExecSync is used by exec probes or lifecycle hooks tha",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-46680",
+       "priority": "medium",
+       "cvss": "7.3",
+       "public": "2026-07-01",
+       "description": "containerd is an open-source container runtime. In versions prior to 1.7.32, 2.0.9, 2.2.4 and 2.3.1, containers launched with a numeric User directive that cannot be parsed as a 32-bit integer are incorrectly treated as a username, leading to runAsNonRoot evasion. If a crafted image provides an /etc",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    },
+    {
+     "source": "docker.io-app",
+     "packages": [
+      "docker.io"
+     ],
+     "installed": "29.1.3-0ubuntu4.1",
+     "open": [
+      {
+       "id": "CVE-2026-92542",
+       "priority": "medium",
+       "cvss": "6.9",
+       "public": "2026-10-07",
+       "description": "The firewall rules which mark VXLAN datagrams for encryption indiscriminately match both authentic VXLAN datagrams sent from the kernel and forged datagrams sent by user processes. Any packet sent from the host network namespace of a Linux Swarm node is encrypted with the overlay-network IPsec param",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-92543",
+       "priority": "medium",
+       "cvss": "7.6",
+       "public": "2026-10-07",
+       "description": "Docker Engine classifies a registry hostname as insecure using an any-match DNS check. loadInsecureRegistries() injects 127.0.0.0/8 and ::1/128 as insecure CIDRs by default. isCIDRMatch resolves all of the hostname's addresses and returns true if a single address is in the insecure CIDR list. Becaus",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93315",
+       "priority": "medium",
+       "cvss": "5.8",
+       "public": "2026-10-05",
+       "description": "When proxy networking with CA injection is enabled, a build can modify its CA bundle before cleanup. This may cause cleanup to block, operate outside the build rootfs, or fail without failing the build.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93316",
+       "priority": "medium",
+       "cvss": "7.1",
+       "public": "2026-10-05",
+       "description": "If BuildKit daemon is started with --cdi-disabled it can lead to daemon panic when builds try to use CDI devices. This can happen maliciously or by accident.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93317",
+       "priority": "medium",
+       "cvss": "5.9",
+       "public": "2026-10-05",
+       "description": "An unauthenticated attacker controlling a registry or OCI-layout blob source could provide blob contents that did not match the claimed digest. The resulting snapshot could be cached under that digest and reused by a later victim build, compromising build-input integrity.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93318",
+       "priority": "medium",
+       "cvss": "7.5",
+       "public": "2026-10-05",
+       "description": "A malicious image can advertise DiffIDs from another image while containing different layer contents. In affected versions, BuildKit could use the advertised DiffIDs to derive cache and snapshot identity without validating that they matched the actual layer contents. If a BuildKit daemon with shared",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93319",
+       "priority": "medium",
+       "cvss": "5.7",
+       "public": "2026-10-05",
+       "description": "A malicious external BuildKit frontend can send requests using the internal API that can create conditions for a data race that can cause the BuildKit daemon to panic.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93320",
+       "priority": "medium",
+       "cvss": "6.0",
+       "public": "2026-10-05",
+       "description": "BuildKit may be tricked into performing file actions with special file inodes where regular files are expected. Special files may block operations or, on rootful workers, allow unintended host device access.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93321",
+       "priority": "medium",
+       "cvss": "6.9",
+       "public": "2026-10-05",
+       "description": "A malicious frontend can submit an LLB definition that causes buildkitd to panic and terminate, interrupting all builds running on that daemon.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93322",
+       "priority": "medium",
+       "cvss": "6.9",
+       "public": "2026-10-05",
+       "description": "A malicious frontend can submit an LLB definition that causes buildkitd to panic and terminate, interrupting all builds running on that daemon.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93323",
+       "priority": "medium",
+       "cvss": "6.8",
+       "public": "2026-10-05",
+       "description": "The Dockerfile frontend loaded the Dockerfile and .dockerignore files of a build context into memory without a size limit. A build context containing an oversized file could make buildkitd allocate memory proportional to that file, potentially exhausting memory and terminating the daemon, which inte",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-93326",
+       "priority": "medium",
+       "cvss": "6.0",
+       "public": "2026-10-05",
+       "description": "A build step for a Git source, crafted in a specific way, can bypass some policy validation rules. A malicious build definition can make the repository look like it is coming from a different remote URL than it really is when Git clone is happening. If policy is doing more stricter validation, for e",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-79994",
+       "priority": "medium",
+       "cvss": "8.7",
+       "public": "2026-09-15",
+       "description": "The guest-to-host Unix-domain socket relay in Docker Sandboxes validates that a socket path is inside an authorized workspace, but later reconnects using the pathname. A malicious guest can replace an intermediate directory with a symlink between validation and connection, causing the host to connec",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-17106",
+       "priority": "medium",
+       "cvss": "7.1",
+       "public": "2026-08-18",
+       "description": "The tar extraction routines in moby/go-archive (Unpack, UnpackLayer, Untar/UntarUncompressed, and the ApplyLayer helpers) do not confine filesystem operations to the destination directory. The extractor decides where each archive entry lands using lexical string checks and then performs the filesyst",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-15791",
+       "priority": "medium",
+       "cvss": "1.8",
+       "public": "2026-07-21",
+       "description": "A crafted message in the BuildKit low-level build API can be used to remove the contents of the /tmp directory. The action that can normally be used to delete files inside the build container rootfs can escape into the real host temp directory.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-15792",
+       "priority": "medium",
+       "cvss": "6.0",
+       "public": "2026-07-21",
+       "description": "A malicious BuildKit client or frontend could craft a request that could lead to BuildKit daemon crashing with a panic.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-15793",
+       "priority": "medium",
+       "cvss": "7.3",
+       "public": "2026-07-21",
+       "description": "BuildKit custom frontends or clients using the raw low-level API can set git.checkoutbundle=true when checking out Git sources. If the Git source is malicious, this could lead to a crafted command invocation on the host.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-41568",
+       "priority": "medium",
+       "cvss": "6.1",
+       "public": "2026-06-12",
+       "description": "Moby is an open source container framework. In Docker Engine prior to version 29.5.1, Docker Daemon versions 28.5.2 and prior, and Moby Daemon prior to version 2.0.0-beta.14, a race condition during docker cp mount setup allows a malicious container to create empty files or directories at arbitrary ",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-42306",
+       "priority": "medium",
+       "cvss": "7.2",
+       "public": "2026-06-12",
+       "description": "Moby is an open source container framework. In Docker Engine prior to version 29.5.1, Docker Daemon versions 28.5.2 and prior, and Moby Daemon prior to version 2.0.0-beta.14, a race condition during docker cp mount setup allows a malicious container to redirect a bind mount target to an arbitrary ho",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-41567",
+       "priority": "medium",
+       "cvss": "7.2",
+       "public": "2026-06-05",
+       "description": "Moby is an open source container framework. In versions prior to 29.5.1 and in moby/moby v2 prior to v2.0.0-beta.14, when a compressed archive is uploaded to a container via `PUT /containers/{id}/archive` or piped through `docker cp -`, the daemon resolves decompression binaries (such as `xz` or `un",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-33990",
+       "priority": "medium",
+       "cvss": "6.8",
+       "public": "2026-04-01",
+       "description": "Docker Model Runner (DMR) is software used to manage, run, and deploy AI models using Docker. Prior to version 1.1.25, Docker Model Runner contains an SSRF vulnerability in its OCI registry token exchange flow. When pulling a model, Model Runner follows the realm URL from the registry's WWW-Authenti",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-33997",
+       "priority": "medium",
+       "cvss": "6.8",
+       "public": "2026-03-31",
+       "description": "Moby is an open source container framework. Prior to version 29.3.1, a security vulnerability has been detected that allows plugins privilege validation to be bypassed during docker plugin install. Due to an error in the daemon's privilege comparison logic, the daemon may incorrectly accept a privil",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-34040",
+       "priority": "medium",
+       "cvss": "8.8",
+       "public": "2026-03-31",
+       "description": "Moby is an open source container framework. Prior to version 29.3.1, a security vulnerability has been detected that allows attackers to bypass authorization plugins (AuthZ). This issue has been patched in version 29.3.1.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2025-54388",
+       "priority": "medium",
+       "cvss": "5.1",
+       "public": "2025-07-30",
+       "description": "Moby is an open source container framework developed by Docker Inc. that is distributed as Docker Engine, Mirantis Container Runtime, and various other downstream projects/products. In versions 28.2.0 through 28.3.2, when the firewalld service is reloaded it removes all iptables rules including thos",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    },
+    {
+     "source": "openssh",
+     "packages": [
+      "openssh-server"
+     ],
+     "installed": "1:10.2p1-2ubuntu3.8",
+     "open": [
+      {
+       "id": "CVE-2026-110924",
+       "priority": "medium",
+       "cvss": "4.8",
+       "public": "2026-10-16",
+       "description": "A flaw was found in OpenSSH. With GSSAPI authentication enabled, a failed GSSAPI attempt can leave delegated credentials stored for the connection even though user authorization did not succeed. A later successful login on that connection is not authorized by the leftover state.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110927",
+       "priority": "medium",
+       "cvss": "4.3",
+       "public": "2026-10-16",
+       "description": "A flaw was found in OpenSSH. After compression is negotiated, a compressed payload can expand past the maximum supported packet size because the inflate loop does not stop at that limit. Memory use grows in the process handling that connection.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110923",
+       "priority": "medium",
+       "cvss": "6.5",
+       "public": "2026-10-15",
+       "description": "A flaw was found in OpenSSH. During an sftp copy, a malicious server can supply an empty name, a slash-only path, or a \"..\" basename that sftp uses as the local destination, writing outside the directory the user selected.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110925",
+       "priority": "medium",
+       "cvss": "5.4",
+       "public": "2026-10-15",
+       "description": "A flaw was found in OpenSSH. A username entered on the ssh command line can still contain '$' or a non-trailing backslash. When a configuration expands %u inside ProxyCommand or Match exec, those characters are passed into the shell.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110926",
+       "priority": "medium",
+       "cvss": "5.3",
+       "public": "2026-10-15",
+       "description": "A flaw was found in OpenSSH. When compression is negotiated, channels on the same connection share one LZ77 dictionary. A peer who can write on one channel can recover plaintext from another channel by chosen-plaintext lengths.",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    },
+    {
+     "source": "runc-app",
+     "packages": [
+      "runc"
+     ],
+     "installed": "1.4.0-0ubuntu1",
+     "open": [
+      {
+       "id": "CVE-2026-41579",
+       "priority": "medium",
+       "cvss": "3.3",
+       "public": "2026-07-01",
+       "description": "runc is a CLI tool for spawning and running containers according to the OCI specification. In versions prior to 1.3.6, 1.4.0-rc.1, 1.4.0-rc.12, 1.5.0-rc.1, and 1.5.0-rc.1, when setting up the container rootfs, setupPtmx and setupDevSymlinks call os.Remove and os.Symlink with a filepath.Join string w",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    }
+   ],
+   "counts": {
+    "medium": 44
+   },
+   "selected": 9,
+   "source": [
+    "security-metadata.canonical.com CVE OVAL (radar)",
+    "dpkg-query"
+   ],
+   "radar": {
+    "generated": "2026-10-19T20:55:00Z",
+    "age_h": 0.0,
+    "stale": false,
+    "service": "ok",
+    "limited": false
+   },
+   "took_ms": 0
+  },
+  {
+   "check": "upstream",
+   "state": "found",
+   "findings": [
+    {
+     "repo": "cockpit-project/cockpit",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge"
+     ],
+     "installed": "360-1",
+     "upstream": "360",
+     "newest": "369",
+     "newest_published": "2026-10-07",
+     "releases": 13,
+     "fixes": [
+      "CVE-2026-4802",
+      "CVE-2026-76235",
+      "CVE-2026-91147",
+      "CVE-2026-91148",
+      "CVE-2026-91149"
+     ],
+     "distribution": true,
+     "stale": false
+    },
+    {
+     "repo": "containerd/containerd",
+     "packages": [
+      "containerd"
+     ],
+     "installed": "2.2.2-0ubuntu1.1",
+     "upstream": "2.2.2",
+     "newest": "2.4.2",
+     "newest_published": "2026-10-13",
+     "releases": 15,
+     "fixes": [
+      "CVE-2026-47262",
+      "CVE-2026-50195",
+      "CVE-2026-53488",
+      "CVE-2026-53489",
+      "CVE-2026-53492",
+      "CVE-2026-53493",
+      "CVE-2026-53495",
+      "CVE-2026-95839",
+      "GHSA-33vj-92qq-66hc",
+      "GHSA-5p7c-hggf-c748",
+      "GHSA-7jxh-36q5-gcqv",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-cvxm-645q-p574",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-pg57-6jwg-q645",
+      "GHSA-rgh6-rfwx-v388",
+      "GHSA-rp3h-jf77-q9p4",
+      "GHSA-vwhp-8p66-mq4f",
+      "GHSA-xhf5-7wjv-pqxp"
+     ],
+     "distribution": true,
+     "stale": false
+    },
+    {
+     "repo": "docker/compose",
+     "packages": [
+      "docker-compose-v2"
+     ],
+     "installed": "2.40.3+ds1-0ubuntu1",
+     "upstream": "2.40.3",
+     "newest": "5.6.0",
+     "newest_published": "2026-10-02",
+     "releases": 15,
+     "fixes": [],
+     "distribution": true,
+     "stale": false
+    },
+    {
+     "repo": "moby/moby",
+     "packages": [
+      "docker.io"
+     ],
+     "installed": "29.1.3-0ubuntu4.1",
+     "upstream": "29.1.3",
+     "newest": "29.9.1",
+     "newest_published": "2026-10-14",
+     "releases": 13,
+     "fixes": [
+      "CVE-2026-15788",
+      "CVE-2026-15789",
+      "CVE-2026-15791",
+      "CVE-2026-15792",
+      "CVE-2026-15793",
+      "CVE-2026-17106",
+      "CVE-2026-53493",
+      "CVE-2026-56857",
+      "CVE-2026-78659",
+      "CVE-2026-78663",
+      "CVE-2026-78669",
+      "CVE-2026-92542",
+      "CVE-2026-92543",
+      "CVE-2026-93315",
+      "CVE-2026-93316",
+      "CVE-2026-93317",
+      "CVE-2026-93318",
+      "CVE-2026-93319",
+      "CVE-2026-93320",
+      "CVE-2026-93321",
+      "CVE-2026-93322",
+      "CVE-2026-93323",
+      "CVE-2026-93326",
+      "CVE-2026-95839",
+      "CVE-2026-97032",
+      "GHSA-2f5p-x9ph-g97x",
+      "GHSA-32pv-7hq5-qhwq",
+      "GHSA-388v-wmr2-g2v2",
+      "GHSA-4hgw-qrhw-fhg8",
+      "GHSA-66hf-6vf5-87hc",
+      "GHSA-6m9p-4h64-m6vh",
+      "GHSA-7236-3392-c5c6",
+      "GHSA-72x6-4j93-7w86",
+      "GHSA-7cfq-22r6-qp73",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-9728-qjrv-2xh2",
+      "GHSA-cv6p-7w7g-xjwq",
+      "GHSA-f2v9-hprr-32q3",
+      "GHSA-fjj4-h6vf-m9hj",
+      "GHSA-g2h8-426c-7976",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-hfg8-hc9c-6c3h",
+      "GHSA-hw3h-2gp9-cxpv",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-mgqf-486f-49vp",
+      "GHSA-mjcv-p78q-w5fw",
+      "GHSA-p3rc-w3hc-pqvv",
+      "GHSA-pg57-6jwg-q645",
+      "GHSA-qx3x-mv6r-52p6",
+      "GHSA-r456-g3gm-cvxf"
+     ],
+     "distribution": true,
+     "stale": false,
+     "fixes_more": 1
+    },
+    {
+     "repo": "opencontainers/runc",
+     "packages": [
+      "runc"
+     ],
+     "installed": "1.4.0-0ubuntu1",
+     "upstream": "1.4.0",
+     "newest": "1.5.2",
+     "newest_published": "2026-09-25",
+     "releases": 6,
+     "fixes": [
+      "CVE-2025-31133",
+      "CVE-2025-52565",
+      "CVE-2025-52881",
+      "CVE-2026-41579",
+      "GHSA-9493-h29p-rfm2",
+      "GHSA-cgrx-mc8f-2prm",
+      "GHSA-qw9x-cqr3-wc7r",
+      "GHSA-xjvp-4fhw-gc47"
+     ],
+     "distribution": true,
+     "stale": false
+    },
+    {
+     "repo": "restic/restic",
+     "packages": [
+      "restic"
+     ],
+     "installed": "0.18.1-3ubuntu1",
+     "upstream": "0.18.1",
+     "newest": "0.19.1",
+     "newest_published": "2026-07-05",
+     "releases": 2,
+     "fixes": [],
+     "distribution": true,
+     "stale": false
+    }
+   ],
+   "source": [
+    "api.github.com releases (radar)",
+    "dpkg-query"
+   ],
+   "radar": {
+    "generated": "2026-10-19T20:55:00Z",
+    "age_h": 0.0,
+    "stale": false,
+    "service": "ok",
+    "limited": false
+   },
+   "unchecked": [],
+   "took_ms": 0
+  },
+  {
+   "check": "newer",
+   "state": "found",
+   "findings": [
+    {
+     "source": "cockpit",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge",
+      "cockpit-networkmanager",
+      "cockpit-packagekit",
+      "cockpit-storaged"
+     ],
+     "installed": "360-1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "367-1"
+     },
+     "stale": false
+    },
+    {
+     "source": "containerd-app",
+     "packages": [
+      "containerd"
+     ],
+     "installed": "2.2.2-0ubuntu1.1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "2.3.4+dfsg1-0ubuntu2"
+     },
+     "stale": false
+    },
+    {
+     "source": "docker-compose-v2",
+     "packages": [
+      "docker-compose-v2"
+     ],
+     "installed": "2.40.3+ds1-0ubuntu1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "2.40.3+ds2-0ubuntu2"
+     },
+     "stale": false
+    },
+    {
+     "source": "docker.io-app",
+     "packages": [
+      "docker.io"
+     ],
+     "installed": "29.1.3-0ubuntu4.1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "29.7.2-0ubuntu1"
+     },
+     "stale": false
+    },
+    {
+     "source": "openssh",
+     "packages": [
+      "openssh-server"
+     ],
+     "installed": "1:10.2p1-2ubuntu3.8",
+     "here": null,
+     "later": {
+      "series": "stonking",
+      "release": "26.10",
+      "version": "1:10.5p1-1ubuntu3.1"
+     },
+     "stale": false
+    },
+    {
+     "source": "restic",
+     "packages": [
+      "restic"
+     ],
+     "installed": "0.18.1-3ubuntu1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "0.19.1-1ubuntu1"
+     },
+     "stale": false
+    },
+    {
+     "source": "runc-app",
+     "packages": [
+      "runc"
+     ],
+     "installed": "1.4.0-0ubuntu1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "1.5.1-0ubuntu2"
+     },
+     "stale": false
+    },
+    {
+     "source": "skopeo",
+     "packages": [
+      "skopeo"
+     ],
+     "installed": "1.21.0~pre1-2build1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "1.22.0+ds1-1"
+     },
+     "stale": false
+    },
+    {
+     "source": "sudo",
+     "packages": [
+      "sudo"
+     ],
+     "installed": "1.9.17p2-1ubuntu3.2",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "1.9.17p2-7ubuntu5"
+     },
+     "stale": false
+    }
+   ],
+   "source": [
+    "api.launchpad.net (radar)",
+    "apt-cache policy",
+    "/usr/share/distro-info/ubuntu.csv"
+   ],
+   "radar": {
+    "generated": "2026-10-19T20:55:00Z",
+    "age_h": 0.0,
+    "stale": false,
+    "service": "ok",
+    "limited": false
+   },
+   "unchecked": [],
+   "took_ms": 0
+  }
+ ],
+ "dpkg_status_mtime": "2026-10-19T18:42:34Z",
+ "took_ms": 3300
+}

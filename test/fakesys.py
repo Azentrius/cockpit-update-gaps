@@ -47,6 +47,8 @@ class FakeSystem:
             return "apt-cache-policy-installed"
         if a == ["apt-mark", "showhold"]:
             return "apt-mark-showhold"
+        if a == ["apt-mark", "showmanual"]:
+            return "apt-mark-showmanual"
         if a[:2] == ["apt-get", "-s"]:
             return "apt-get-s-dist-upgrade"
         if a[:2] == ["apt-get", "indextargets"]:

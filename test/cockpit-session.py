@@ -258,6 +258,28 @@ def main():
         title, text, ok, log = run_dialog(page, frame, frame.locator("#ug-timer-off"), 120)
         timer = root("systemctl", "is-enabled", "update-gaps-scan.timer", check=False)
         note("regular check switched off from the page", ok and timer == "disabled", f"{title} -> {text}; timer {timer}")
+
+        # 4b. Network data (stage 2), set up from the page: a real fetch from this runner, as the
+        # unprivileged radar, then a scan that reads its data.
+        before = (state() or {}).get("generated")
+        title, text, ok, log = run_dialog(page, frame, frame.locator("#ug-radar-setup"), 600)
+        radar_timer = root("systemctl", "is-enabled", "update-gaps-radar.timer", check=False)
+        mode = root("stat", "-c", "%a %U", "/var/lib/private/update-gaps-radar/radar.json", check=False)
+        unit = root("systemctl", "show", "update-gaps-radar.service", "-p", "DynamicUser", "-p", "Result", check=False)
+        note("network data set up from the page: unprivileged radar, data 0644", ok and radar_timer == "enabled"
+             and mode.startswith("644 ") and "DynamicUser=yes" in unit and "Result=success" in unit,
+             f"{title} -> {text}; timer {radar_timer}; {mode}; {unit.replace(chr(10), ', ')}; log {log.strip()[-160:]}")
+        after = poll(page, lambda: (state() or {}).get("generated") != before and state(), 120) or {}
+        stage2 = {c["check"]: c for c in after.get("checks", []) if c["check"] in ("cve", "upstream", "newer")}
+        good = all(c.get("state") in ("found", "none", "partial") for c in stage2.values()) and len(stage2) == 3
+        note("the scan reads the network data: cve, upstream, newer checked",
+             good, "; ".join(f"{k} {c.get('state')} {c.get('reason') or ''} {(c.get('radar') or {}).get('service')}"
+                             for k, c in stage2.items()))
+        poll(page, lambda: frame.locator("#ug-radar-off").count() == 1, 60)
+        shot(page, "network-data")
+        title, text, ok, log = run_dialog(page, frame, frame.locator("#ug-radar-off"), 120)
+        radar_timer = root("systemctl", "is-enabled", "update-gaps-radar.timer", check=False)
+        note("network data switched off from the page", ok and radar_timer == "disabled", f"{title} -> {text}; timer {radar_timer}")
         ctx.close()
 
         # 5. Without administrative access (a user without sudo, German browser).

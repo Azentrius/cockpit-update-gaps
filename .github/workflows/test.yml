@@ -87,7 +87,7 @@ jobs:
         run: |
           docker run --rm -v "$PWD:/src" -w /src/test python:3.8-slim sh -ec '
             python3 --version
-            for t in lib_test.py scan_test.py status_test.py; do python3 "$t" > "/tmp/$t.log" 2>&1 || { cat "/tmp/$t.log"; exit 1; }; echo "PASS $t"; done'
+            for t in lib_test.py scan_test.py status_test.py radar_test.py; do python3 "$t" > "/tmp/$t.log" 2>&1 || { cat "/tmp/$t.log"; exit 1; }; echo "PASS $t"; done'
 
   # The helpers on real Debian and Ubuntu systems, in throw-away containers: a held package, a
   # package without a source, a source without lists, files outside apt, a hidden folder, the

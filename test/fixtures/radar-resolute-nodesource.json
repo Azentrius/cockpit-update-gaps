@@ -1,0 +1,3148 @@
+{
+ "format": 1,
+ "generated": "2026-10-19T20:55:00Z",
+ "distro": "ubuntu",
+ "codename": "resolute",
+ "selection": {
+  "sources": {
+   "cockpit": [
+    "cockpit",
+    "cockpit-bridge",
+    "cockpit-networkmanager",
+    "cockpit-packagekit",
+    "cockpit-storaged"
+   ],
+   "containerd-app": [
+    "containerd"
+   ],
+   "docker-compose-v2": [
+    "docker-compose-v2"
+   ],
+   "docker.io-app": [
+    "docker.io"
+   ],
+   "openssh": [
+    "openssh-server"
+   ],
+   "restic": [
+    "restic"
+   ],
+   "runc-app": [
+    "runc"
+   ],
+   "skopeo": [
+    "skopeo"
+   ],
+   "sudo": [
+    "sudo"
+   ]
+  },
+  "upstream": {
+   "cockpit-project/cockpit": [
+    "cockpit",
+    "cockpit-bridge"
+   ],
+   "containerd/containerd": [
+    "containerd"
+   ],
+   "docker/compose": [
+    "docker-compose-v2"
+   ],
+   "moby/moby": [
+    "docker.io"
+   ],
+   "opencontainers/runc": [
+    "runc"
+   ],
+   "restic/restic": [
+    "restic"
+   ]
+  }
+ },
+ "services": {
+  "oval": {
+   "state": "ok",
+   "fetched": "2026-10-19T20:55:00Z",
+   "errors": [],
+   "limited": false
+  },
+  "launchpad": {
+   "state": "ok",
+   "fetched": "2026-10-19T20:55:00Z",
+   "errors": [],
+   "limited": false
+  },
+  "github": {
+   "state": "ok",
+   "fetched": "2026-10-19T20:55:00Z",
+   "errors": [],
+   "limited": false
+  }
+ },
+ "oval": {
+  "docker.io-app": {
+   "open": [
+    {
+     "id": "CVE-2026-92542",
+     "priority": "medium",
+     "cvss": "6.9",
+     "public": "2026-10-07",
+     "description": "The firewall rules which mark VXLAN datagrams for encryption indiscriminately match both authentic VXLAN datagrams sent from the kernel and forged datagrams sent by user processes. Any packet sent from the host network namespace of a Linux Swarm node is encrypted with the overlay-network IPsec param",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-92543",
+     "priority": "medium",
+     "cvss": "7.6",
+     "public": "2026-10-07",
+     "description": "Docker Engine classifies a registry hostname as insecure using an any-match DNS check. loadInsecureRegistries() injects 127.0.0.0/8 and ::1/128 as insecure CIDRs by default. isCIDRMatch resolves all of the hostname's addresses and returns true if a single address is in the insecure CIDR list. Becaus",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93315",
+     "priority": "medium",
+     "cvss": "5.8",
+     "public": "2026-10-05",
+     "description": "When proxy networking with CA injection is enabled, a build can modify its CA bundle before cleanup. This may cause cleanup to block, operate outside the build rootfs, or fail without failing the build.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93316",
+     "priority": "medium",
+     "cvss": "7.1",
+     "public": "2026-10-05",
+     "description": "If BuildKit daemon is started with --cdi-disabled it can lead to daemon panic when builds try to use CDI devices. This can happen maliciously or by accident.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93317",
+     "priority": "medium",
+     "cvss": "5.9",
+     "public": "2026-10-05",
+     "description": "An unauthenticated attacker controlling a registry or OCI-layout blob source could provide blob contents that did not match the claimed digest. The resulting snapshot could be cached under that digest and reused by a later victim build, compromising build-input integrity.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93318",
+     "priority": "medium",
+     "cvss": "7.5",
+     "public": "2026-10-05",
+     "description": "A malicious image can advertise DiffIDs from another image while containing different layer contents. In affected versions, BuildKit could use the advertised DiffIDs to derive cache and snapshot identity without validating that they matched the actual layer contents. If a BuildKit daemon with shared",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93319",
+     "priority": "medium",
+     "cvss": "5.7",
+     "public": "2026-10-05",
+     "description": "A malicious external BuildKit frontend can send requests using the internal API that can create conditions for a data race that can cause the BuildKit daemon to panic.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93320",
+     "priority": "medium",
+     "cvss": "6.0",
+     "public": "2026-10-05",
+     "description": "BuildKit may be tricked into performing file actions with special file inodes where regular files are expected. Special files may block operations or, on rootful workers, allow unintended host device access.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93321",
+     "priority": "medium",
+     "cvss": "6.9",
+     "public": "2026-10-05",
+     "description": "A malicious frontend can submit an LLB definition that causes buildkitd to panic and terminate, interrupting all builds running on that daemon.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93322",
+     "priority": "medium",
+     "cvss": "6.9",
+     "public": "2026-10-05",
+     "description": "A malicious frontend can submit an LLB definition that causes buildkitd to panic and terminate, interrupting all builds running on that daemon.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93323",
+     "priority": "medium",
+     "cvss": "6.8",
+     "public": "2026-10-05",
+     "description": "The Dockerfile frontend loaded the Dockerfile and .dockerignore files of a build context into memory without a size limit. A build context containing an oversized file could make buildkitd allocate memory proportional to that file, potentially exhausting memory and terminating the daemon, which inte",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-93326",
+     "priority": "medium",
+     "cvss": "6.0",
+     "public": "2026-10-05",
+     "description": "A build step for a Git source, crafted in a specific way, can bypass some policy validation rules. A malicious build definition can make the repository look like it is coming from a different remote URL than it really is when Git clone is happening. If policy is doing more stricter validation, for e",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-79994",
+     "priority": "medium",
+     "cvss": "8.7",
+     "public": "2026-09-15",
+     "description": "The guest-to-host Unix-domain socket relay in Docker Sandboxes validates that a socket path is inside an authorized workspace, but later reconnects using the pathname. A malicious guest can replace an intermediate directory with a symlink between validation and connection, causing the host to connec",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-17106",
+     "priority": "medium",
+     "cvss": "7.1",
+     "public": "2026-08-18",
+     "description": "The tar extraction routines in moby/go-archive (Unpack, UnpackLayer, Untar/UntarUncompressed, and the ApplyLayer helpers) do not confine filesystem operations to the destination directory. The extractor decides where each archive entry lands using lexical string checks and then performs the filesyst",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-15791",
+     "priority": "medium",
+     "cvss": "1.8",
+     "public": "2026-07-21",
+     "description": "A crafted message in the BuildKit low-level build API can be used to remove the contents of the /tmp directory. The action that can normally be used to delete files inside the build container rootfs can escape into the real host temp directory.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-15792",
+     "priority": "medium",
+     "cvss": "6.0",
+     "public": "2026-07-21",
+     "description": "A malicious BuildKit client or frontend could craft a request that could lead to BuildKit daemon crashing with a panic.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-15793",
+     "priority": "medium",
+     "cvss": "7.3",
+     "public": "2026-07-21",
+     "description": "BuildKit custom frontends or clients using the raw low-level API can set git.checkoutbundle=true when checking out Git sources. If the Git source is malicious, this could lead to a crafted command invocation on the host.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-41568",
+     "priority": "medium",
+     "cvss": "6.1",
+     "public": "2026-06-12",
+     "description": "Moby is an open source container framework. In Docker Engine prior to version 29.5.1, Docker Daemon versions 28.5.2 and prior, and Moby Daemon prior to version 2.0.0-beta.14, a race condition during docker cp mount setup allows a malicious container to create empty files or directories at arbitrary ",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-42306",
+     "priority": "medium",
+     "cvss": "7.2",
+     "public": "2026-06-12",
+     "description": "Moby is an open source container framework. In Docker Engine prior to version 29.5.1, Docker Daemon versions 28.5.2 and prior, and Moby Daemon prior to version 2.0.0-beta.14, a race condition during docker cp mount setup allows a malicious container to redirect a bind mount target to an arbitrary ho",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-41567",
+     "priority": "medium",
+     "cvss": "7.2",
+     "public": "2026-06-05",
+     "description": "Moby is an open source container framework. In versions prior to 29.5.1 and in moby/moby v2 prior to v2.0.0-beta.14, when a compressed archive is uploaded to a container via `PUT /containers/{id}/archive` or piped through `docker cp -`, the daemon resolves decompression binaries (such as `xz` or `un",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-33990",
+     "priority": "medium",
+     "cvss": "6.8",
+     "public": "2026-04-01",
+     "description": "Docker Model Runner (DMR) is software used to manage, run, and deploy AI models using Docker. Prior to version 1.1.25, Docker Model Runner contains an SSRF vulnerability in its OCI registry token exchange flow. When pulling a model, Model Runner follows the realm URL from the registry's WWW-Authenti",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-33997",
+     "priority": "medium",
+     "cvss": "6.8",
+     "public": "2026-03-31",
+     "description": "Moby is an open source container framework. Prior to version 29.3.1, a security vulnerability has been detected that allows plugins privilege validation to be bypassed during docker plugin install. Due to an error in the daemon's privilege comparison logic, the daemon may incorrectly accept a privil",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-34040",
+     "priority": "medium",
+     "cvss": "8.8",
+     "public": "2026-03-31",
+     "description": "Moby is an open source container framework. Prior to version 29.3.1, a security vulnerability has been detected that allows attackers to bypass authorization plugins (AuthZ). This issue has been patched in version 29.3.1.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2025-54388",
+     "priority": "medium",
+     "cvss": "5.1",
+     "public": "2025-07-30",
+     "description": "Moby is an open source container framework developed by Docker Inc. that is distributed as Docker Engine, Mirantis Container Runtime, and various other downstream projects/products. In versions 28.2.0 through 28.3.2, when the firewalld service is reloaded it removes all iptables rules including thos",
+     "status": "needs-fixing"
+    }
+   ],
+   "fixed": [
+    {
+     "id": "CVE-2026-33747",
+     "priority": "medium",
+     "cvss": "8.4",
+     "public": "2026-04-22",
+     "description": "BuildKit is a toolkit for converting source code to build artifacts in an efficient, expressive and repeatable manner. Prior to version 0.28.1, when using a custom BuildKit frontend, the frontend can craft an API message that causes files to be written outside of the BuildKit state directory for the",
+     "version": "29.1.3-0ubuntu4.1"
+    },
+    {
+     "id": "CVE-2026-33748",
+     "priority": "medium",
+     "cvss": "8.2",
+     "public": "2026-04-22",
+     "description": "BuildKit is a toolkit for converting source code to build artifacts in an efficient, expressive and repeatable manner. Prior to version 0.28.1, insufficient validation of Git URL fragment subdir components may allow access to files outside the checked-out Git repository root. Possible access is limi",
+     "version": "29.1.3-0ubuntu4.1"
+    }
+   ]
+  },
+  "openssh": {
+   "open": [
+    {
+     "id": "CVE-2026-110924",
+     "priority": "medium",
+     "cvss": "4.8",
+     "public": "2026-10-16",
+     "description": "A flaw was found in OpenSSH. With GSSAPI authentication enabled, a failed GSSAPI attempt can leave delegated credentials stored for the connection even though user authorization did not succeed. A later successful login on that connection is not authorized by the leftover state.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-110927",
+     "priority": "medium",
+     "cvss": "4.3",
+     "public": "2026-10-16",
+     "description": "A flaw was found in OpenSSH. After compression is negotiated, a compressed payload can expand past the maximum supported packet size because the inflate loop does not stop at that limit. Memory use grows in the process handling that connection.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-110923",
+     "priority": "medium",
+     "cvss": "6.5",
+     "public": "2026-10-15",
+     "description": "A flaw was found in OpenSSH. During an sftp copy, a malicious server can supply an empty name, a slash-only path, or a \"..\" basename that sftp uses as the local destination, writing outside the directory the user selected.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-110925",
+     "priority": "medium",
+     "cvss": "5.4",
+     "public": "2026-10-15",
+     "description": "A flaw was found in OpenSSH. A username entered on the ssh command line can still contain '$' or a non-trailing backslash. When a configuration expands %u inside ProxyCommand or Match exec, those characters are passed into the shell.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-110926",
+     "priority": "medium",
+     "cvss": "5.3",
+     "public": "2026-10-15",
+     "description": "A flaw was found in OpenSSH. When compression is negotiated, channels on the same connection share one LZ77 dictionary. A peer who can write on one channel can recover plaintext from another channel by chosen-plaintext lengths.",
+     "status": "needs-fixing"
+    }
+   ],
+   "fixed": [
+    {
+     "id": "CVE-2026-106552",
+     "priority": "medium",
+     "cvss": "4.2",
+     "public": "2026-10-07",
+     "description": "In sftp in OpenSSH before 10.6, a server can trigger directory traversal (causing files to be written to unintended locations) during a recursive copy operation. Update Instructions: Run `sudo pro fix CVE-2026-106552` to fix the vulnerability. The problem can be corrected by updating your system to ",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106553",
+     "priority": "medium",
+     "cvss": "2.2",
+     "public": "2026-10-07",
+     "description": "In sshd in OpenSSH before 10.6, credentials can incorrectly persist after failure of a GSSAPIAuthentication authentication attempt. Update Instructions: Run `sudo pro fix CVE-2026-106553` to fix the vulnerability. The problem can be corrected by updating your system to the following package versions",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106555",
+     "priority": "medium",
+     "cvss": "2.2",
+     "public": "2026-10-07",
+     "description": "In sshd in OpenSSH before 10.6, GSSAPIAuthentication authentication state can incorrectly be persisted across authentication attempts. Update Instructions: Run `sudo pro fix CVE-2026-106555` to fix the vulnerability. The problem can be corrected by updating your system to the following package versi",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106582",
+     "priority": "medium",
+     "cvss": "3.7",
+     "public": "2026-10-07",
+     "description": "In sshd and ssh in OpenSSH before 10.6, an LZ77 dictionary coder can be used even though this is contraindicated by the arXiv 2609.07709 \"Crossing the Streams\" findings. Update Instructions: Run `sudo pro fix CVE-2026-106582` to fix the vulnerability. The problem can be corrected by updating your sy",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106583",
+     "priority": "medium",
+     "cvss": "2.5",
+     "public": "2026-10-07",
+     "description": "In ssh in OpenSSH before 10.6, a $ or \\ character can occur in a command-line username, leading to injection. Update Instructions: Run `sudo pro fix CVE-2026-106583` to fix the vulnerability. The problem can be corrected by updating your system to the following package versions: openssh-client - 1:1",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106584",
+     "priority": "medium",
+     "cvss": "2.5",
+     "public": "2026-10-07",
+     "description": "In ssh-keygen in OpenSSH before 10.6, certificates could have incorrect expiration times because of Daylight Saving mishandling. There can be a slightly more severe effect on users in certain Antarctic locations. Update Instructions: Run `sudo pro fix CVE-2026-106584` to fix the vulnerability. The p",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106585",
+     "priority": "medium",
+     "cvss": "6.5",
+     "public": "2026-10-07",
+     "description": "In sshd and ssh in OpenSSH before 10.6, there is no check for whether the maximum packet length is exceeded during decompression of highly compressed data. Update Instructions: Run `sudo pro fix CVE-2026-106585` to fix the vulnerability. The problem can be corrected by updating your system to the fo",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106586",
+     "priority": "medium",
+     "cvss": "2.5",
+     "public": "2026-10-07",
+     "description": "In sshd in OpenSSH before 10.6, the restrict keyword (in authorized_keys) was supposed to be applicable to tunnel forwarding but was not, a different vulnerability than CVE-2026-73283. Update Instructions: Run `sudo pro fix CVE-2026-106586` to fix the vulnerability. The problem can be corrected by u",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-106587",
+     "priority": "medium",
+     "cvss": "3.6",
+     "public": "2026-10-07",
+     "description": "In sshd in OpenSSH before 10.6, the value \"none\" for a configuration option is sometimes interpreted as a filename but was intended to mean that a feature is disabled. Update Instructions: Run `sudo pro fix CVE-2026-106587` to fix the vulnerability. The problem can be corrected by updating your syst",
+     "version": "1:10.2p1-2ubuntu3.8"
+    },
+    {
+     "id": "CVE-2026-73281",
+     "priority": "medium",
+     "cvss": "3.5",
+     "public": "2026-08-11",
+     "description": "In ssh-agent in OpenSSH before 10.5, some operations can occur remotely but were intended to occur only locally, including operations that add tokens or use keys. This is caused by misinteraction between agent locking and the session-bind@openssh.com extension. Update Instructions: Run `sudo pro fix",
+     "version": "1:10.2p1-2ubuntu3.6"
+    },
+    {
+     "id": "CVE-2026-73282",
+     "priority": "medium",
+     "cvss": "4.8",
+     "public": "2026-08-11",
+     "description": "In ssh in OpenSSH before 10.5, a use-after-free for realloc data can occur if a certain pair of remote-forwarding operations are concurrent. Update Instructions: Run `sudo pro fix CVE-2026-73282` to fix the vulnerability. The problem can be corrected by updating your system to the following package ",
+     "version": "1:10.2p1-2ubuntu3.6"
+    },
+    {
+     "id": "CVE-2026-73283",
+     "priority": "medium",
+     "cvss": "2.5",
+     "public": "2026-08-11",
+     "description": "In sshd in OpenSSH before 10.5, the restrict keyword (in authorized_keys) was supposed to be applicable to tunnel forwarding but was not. Update Instructions: Run `sudo pro fix CVE-2026-73283` to fix the vulnerability. The problem can be corrected by updating your system to the following package ver",
+     "version": "1:10.2p1-2ubuntu3.6"
+    },
+    {
+     "id": "CVE-2026-59995",
+     "priority": "medium",
+     "cvss": "4.2",
+     "public": "2026-07-08",
+     "description": "sftp in OpenSSH before 10.4 does not properly constrain the location of downloaded files when \"sftp server:/path .\" is used with an attacker-controlled server. Update Instructions: Run `sudo pro fix CVE-2026-59995` to fix the vulnerability. The problem can be corrected by updating your system to the",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-59996",
+     "priority": "medium",
+     "cvss": "4.2",
+     "public": "2026-07-08",
+     "description": "scp in OpenSSH before 10.4 may place a file in the parent directory of an intended directory when the copy occurs between two remote destinations. Update Instructions: Run `sudo pro fix CVE-2026-59996` to fix the vulnerability. The problem can be corrected by updating your system to the following pa",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-59997",
+     "priority": "medium",
+     "cvss": "4.2",
+     "public": "2026-07-08",
+     "description": "internal-sftp in sshd in OpenSSH before 10.4 recognizes only the first 9 command-line arguments, which can be important if a later command-line argument would have helped to ensure the intended security properties of an SFTP connection. Update Instructions: Run `sudo pro fix CVE-2026-59997` to fix t",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-59998",
+     "priority": "medium",
+     "cvss": "4.8",
+     "public": "2026-07-08",
+     "description": "sshd in OpenSSH before 10.4 has an undocumented security-relevant behavior: GSSAPIStrictAcceptorCheck has no value if the server is in Windows Active Directory. Update Instructions: Run `sudo pro fix CVE-2026-59998` to fix the vulnerability. The problem can be corrected by updating your system to th",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-59999",
+     "priority": "medium",
+     "cvss": "5.9",
+     "public": "2026-07-08",
+     "description": "In sshd in OpenSSH before 10.4, DisableForwarding=yes was supposed to take precedence over PermitTunnel=yes, but did not. Update Instructions: Run `sudo pro fix CVE-2026-59999` to fix the vulnerability. The problem can be corrected by updating your system to the following package versions: openssh-c",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-60000",
+     "priority": "medium",
+     "cvss": "3.7",
+     "public": "2026-07-08",
+     "description": "sshd in OpenSSH before 10.4 allows remote attackers to cause a denial of service (resource consumption from excessive authentication attempts) because MaxAuthTries was mishandled for GSSAPIAuthentication. Update Instructions: Run `sudo pro fix CVE-2026-60000` to fix the vulnerability. The problem ca",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-60001",
+     "priority": "medium",
+     "cvss": "6.5",
+     "public": "2026-07-08",
+     "description": "sshd in OpenSSH before 10.4 does not always honor the minimum authentication delay. Update Instructions: Run `sudo pro fix CVE-2026-60001` to fix the vulnerability. The problem can be corrected by updating your system to the following package versions: openssh-client - 1:10.2p1-2ubuntu3.4 openssh-cl",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-60002",
+     "priority": "medium",
+     "cvss": "7.7",
+     "public": "2026-07-08",
+     "description": "ssh in OpenSSH before 10.4 can have a use-after-free when a server changes its host key during a key re-exchange. (This outcome occurs only on the client side.) Update Instructions: Run `sudo pro fix CVE-2026-60002` to fix the vulnerability. The problem can be corrected by updating your system to th",
+     "version": "1:10.2p1-2ubuntu3.4"
+    },
+    {
+     "id": "CVE-2026-35385",
+     "priority": "medium",
+     "cvss": "7.5",
+     "public": "2026-04-02",
+     "description": "In OpenSSH before 10.3, a file downloaded by scp may be installed setuid or setgid, an outcome contrary to some users' expectations, if the download is performed as root with -O (legacy scp protocol) and without -p (preserve mode). Update Instructions: Run `sudo pro fix CVE-2026-35385` to fix the vu",
+     "version": "1:10.2p1-2ubuntu3.2"
+    },
+    {
+     "id": "CVE-2026-35386",
+     "priority": "medium",
+     "cvss": "3.6",
+     "public": "2026-04-02",
+     "description": "In OpenSSH before 10.3, command execution can occur via shell metacharacters in a username within a command line. This requires a scenario where the username on the command line is untrusted, and also requires a non-default configurations of % in ssh_config. Update Instructions: Run `sudo pro fix CV",
+     "version": "1:10.2p1-2ubuntu3.2"
+    },
+    {
+     "id": "CVE-2026-35387",
+     "priority": "medium",
+     "cvss": "3.1",
+     "public": "2026-04-02",
+     "description": "OpenSSH before 10.3 can use unintended ECDSA algorithms. Listing of any ECDSA algorithm in PubkeyAcceptedAlgorithms or HostbasedAcceptedAlgorithms is misinterpreted to mean all ECDSA algorithms. Update Instructions: Run `sudo pro fix CVE-2026-35387` to fix the vulnerability. The problem can be corre",
+     "version": "1:10.2p1-2ubuntu3.2"
+    },
+    {
+     "id": "CVE-2026-35388",
+     "priority": "medium",
+     "cvss": "2.5",
+     "public": "2026-04-02",
+     "description": "OpenSSH before 10.3 omits connection multiplexing confirmation for proxy-mode multiplexing sessions. Update Instructions: Run `sudo pro fix CVE-2026-35388` to fix the vulnerability. The problem can be corrected by updating your system to the following package versions: openssh-client - 1:10.2p1-2ubu",
+     "version": "1:10.2p1-2ubuntu3.2"
+    },
+    {
+     "id": "CVE-2026-35414",
+     "priority": "medium",
+     "cvss": "4.2",
+     "public": "2026-04-02",
+     "description": "OpenSSH before 10.3 mishandles the authorized_keys principals option in uncommon scenarios involving a principals list in conjunction with a Certificate Authority that makes certain use of comma characters. Update Instructions: Run `sudo pro fix CVE-2026-35414` to fix the vulnerability. The problem ",
+     "version": "1:10.2p1-2ubuntu3.2"
+    },
+    {
+     "id": "CVE-2025-61984",
+     "priority": "low",
+     "cvss": "3.6",
+     "public": "2025-10-06",
+     "description": "ssh in OpenSSH before 10.1 allows control characters in usernames that originate from certain possibly untrusted sources, potentially leading to code execution when a ProxyCommand is used. The untrusted sources are the command line and %-sequence expansion of a configuration file. (A configuration f",
+     "version": "1:10.2p1-2ubuntu1"
+    },
+    {
+     "id": "CVE-2025-61985",
+     "priority": "low",
+     "cvss": "3.6",
+     "public": "2025-10-06",
+     "description": "ssh in OpenSSH before 10.1 allows the '\\0' character in an ssh:// URI, potentially leading to code execution when a ProxyCommand is used. Update Instructions: Run `sudo pro fix CVE-2025-61985` to fix the vulnerability. The problem can be corrected by updating your system to the following package ver",
+     "version": "1:10.2p1-2ubuntu1"
+    }
+   ]
+  },
+  "cockpit": {
+   "open": [
+    {
+     "id": "CVE-2026-91148",
+     "priority": "medium",
+     "cvss": null,
+     "public": "2026-10-02",
+     "description": "[Unknown description]",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-91142",
+     "priority": "medium",
+     "cvss": "3.6",
+     "public": "2026-09-18",
+     "description": "A flaw was found in Cockpit. An integer overflow vulnerability in the `do_lastlog()` function, specifically in the offset calculation for `lastlog` entries on ILP32 (Integer, Long, Pointer 32-bit) builds, can be exploited. A low-privileged authenticated user with a specially provisioned large User I",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-91147",
+     "priority": "medium",
+     "cvss": "5.9",
+     "public": "2026-09-18",
+     "description": "A flaw was found in `cockpit-ws`. This vulnerability allows a remote, unauthenticated attacker to cause a Denial of Service (DoS) by sending a specially crafted request. When the `WebService.UrlRoot` is configured and a request is made to the exact URL-root prefix without a trailing slash, `cockpit-",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-91149",
+     "priority": "medium",
+     "cvss": "7.5",
+     "public": "2026-09-18",
+     "description": "A flaw was found in Cockpit. An unauthenticated remote attacker can exploit this vulnerability by initiating and sustaining numerous simultaneous connections to the `cockpit-tls` service. This forces the service to create an unbounded number of detached threads, consuming system resources such as me",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-39275",
+     "priority": "medium",
+     "cvss": "6.1",
+     "public": "2026-08-26",
+     "description": "Cross Site Scripting vulnerability in Cockpit CMS v.2.13.5 and before allows a remote attacker to execute arbitrary code via the item.php, field-select.js and tags.js components",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-76235",
+     "priority": "medium",
+     "cvss": "7.5",
+     "public": "2026-08-19",
+     "description": "A memory leak flaw was found in cockpit-ws. The login page handler leaks a heap allocation on every unauthenticated request that carries a CockpitLang cookie, allowing a remote unauthenticated attacker to exhaust memory on the host and cause a denial of service.",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-4802",
+     "priority": "medium",
+     "cvss": "8.0",
+     "public": "2026-05-11",
+     "description": "A flaw was found in Cockpit. This vulnerability allows a remote attacker to achieve arbitrary command execution on the host by exploiting unsanitized user-controlled parameters within crafted links in the system logs user interface (UI). An attacker can inject shell metacharacters and command substi",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-4631",
+     "priority": "medium",
+     "cvss": "9.8",
+     "public": "2026-04-07",
+     "description": "Cockpit's remote login feature passes user-supplied hostnames and usernames from the web interface to the SSH client without validation or sanitization. An attacker with network access to the Cockpit web service can craft a single HTTP request to the login endpoint that injects malicious SSH options",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-31891",
+     "priority": "medium",
+     "cvss": "7.7",
+     "public": "2026-03-18",
+     "description": "Cockpit is a headless content management system. Any Cockpit CMS instance running version 2.13.4 or earlier with API access enabled is potentially affected by a a SQL Injection vulnerability in the MongoLite Aggregation Optimizer. Any deployment where the `/api/content/aggregate/{model}` endpoint is",
+     "status": "needs-fixing"
+    }
+   ],
+   "fixed": []
+  },
+  "containerd-app": {
+   "open": [
+    {
+     "id": "CVE-2026-95837",
+     "priority": "medium",
+     "cvss": "7.8",
+     "public": "2026-10-12",
+     "description": "containerd is an open-source container runtime. From 2.1.0 until 2.2.7 and 2.3.4, containerd's CRI CreateContainer checkpoint restore is vulnerable because CRIU restores process security state from checkpoint data instead of enforcing the destination ContainerConfig. An attacker who can create a con",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-95838",
+     "priority": "medium",
+     "cvss": "4.6",
+     "public": "2026-10-12",
+     "description": "containerd is an open-source container runtime. Prior to 1.7.35, 2.0.12, 2.2.8, and 2.3.5, containerd's layer unpack handler repeatedly traverses directories for certain opaque whiteout configurations. A malicious image layer can trigger repeated directory traversals while opaque whiteouts are proce",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-53493",
+     "priority": "medium",
+     "cvss": "6.9",
+     "public": "2026-09-25",
+     "description": "containerd is an open-source container runtime. Prior to versions 1.7.36, 2.0.13, 2.2.9, 2.3.6, and 2.4.1, a crafted OCI index graph can force very high CPU/memory usage during PullImage (before container start), causing long ContainerCreating stalls and, at larger sizes, node/runtime instability. V",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-53495",
+     "priority": "medium",
+     "cvss": "6.8",
+     "public": "2026-09-14",
+     "description": "containerd is an open-source container runtime. Prior to 1.7.35, 2.0.12, 2.2.8, and 2.3.5, containerd on Linux with the CRI plugin enabled can indefinitely block the drainExecSyncIO goroutine in internal/cri/server/container_execsync.go when CRI ExecSync is used by exec probes or lifecycle hooks tha",
+     "status": "needs-fixing"
+    },
+    {
+     "id": "CVE-2026-46680",
+     "priority": "medium",
+     "cvss": "7.3",
+     "public": "2026-07-01",
+     "description": "containerd is an open-source container runtime. In versions prior to 1.7.32, 2.0.9, 2.2.4 and 2.3.1, containers launched with a numeric User directive that cannot be parsed as a 32-bit integer are incorrectly treated as a username, leading to runAsNonRoot evasion. If a crafted image provides an /etc",
+     "status": "needs-fixing"
+    }
+   ],
+   "fixed": [
+    {
+     "id": "CVE-2026-50195",
+     "priority": "high",
+     "cvss": "5.6",
+     "public": "2026-06-22",
+     "description": "containerd is an open-source container runtime. Versions prior to 2.3.2, 2.2.5 and 2.1.9 contain a vulnerability in the CRI checkpoint import process where it fails to validate the image references specified within a checkpoint image's configuration. An attacker with permissions to create pods can u",
+     "version": "2.2.2-0ubuntu1.1"
+    },
+    {
+     "id": "CVE-2026-53488",
+     "priority": "high",
+     "cvss": "9.4",
+     "public": "2026-06-22",
+     "description": "containerd is an open-source container runtime. In versions prior to 1.7.33, 2.3.2, 2.2.5, 2.1.9, and 2.0.10 the CRI plugin propagates labels from an image config (LABEL instruction in Dockerfile) to a container without validation. This may result in executing an arbitrary command on the host, via a",
+     "version": "2.2.2-0ubuntu1.1"
+    },
+    {
+     "id": "CVE-2026-53489",
+     "priority": "high",
+     "cvss": "8.2",
+     "public": "2026-06-22",
+     "description": "containerd is an open-source container runtime. Versions prior to 2.3.2, 2.2.5 and 2.1.9 contain a bug where the CRI plugin restores container.log from a checkpoint image without validating a symlinked path. This could result in reading an arbitrary file on the host via kubectl logs. This issue has ",
+     "version": "2.2.2-0ubuntu1.1"
+    },
+    {
+     "id": "CVE-2026-53492",
+     "priority": "high",
+     "cvss": "8.4",
+     "public": "2026-06-22",
+     "description": "containerd is an open-source container runtime. In Versions prior to 2.3.2, 2.2.5 and 2.1.9, the CRI implementation improperly trusts Container Device Interface (CDI) annotations found within untrusted checkpoint image metadata during container restoration. When restoring a container from a checkpoi",
+     "version": "2.2.2-0ubuntu1.1"
+    },
+    {
+     "id": "CVE-2026-47262",
+     "priority": "medium",
+     "cvss": "5.3",
+     "public": "2026-06-22",
+     "description": "containerd is an open-source container runtime. Versions prior to 1.7.33, 2.0.10, 2.1.9, 2.2.5 and 2.3.2, contain a vulnerability that allows a maliciously crafted image to cause a Denial of Service (DoS) condition. When creating a container from this image, memory exhaustion occurs, leading to an O",
+     "version": "2.2.2-0ubuntu1.1"
+    },
+    {
+     "id": "CVE-2026-33814",
+     "priority": "medium",
+     "cvss": "7.5",
+     "public": "2026-05-07",
+     "description": "When processing HTTP/2 SETTINGS frames, transport will enter an infinite loop of writing CONTINUATION frames if it receives a SETTINGS_MAX_FRAME_SIZE with a value of 0. Update Instructions: Run `sudo pro fix CVE-2026-33814` to fix the vulnerability. The problem can be corrected by updating your syst",
+     "version": "2.2.2-0ubuntu1.1"
+    }
+   ]
+  },
+  "runc-app": {
+   "open": [
+    {
+     "id": "CVE-2026-41579",
+     "priority": "medium",
+     "cvss": "3.3",
+     "public": "2026-07-01",
+     "description": "runc is a CLI tool for spawning and running containers according to the OCI specification. In versions prior to 1.3.6, 1.4.0-rc.1, 1.4.0-rc.12, 1.5.0-rc.1, and 1.5.0-rc.1, when setting up the container rootfs, setupPtmx and setupDevSymlinks call os.Remove and os.Symlink with a filepath.Join string w",
+     "status": "needs-fixing"
+    }
+   ],
+   "fixed": []
+  },
+  "sudo": {
+   "open": [],
+   "fixed": [
+    {
+     "id": "CVE-2026-96512",
+     "priority": "medium",
+     "cvss": "7.8",
+     "public": "2026-09-23",
+     "description": "A flaw was found in sudo. When sudoers rules use NOTBEFORE or NOTAFTER time-based access restrictions with timestamps that omit the trailing 'Z' timezone indicator, the time evaluation relies on the TZ environment variable inherited from the calling user. Because sudo is a setuid-root program, an un",
+     "version": "1.9.17p2-1ubuntu3.2"
+    },
+    {
+     "id": "CVE-2026-82474",
+     "priority": "medium",
+     "cvss": "7.8",
+     "public": "2026-08-29",
+     "description": "Sudo through 1.9.17p2 fails to apply intercept policy checks to the execveat system call in ptrace-based intercept mode. Users permitted to run specific commands can execute denied programs by calling execveat directly or through fexecve, bypassing policy enforcement and logging. Update Instructions",
+     "version": "1.9.17p2-1ubuntu3.1"
+    }
+   ]
+  }
+ },
+ "launchpad": {
+  "cockpit": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "367-1",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "367-1",
+     "published": "2026-09-04T13:19:03"
+    },
+    {
+     "series": "noble",
+     "pocket": "Backports",
+     "version": "362-1~bpo24.04.1",
+     "published": "2026-07-22T15:22:58"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "360-1",
+     "published": "2026-04-12T00:59:25"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Backports",
+     "version": "360-1~bpo22.04.1",
+     "published": "2026-04-13T15:25:30"
+    },
+    {
+     "series": "questing",
+     "pocket": "Backports",
+     "version": "355-1~bpo25.10.1",
+     "published": "2026-03-12T17:02:57"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "346-1",
+     "published": "2025-09-07T18:29:28"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Backports",
+     "version": "346-1~bpo25.04.1",
+     "published": "2025-09-27T01:39:20"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "333-1",
+     "published": "2025-02-13T22:14:41"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Backports",
+     "version": "316-1~bpo23.10.1",
+     "published": "2024-05-07T14:33:39"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "314-1",
+     "published": "2024-04-07T05:27:37"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Backports",
+     "version": "308-1~bpo23.04.1",
+     "published": "2024-01-17T21:55:07"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "300.1-1",
+     "published": "2023-09-09T10:43:29"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Release",
+     "version": "287-1",
+     "published": "2023-03-17T09:29:21"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "264-1ubuntu0.22.04.1",
+     "published": "2022-10-25T06:03:31"
+    },
+    {
+     "series": "focal",
+     "pocket": "Backports",
+     "version": "264-1ubuntu0.22.04.1~bpo20.04.1",
+     "published": "2022-10-29T15:58:25"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Release",
+     "version": "264-1",
+     "published": "2022-03-01T11:13:44"
+    },
+    {
+     "series": "focal",
+     "pocket": "Release",
+     "version": "215-1",
+     "published": "2020-03-24T16:10:56"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Backports",
+     "version": "215-1~ubuntu18.04.1",
+     "published": "2020-03-24T17:53:47"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Backports",
+     "version": "178-1~ubuntu16.04.1",
+     "published": "2018-09-21T09:23:19"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Release",
+     "version": "164-1",
+     "published": "2018-03-27T11:53:53"
+    }
+   ]
+  },
+  "containerd-app": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "2.3.4+dfsg1-0ubuntu2",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "2.3.4+dfsg1-0ubuntu2",
+     "published": "2026-08-23T14:19:32"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Proposed",
+     "version": "2.2.2-0ubuntu1.2",
+     "published": "2026-10-15T19:14:52"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Updates",
+     "version": "2.2.2-0ubuntu1.1",
+     "published": "2026-06-25T13:47:36"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Security",
+     "version": "2.2.2-0ubuntu1.1",
+     "published": "2026-06-25T11:12:26"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "2.2.2-0ubuntu1",
+     "published": "2026-04-07T05:30:26"
+    },
+    {
+     "series": "questing",
+     "pocket": "Updates",
+     "version": "2.2.1-0ubuntu1~25.10.2",
+     "published": "2026-06-25T13:47:36"
+    },
+    {
+     "series": "questing",
+     "pocket": "Security",
+     "version": "2.2.1-0ubuntu1~25.10.2",
+     "published": "2026-06-25T11:12:26"
+    },
+    {
+     "series": "noble",
+     "pocket": "Proposed",
+     "version": "2.2.1-0ubuntu1~24.04.4",
+     "published": "2026-10-15T19:14:52"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "2.2.1-0ubuntu1~24.04.3",
+     "published": "2026-06-25T13:47:36"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "2.2.1-0ubuntu1~24.04.3",
+     "published": "2026-06-25T11:12:26"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "2.2.1-0ubuntu1~22.04.2",
+     "published": "2026-06-25T13:47:36"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "2.2.1-0ubuntu1~22.04.2",
+     "published": "2026-06-25T11:12:26"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "2.1.3-0ubuntu3",
+     "published": "2025-09-01T01:10:48"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Updates",
+     "version": "2.1.3-0ubuntu3~25.04.1",
+     "published": "2025-10-07T09:41:41"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "2.0.2-0ubuntu2",
+     "published": "2025-03-28T20:34:12"
+    },
+    {
+     "series": "focal",
+     "pocket": "Updates",
+     "version": "1.7.24-0ubuntu1~20.04.2",
+     "published": "2025-03-26T21:58:09"
+    },
+    {
+     "series": "focal",
+     "pocket": "Security",
+     "version": "1.7.24-0ubuntu1~20.04.2",
+     "published": "2025-03-26T17:36:03"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "1.7.12-0ubuntu4",
+     "published": "2024-04-17T23:53:32"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "1.7.12-0ubuntu2~23.10.1",
+     "published": "2024-06-10T10:02:31"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "1.7.2-0ubuntu2",
+     "published": "2023-08-23T16:34:18"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Updates",
+     "version": "1.7.2-0ubuntu1~23.04.1",
+     "published": "2023-08-02T04:39:06"
+    }
+   ]
+  },
+  "docker-compose-v2": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "2.40.3+ds2-0ubuntu2",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "2.40.3+ds2-0ubuntu2",
+     "published": "2026-09-30T21:11:41"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "2.40.3+ds1-0ubuntu1",
+     "published": "2026-01-07T19:32:36"
+    },
+    {
+     "series": "questing",
+     "pocket": "Updates",
+     "version": "2.40.3+ds1-0ubuntu1~25.10.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "2.40.3+ds1-0ubuntu1~24.04.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "2.40.3+ds1-0ubuntu1~22.04.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "2.37.1+ds1-0ubuntu2",
+     "published": "2025-09-01T01:10:48"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Updates",
+     "version": "2.37.1+ds1-0ubuntu2~25.04.1",
+     "published": "2025-10-07T09:41:41"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "2.33.0+ds1-0ubuntu1",
+     "published": "2025-02-19T22:59:57"
+    },
+    {
+     "series": "focal",
+     "pocket": "Updates",
+     "version": "2.27.1+ds1-0ubuntu1~20.04.1",
+     "published": "2025-01-27T20:17:54"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "2.24.6+ds1-0ubuntu2",
+     "published": "2024-04-17T23:53:32"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "2.24.6+ds1-0ubuntu1~23.10.1",
+     "published": "2024-06-10T10:02:31"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "2.20.2+ds1-0ubuntu1",
+     "published": "2023-08-15T22:48:59"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Updates",
+     "version": "2.20.2+ds1-0ubuntu1~23.04.1",
+     "published": "2023-10-09T18:37:13"
+    }
+   ]
+  },
+  "docker.io-app": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "29.7.2-0ubuntu1",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "29.7.2-0ubuntu1",
+     "published": "2026-09-16T15:58:53"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Updates",
+     "version": "29.1.3-0ubuntu4.1",
+     "published": "2026-05-05T14:01:58"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Security",
+     "version": "29.1.3-0ubuntu4.1",
+     "published": "2026-05-05T13:21:47"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "29.1.3-0ubuntu4",
+     "published": "2026-04-01T10:19:16"
+    },
+    {
+     "series": "questing",
+     "pocket": "Updates",
+     "version": "29.1.3-0ubuntu3~25.10.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "29.1.3-0ubuntu3~24.04.2",
+     "published": "2026-05-05T14:01:58"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "29.1.3-0ubuntu3~24.04.2",
+     "published": "2026-05-05T13:21:47"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "29.1.3-0ubuntu3~22.04.2",
+     "published": "2026-05-05T14:01:58"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "29.1.3-0ubuntu3~22.04.2",
+     "published": "2026-05-05T13:21:47"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "28.2.2-0ubuntu1",
+     "published": "2025-07-01T05:02:18"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Updates",
+     "version": "28.2.2-0ubuntu1~25.04.1",
+     "published": "2025-10-07T09:41:41"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "27.5.1-0ubuntu3",
+     "published": "2025-02-26T22:24:47"
+    },
+    {
+     "series": "focal",
+     "pocket": "Updates",
+     "version": "26.1.3-0ubuntu1~20.04.1",
+     "published": "2025-01-27T20:17:54"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "24.0.7-0ubuntu4",
+     "published": "2024-04-22T07:03:26"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "24.0.7-0ubuntu2~23.10.1",
+     "published": "2024-06-10T10:02:31"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "24.0.5-0ubuntu1",
+     "published": "2023-08-18T03:33:27"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Updates",
+     "version": "24.0.5-0ubuntu1~23.04.1",
+     "published": "2023-08-31T19:39:32"
+    }
+   ]
+  },
+  "openssh": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "stonking",
+     "pocket": "Security",
+     "version": "1:10.5p1-1ubuntu3.1",
+     "published": "2026-10-19T13:29:18"
+    },
+    {
+     "series": "tenacious",
+     "pocket": "Proposed",
+     "version": "1:10.5p1-1ubuntu3",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Proposed",
+     "version": "1:10.5p1-1ubuntu3",
+     "published": "2026-10-11T13:39:22"
+    },
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "1:10.5p1-1ubuntu2",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "1:10.5p1-1ubuntu2",
+     "published": "2026-09-12T09:46:17"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Security",
+     "version": "1:10.2p1-2ubuntu3.8",
+     "published": "2026-10-14T12:40:12"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Updates",
+     "version": "1:10.2p1-2ubuntu3.7",
+     "published": "2026-10-06T13:07:31"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "1:10.2p1-2ubuntu3",
+     "published": "2026-03-27T02:16:04"
+    },
+    {
+     "series": "questing",
+     "pocket": "Updates",
+     "version": "1:10.0p1-5ubuntu5.4",
+     "published": "2026-04-29T15:31:30"
+    },
+    {
+     "series": "questing",
+     "pocket": "Security",
+     "version": "1:10.0p1-5ubuntu5.4",
+     "published": "2026-04-29T11:45:57"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "1:10.0p1-5ubuntu5",
+     "published": "2025-10-01T19:15:18"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Updates",
+     "version": "1:9.9p1-3ubuntu3.2",
+     "published": "2025-09-09T07:10:36"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Security",
+     "version": "1:9.9p1-3ubuntu3.1",
+     "published": "2025-04-24T12:34:50"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "1:9.9p1-3ubuntu3",
+     "published": "2025-02-22T20:07:28"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "1:9.6p1-3ubuntu13.20",
+     "published": "2026-10-14T12:40:12"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "1:9.6p1-3ubuntu13.19",
+     "published": "2026-09-03T14:35:33"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "1:9.6p1-3ubuntu13",
+     "published": "2024-04-15T22:48:18"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "1:9.3p1-1ubuntu3.6",
+     "published": "2024-07-01T11:19:43"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Security",
+     "version": "1:9.3p1-1ubuntu3.6",
+     "published": "2024-07-01T10:11:09"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "1:9.3p1-1ubuntu3",
+     "published": "2023-08-29T18:44:14"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Updates",
+     "version": "1:9.0p1-1ubuntu8.7",
+     "published": "2024-01-03T19:19:50"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Security",
+     "version": "1:9.0p1-1ubuntu8.7",
+     "published": "2024-01-03T18:05:39"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Release",
+     "version": "1:9.0p1-1ubuntu8",
+     "published": "2022-12-02T02:13:55"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "1:8.9p1-3ubuntu0.18",
+     "published": "2026-10-14T12:40:12"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "1:8.9p1-3ubuntu0.17",
+     "published": "2026-09-03T14:35:33"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Release",
+     "version": "1:8.9p1-3",
+     "published": "2022-03-11T22:59:01"
+    },
+    {
+     "series": "focal",
+     "pocket": "Updates",
+     "version": "1:8.2p1-4ubuntu0.13",
+     "published": "2025-04-24T15:47:10"
+    },
+    {
+     "series": "focal",
+     "pocket": "Security",
+     "version": "1:8.2p1-4ubuntu0.13",
+     "published": "2025-04-24T12:34:50"
+    },
+    {
+     "series": "focal",
+     "pocket": "Release",
+     "version": "1:8.2p1-4",
+     "published": "2020-03-30T13:43:28"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Updates",
+     "version": "1:7.6p1-4ubuntu0.7",
+     "published": "2022-05-11T23:40:00"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Security",
+     "version": "1:7.6p1-4ubuntu0.5",
+     "published": "2021-08-12T12:03:27"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Release",
+     "version": "1:7.6p1-4",
+     "published": "2018-03-07T11:43:18"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Updates",
+     "version": "1:7.2p2-4ubuntu2.10",
+     "published": "2020-07-02T09:38:39"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Security",
+     "version": "1:7.2p2-4ubuntu2.8",
+     "published": "2019-03-04T17:53:15"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Release",
+     "version": "1:7.2p2-4",
+     "published": "2016-04-16T07:39:00"
+    },
+    {
+     "series": "trusty",
+     "pocket": "Updates",
+     "version": "1:6.6p1-2ubuntu2.13",
+     "published": "2019-03-04T19:08:23"
+    },
+    {
+     "series": "trusty",
+     "pocket": "Security",
+     "version": "1:6.6p1-2ubuntu2.13",
+     "published": "2019-03-04T17:53:15"
+    },
+    {
+     "series": "trusty",
+     "pocket": "Release",
+     "version": "1:6.6p1-2ubuntu1",
+     "published": "2014-04-14T15:48:20"
+    },
+    {
+     "series": "precise",
+     "pocket": "Updates",
+     "version": "1:5.9p1-5ubuntu1.10",
+     "published": "2016-08-15T17:59:10"
+    },
+    {
+     "series": "precise",
+     "pocket": "Security",
+     "version": "1:5.9p1-5ubuntu1.10",
+     "published": "2016-08-15T16:49:53"
+    },
+    {
+     "series": "precise",
+     "pocket": "Release",
+     "version": "1:5.9p1-5ubuntu1",
+     "published": "2012-04-02T12:03:35"
+    }
+   ]
+  },
+  "restic": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "0.19.1-1ubuntu1",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "0.19.1-1ubuntu1",
+     "published": "2026-10-06T20:57:08"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "0.18.1-3ubuntu1",
+     "published": "2026-03-04T03:32:27"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "0.18.0-1ubuntu1",
+     "published": "2025-09-01T03:34:33"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "0.17.3-1",
+     "published": "2024-12-12T05:27:01"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "0.16.4-2ubuntu0.24.04.3",
+     "published": "2025-07-21T10:51:51"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "0.16.4-2ubuntu0.24.04.3",
+     "published": "2025-07-21T09:11:33"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "0.16.4-2",
+     "published": "2024-02-15T23:28:09"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "0.14.0-1ubuntu0.1",
+     "published": "2024-01-29T09:34:30"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Security",
+     "version": "0.14.0-1ubuntu0.1",
+     "published": "2024-01-29T08:50:10"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "0.14.0-1build1",
+     "published": "2023-08-24T18:19:04"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Release",
+     "version": "0.14.0-1",
+     "published": "2022-11-07T19:38:53"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "0.12.1-2ubuntu0.3",
+     "published": "2024-11-19T14:58:14"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "0.12.1-2ubuntu0.3",
+     "published": "2024-11-19T13:05:43"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Release",
+     "version": "0.12.1-2",
+     "published": "2021-10-21T21:08:33"
+    },
+    {
+     "series": "focal",
+     "pocket": "Release",
+     "version": "0.9.6+ds-2",
+     "published": "2019-11-25T00:28:15"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Release",
+     "version": "0.8.3+ds-1",
+     "published": "2018-02-28T13:59:22"
+    }
+   ]
+  },
+  "runc-app": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "1.5.1-0ubuntu2",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "1.5.1-0ubuntu2",
+     "published": "2026-09-15T17:29:53"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "1.4.0-0ubuntu1",
+     "published": "2026-01-14T13:48:20"
+    },
+    {
+     "series": "questing",
+     "pocket": "Updates",
+     "version": "1.3.4-0ubuntu1~25.10.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "1.3.4-0ubuntu1~24.04.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "1.3.4-0ubuntu1~22.04.1",
+     "published": "2026-04-08T01:11:17"
+    },
+    {
+     "series": "questing",
+     "pocket": "Security",
+     "version": "1.3.3-0ubuntu1~25.10.3",
+     "published": "2025-11-24T12:54:34"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Updates",
+     "version": "1.3.3-0ubuntu1~25.04.3",
+     "published": "2025-11-24T16:49:33"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Security",
+     "version": "1.3.3-0ubuntu1~25.04.3",
+     "published": "2025-11-24T12:54:34"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "1.3.3-0ubuntu1~24.04.3",
+     "published": "2025-11-24T12:54:34"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "1.3.3-0ubuntu1~22.04.3",
+     "published": "2025-11-24T12:54:34"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "1.3.0-0ubuntu2",
+     "published": "2025-08-31T23:39:48"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "1.2.5-0ubuntu1",
+     "published": "2025-02-20T15:11:36"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "1.1.12-0ubuntu3",
+     "published": "2024-04-17T23:53:32"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "1.1.12-0ubuntu2~23.10.1",
+     "published": "2024-06-10T10:02:31"
+    },
+    {
+     "series": "focal",
+     "pocket": "Updates",
+     "version": "1.1.12-0ubuntu2~20.04.1",
+     "published": "2024-06-10T10:02:31"
+    }
+   ]
+  },
+  "skopeo": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "1.22.0+ds1-1",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "1.22.0+ds1-1",
+     "published": "2026-07-11T23:22:39"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "1.21.0~pre1-2build1",
+     "published": "2026-03-05T18:51:07"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "1.18.0+ds1-1",
+     "published": "2025-05-05T06:41:15"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "1.13.3+ds1-2ubuntu0.24.04.3",
+     "published": "2025-07-21T10:51:51"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "1.13.3+ds1-2ubuntu0.24.04.3",
+     "published": "2025-07-21T09:11:33"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "1.13.3+ds1-2build2",
+     "published": "2024-10-17T09:30:28"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "1.13.3+ds1-2build2",
+     "published": "2024-04-04T02:14:57"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Updates",
+     "version": "1.9.3+ds1-1ubuntu0.1",
+     "published": "2024-02-01T12:46:24"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Security",
+     "version": "1.9.3+ds1-1ubuntu0.1",
+     "published": "2024-02-01T11:54:29"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "1.9.3+ds1-1build1",
+     "published": "2023-08-29T04:19:05"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Release",
+     "version": "1.9.3+ds1-1",
+     "published": "2023-01-31T03:58:57"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "1.4.1+ds1-1ubuntu0.1",
+     "published": "2024-11-19T14:58:14"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "1.4.1+ds1-1ubuntu0.1",
+     "published": "2024-11-19T13:05:43"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Release",
+     "version": "1.4.1+ds1-1",
+     "published": "2021-11-09T03:39:04"
+    }
+   ]
+  },
+  "sudo": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "published": [
+    {
+     "series": "tenacious",
+     "pocket": "Release",
+     "version": "1.9.17p2-7ubuntu5",
+     "published": "2026-10-15T14:40:17"
+    },
+    {
+     "series": "stonking",
+     "pocket": "Release",
+     "version": "1.9.17p2-7ubuntu5",
+     "published": "2026-10-07T15:16:49"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Updates",
+     "version": "1.9.17p2-1ubuntu3.2",
+     "published": "2026-10-07T15:16:49"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Security",
+     "version": "1.9.17p2-1ubuntu3.2",
+     "published": "2026-10-07T13:05:21"
+    },
+    {
+     "series": "resolute",
+     "pocket": "Release",
+     "version": "1.9.17p2-1ubuntu3",
+     "published": "2026-03-18T16:24:33"
+    },
+    {
+     "series": "questing",
+     "pocket": "Updates",
+     "version": "1.9.17p2-1ubuntu1.1",
+     "published": "2026-03-13T06:00:33"
+    },
+    {
+     "series": "questing",
+     "pocket": "Security",
+     "version": "1.9.17p2-1ubuntu1.1",
+     "published": "2026-03-12T21:49:57"
+    },
+    {
+     "series": "questing",
+     "pocket": "Release",
+     "version": "1.9.17p2-1ubuntu1",
+     "published": "2025-10-02T17:12:27"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Updates",
+     "version": "1.9.16p2-1ubuntu1.1",
+     "published": "2025-06-30T18:58:34"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Security",
+     "version": "1.9.16p2-1ubuntu1.1",
+     "published": "2025-06-30T15:43:44"
+    },
+    {
+     "series": "plucky",
+     "pocket": "Release",
+     "version": "1.9.16p2-1ubuntu1",
+     "published": "2025-02-22T18:17:45"
+    },
+    {
+     "series": "noble",
+     "pocket": "Updates",
+     "version": "1.9.15p5-3ubuntu5.24.04.4",
+     "published": "2026-10-07T15:16:49"
+    },
+    {
+     "series": "noble",
+     "pocket": "Security",
+     "version": "1.9.15p5-3ubuntu5.24.04.4",
+     "published": "2026-10-07T13:05:21"
+    },
+    {
+     "series": "noble",
+     "pocket": "Release",
+     "version": "1.9.15p5-3ubuntu5",
+     "published": "2024-04-18T02:44:19"
+    },
+    {
+     "series": "mantic",
+     "pocket": "Release",
+     "version": "1.9.14p2-1ubuntu1",
+     "published": "2023-08-26T14:05:11"
+    },
+    {
+     "series": "lunar",
+     "pocket": "Release",
+     "version": "1.9.13p1-1ubuntu2",
+     "published": "2023-03-14T22:29:39"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Updates",
+     "version": "1.9.9-1ubuntu2.7",
+     "published": "2026-10-07T19:14:08"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Security",
+     "version": "1.9.9-1ubuntu2.7",
+     "published": "2026-10-07T13:28:50"
+    },
+    {
+     "series": "jammy",
+     "pocket": "Release",
+     "version": "1.9.9-1ubuntu2",
+     "published": "2022-02-20T04:18:56"
+    },
+    {
+     "series": "focal",
+     "pocket": "Updates",
+     "version": "1.8.31-1ubuntu1.5",
+     "published": "2023-04-11T15:09:17"
+    },
+    {
+     "series": "focal",
+     "pocket": "Security",
+     "version": "1.8.31-1ubuntu1.5",
+     "published": "2023-04-11T14:23:42"
+    },
+    {
+     "series": "focal",
+     "pocket": "Release",
+     "version": "1.8.31-1ubuntu1",
+     "published": "2020-02-10T20:08:24"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Updates",
+     "version": "1.8.21p2-3ubuntu1.6",
+     "published": "2023-04-11T15:09:17"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Security",
+     "version": "1.8.21p2-3ubuntu1.6",
+     "published": "2023-04-11T14:23:42"
+    },
+    {
+     "series": "bionic",
+     "pocket": "Release",
+     "version": "1.8.21p2-3ubuntu1",
+     "published": "2018-01-27T04:04:22"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Updates",
+     "version": "1.8.16-0ubuntu1.10",
+     "published": "2021-01-26T19:28:43"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Security",
+     "version": "1.8.16-0ubuntu1.10",
+     "published": "2021-01-26T18:48:27"
+    },
+    {
+     "series": "xenial",
+     "pocket": "Release",
+     "version": "1.8.16-0ubuntu1",
+     "published": "2016-03-31T00:18:45"
+    },
+    {
+     "series": "trusty",
+     "pocket": "Updates",
+     "version": "1.8.9p5-1ubuntu1.4",
+     "published": "2017-05-30T15:58:24"
+    },
+    {
+     "series": "trusty",
+     "pocket": "Security",
+     "version": "1.8.9p5-1ubuntu1.4",
+     "published": "2017-05-30T15:33:20"
+    },
+    {
+     "series": "trusty",
+     "pocket": "Release",
+     "version": "1.8.9p5-1ubuntu1",
+     "published": "2014-02-10T20:53:25"
+    },
+    {
+     "series": "precise",
+     "pocket": "Updates",
+     "version": "1.8.3p1-1ubuntu3.10",
+     "published": "2021-05-03T14:44:03"
+    },
+    {
+     "series": "precise",
+     "pocket": "Security",
+     "version": "1.8.3p1-1ubuntu3.10",
+     "published": "2021-05-03T13:34:04"
+    },
+    {
+     "series": "precise",
+     "pocket": "Release",
+     "version": "1.8.3p1-1ubuntu3",
+     "published": "2012-01-31T16:04:14"
+    }
+   ]
+  }
+ },
+ "github": {
+  "cockpit-project/cockpit": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "releases": [
+    {
+     "tag": "369",
+     "version": "369",
+     "published": "2026-10-07T12:57:34",
+     "fixes": []
+    },
+    {
+     "tag": "310.10",
+     "version": "310.10",
+     "published": "2026-09-24T09:30:38",
+     "fixes": [
+      "CVE-2026-76235",
+      "CVE-2026-91147",
+      "CVE-2026-91148"
+     ]
+    },
+    {
+     "tag": "368",
+     "version": "368",
+     "published": "2026-09-23T13:52:53",
+     "fixes": [
+      "CVE-2026-91147",
+      "CVE-2026-91148",
+      "CVE-2026-91149"
+     ]
+    },
+    {
+     "tag": "366.1",
+     "version": "366.1",
+     "published": "2026-09-23T12:28:45",
+     "fixes": [
+      "CVE-2026-76235",
+      "CVE-2026-91147",
+      "CVE-2026-91148",
+      "CVE-2026-91149"
+     ]
+    },
+    {
+     "tag": "356.4",
+     "version": "356.4",
+     "published": "2026-09-23T12:51:06",
+     "fixes": [
+      "CVE-2026-76235",
+      "CVE-2026-91147",
+      "CVE-2026-91148",
+      "CVE-2026-91149"
+     ]
+    },
+    {
+     "tag": "367",
+     "version": "367",
+     "published": "2026-08-27T09:39:45",
+     "fixes": []
+    },
+    {
+     "tag": "366",
+     "version": "366",
+     "published": "2026-08-13T09:47:02",
+     "fixes": []
+    },
+    {
+     "tag": "356.3",
+     "version": "356.3",
+     "published": "2026-08-13T07:38:12",
+     "fixes": []
+    },
+    {
+     "tag": "310.9",
+     "version": "310.9",
+     "published": "2026-08-04T13:23:21",
+     "fixes": []
+    },
+    {
+     "tag": "365",
+     "version": "365",
+     "published": "2026-07-30T14:22:09",
+     "fixes": []
+    },
+    {
+     "tag": "364",
+     "version": "364",
+     "published": "2026-06-23T13:40:13",
+     "fixes": []
+    },
+    {
+     "tag": "363.2",
+     "version": "363.2",
+     "published": "2026-06-08T07:36:46",
+     "fixes": []
+    },
+    {
+     "tag": "363.1",
+     "version": "363.1",
+     "published": "2026-06-04T14:02:11",
+     "fixes": []
+    },
+    {
+     "tag": "363",
+     "version": "363",
+     "published": "2026-06-04T12:22:34",
+     "fixes": []
+    },
+    {
+     "tag": "356.2",
+     "version": "356.2",
+     "published": "2026-05-21T15:49:42",
+     "fixes": [
+      "CVE-2026-4802"
+     ]
+    },
+    {
+     "tag": "362",
+     "version": "362",
+     "published": "2026-05-20T12:30:14",
+     "fixes": [
+      "CVE-2026-4802"
+     ]
+    },
+    {
+     "tag": "310.8",
+     "version": "310.8",
+     "published": "2026-05-20T11:32:47",
+     "fixes": [
+      "CVE-2026-4802"
+     ]
+    },
+    {
+     "tag": "361",
+     "version": "361",
+     "published": "2026-04-21T12:04:08",
+     "fixes": []
+    },
+    {
+     "tag": "310.7",
+     "version": "310.7",
+     "published": "2026-04-21T12:24:44",
+     "fixes": []
+    },
+    {
+     "tag": "360.1",
+     "version": "360.1",
+     "published": "2026-04-14T07:08:07",
+     "fixes": []
+    },
+    {
+     "tag": "356.1",
+     "version": "356.1",
+     "published": "2026-04-13T15:19:41",
+     "fixes": [
+      "CVE-2026-4631",
+      "CVE-2026-4800"
+     ]
+    },
+    {
+     "tag": "360",
+     "version": "360",
+     "published": "2026-04-08T14:09:12",
+     "fixes": [
+      "CVE-2026-4631"
+     ]
+    },
+    {
+     "tag": "359",
+     "version": "359",
+     "published": "2026-03-26T14:52:10",
+     "fixes": []
+    },
+    {
+     "tag": "358",
+     "version": "358",
+     "published": "2026-03-18T09:36:16",
+     "fixes": []
+    },
+    {
+     "tag": "357",
+     "version": "357",
+     "published": "2026-02-27T12:02:29",
+     "fixes": []
+    },
+    {
+     "tag": "356",
+     "version": "356",
+     "published": "2026-02-11T11:15:26",
+     "fixes": []
+    },
+    {
+     "tag": "355",
+     "version": "355",
+     "published": "2026-01-29T06:14:03",
+     "fixes": []
+    },
+    {
+     "tag": "354",
+     "version": "354",
+     "published": "2026-01-07T11:16:12",
+     "fixes": []
+    },
+    {
+     "tag": "353.1",
+     "version": "353.1",
+     "published": "2025-12-15T10:29:34",
+     "fixes": []
+    },
+    {
+     "tag": "353",
+     "version": "353",
+     "published": "2025-12-10T10:55:50",
+     "fixes": []
+    }
+   ]
+  },
+  "containerd/containerd": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "releases": [
+    {
+     "tag": "v2.4.2",
+     "version": "2.4.2",
+     "published": "2026-10-13T22:35:06",
+     "fixes": [
+      "CVE-2026-95839",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-vwhp-8p66-mq4f"
+     ]
+    },
+    {
+     "tag": "v2.3.7",
+     "version": "2.3.7",
+     "published": "2026-10-13T22:46:58",
+     "fixes": [
+      "CVE-2026-95839",
+      "GHSA-5p7c-hggf-c748",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-vwhp-8p66-mq4f"
+     ]
+    },
+    {
+     "tag": "v2.2.10",
+     "version": "2.2.10",
+     "published": "2026-10-13T22:45:01",
+     "fixes": [
+      "CVE-2026-95839",
+      "GHSA-5p7c-hggf-c748",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-vwhp-8p66-mq4f"
+     ]
+    },
+    {
+     "tag": "v2.0.14",
+     "version": "2.0.14",
+     "published": "2026-10-13T22:26:41",
+     "fixes": [
+      "GHSA-hc94-p972-ch66"
+     ]
+    },
+    {
+     "tag": "v2.4.1",
+     "version": "2.4.1",
+     "published": "2026-09-24T23:40:25",
+     "fixes": [
+      "CVE-2026-53493",
+      "GHSA-pg57-6jwg-q645"
+     ]
+    },
+    {
+     "tag": "v2.3.6",
+     "version": "2.3.6",
+     "published": "2026-09-24T23:13:08",
+     "fixes": [
+      "CVE-2026-53493",
+      "GHSA-pg57-6jwg-q645"
+     ]
+    },
+    {
+     "tag": "v2.2.9",
+     "version": "2.2.9",
+     "published": "2026-09-24T23:16:34",
+     "fixes": [
+      "CVE-2026-53493",
+      "GHSA-pg57-6jwg-q645"
+     ]
+    },
+    {
+     "tag": "v2.0.13",
+     "version": "2.0.13",
+     "published": "2026-09-24T23:04:56",
+     "fixes": [
+      "CVE-2026-53493",
+      "GHSA-pg57-6jwg-q645"
+     ]
+    },
+    {
+     "tag": "v1.7.36",
+     "version": "1.7.36",
+     "published": "2026-09-24T23:43:50",
+     "fixes": [
+      "CVE-2026-53493",
+      "GHSA-pg57-6jwg-q645"
+     ]
+    },
+    {
+     "tag": "v2.4.0",
+     "version": "2.4.0",
+     "published": "2026-09-16T20:08:21",
+     "fixes": []
+    },
+    {
+     "tag": "v2.3.5",
+     "version": "2.3.5",
+     "published": "2026-09-04T20:49:28",
+     "fixes": [
+      "CVE-2026-53495",
+      "GHSA-7jxh-36q5-gcqv",
+      "GHSA-rp3h-jf77-q9p4"
+     ]
+    },
+    {
+     "tag": "v2.2.8",
+     "version": "2.2.8",
+     "published": "2026-09-04T20:49:19",
+     "fixes": [
+      "CVE-2026-53495",
+      "GHSA-7jxh-36q5-gcqv",
+      "GHSA-rp3h-jf77-q9p4"
+     ]
+    },
+    {
+     "tag": "v2.0.12",
+     "version": "2.0.12",
+     "published": "2026-09-04T20:49:53",
+     "fixes": [
+      "CVE-2026-53495",
+      "GHSA-7jxh-36q5-gcqv",
+      "GHSA-rp3h-jf77-q9p4"
+     ]
+    },
+    {
+     "tag": "v1.7.35",
+     "version": "1.7.35",
+     "published": "2026-09-04T21:17:05",
+     "fixes": [
+      "CVE-2026-53495",
+      "GHSA-7jxh-36q5-gcqv",
+      "GHSA-rp3h-jf77-q9p4"
+     ]
+    },
+    {
+     "tag": "v2.3.4",
+     "version": "2.3.4",
+     "published": "2026-08-12T17:59:47",
+     "fixes": []
+    },
+    {
+     "tag": "v2.2.7",
+     "version": "2.2.7",
+     "published": "2026-08-12T18:02:25",
+     "fixes": []
+    },
+    {
+     "tag": "v2.3.3",
+     "version": "2.3.3",
+     "published": "2026-07-10T00:04:40",
+     "fixes": []
+    },
+    {
+     "tag": "v2.2.6",
+     "version": "2.2.6",
+     "published": "2026-07-09T23:57:48",
+     "fixes": []
+    },
+    {
+     "tag": "v2.0.11",
+     "version": "2.0.11",
+     "published": "2026-07-09T23:49:40",
+     "fixes": []
+    },
+    {
+     "tag": "v1.7.34",
+     "version": "1.7.34",
+     "published": "2026-07-09T23:41:27",
+     "fixes": []
+    },
+    {
+     "tag": "v2.3.2",
+     "version": "2.3.2",
+     "published": "2026-06-18T23:16:02",
+     "fixes": [
+      "CVE-2026-47262",
+      "CVE-2026-50195",
+      "CVE-2026-53488",
+      "CVE-2026-53489",
+      "CVE-2026-53492",
+      "GHSA-33vj-92qq-66hc",
+      "GHSA-cvxm-645q-p574",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-rgh6-rfwx-v388",
+      "GHSA-xhf5-7wjv-pqxp"
+     ]
+    },
+    {
+     "tag": "v2.2.5",
+     "version": "2.2.5",
+     "published": "2026-06-18T23:11:33",
+     "fixes": [
+      "CVE-2026-47262",
+      "CVE-2026-50195",
+      "CVE-2026-53488",
+      "CVE-2026-53489",
+      "CVE-2026-53492",
+      "GHSA-33vj-92qq-66hc",
+      "GHSA-cvxm-645q-p574",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-rgh6-rfwx-v388",
+      "GHSA-xhf5-7wjv-pqxp"
+     ]
+    },
+    {
+     "tag": "v2.1.9",
+     "version": "2.1.9",
+     "published": "2026-06-18T23:20:04",
+     "fixes": [
+      "CVE-2026-47262",
+      "CVE-2026-50195",
+      "CVE-2026-53488",
+      "CVE-2026-53489",
+      "CVE-2026-53492",
+      "GHSA-33vj-92qq-66hc",
+      "GHSA-cvxm-645q-p574",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-rgh6-rfwx-v388",
+      "GHSA-xhf5-7wjv-pqxp"
+     ]
+    },
+    {
+     "tag": "v2.0.10",
+     "version": "2.0.10",
+     "published": "2026-06-18T23:17:50",
+     "fixes": [
+      "CVE-2026-47262",
+      "CVE-2026-53488",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-xhf5-7wjv-pqxp"
+     ]
+    }
+   ]
+  },
+  "docker/compose": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "releases": [
+    {
+     "tag": "v5.6.0",
+     "version": "5.6.0",
+     "published": "2026-10-02T16:07:06",
+     "fixes": []
+    },
+    {
+     "tag": "v5.5.1",
+     "version": "5.5.1",
+     "published": "2026-09-03T15:53:28",
+     "fixes": []
+    },
+    {
+     "tag": "v5.5.0",
+     "version": "5.5.0",
+     "published": "2026-08-17T10:01:05",
+     "fixes": []
+    },
+    {
+     "tag": "v5.4.0",
+     "version": "5.4.0",
+     "published": "2026-08-03T14:39:12",
+     "fixes": []
+    },
+    {
+     "tag": "v5.3.1",
+     "version": "5.3.1",
+     "published": "2026-07-07T12:42:03",
+     "fixes": []
+    },
+    {
+     "tag": "v5.3.0",
+     "version": "5.3.0",
+     "published": "2026-07-02T09:22:07",
+     "fixes": []
+    },
+    {
+     "tag": "v5.2.0",
+     "version": "5.2.0",
+     "published": "2026-06-23T14:56:33",
+     "fixes": []
+    },
+    {
+     "tag": "v5.1.4",
+     "version": "5.1.4",
+     "published": "2026-05-20T15:22:40",
+     "fixes": []
+    },
+    {
+     "tag": "v5.1.3",
+     "version": "5.1.3",
+     "published": "2026-04-15T14:31:48",
+     "fixes": []
+    },
+    {
+     "tag": "v5.1.2",
+     "version": "5.1.2",
+     "published": "2026-04-09T09:21:05",
+     "fixes": []
+    },
+    {
+     "tag": "v5.1.1",
+     "version": "5.1.1",
+     "published": "2026-03-20T05:34:54",
+     "fixes": []
+    },
+    {
+     "tag": "v5.1.0",
+     "version": "5.1.0",
+     "published": "2026-02-24T16:42:29",
+     "fixes": []
+    },
+    {
+     "tag": "v5.0.2",
+     "version": "5.0.2",
+     "published": "2026-01-21T07:42:38",
+     "fixes": []
+    },
+    {
+     "tag": "v5.0.1",
+     "version": "5.0.1",
+     "published": "2025-12-18T14:22:38",
+     "fixes": []
+    },
+    {
+     "tag": "v5.0.0",
+     "version": "5.0.0",
+     "published": "2025-12-02T10:33:31",
+     "fixes": []
+    },
+    {
+     "tag": "v2.40.3",
+     "version": "2.40.3",
+     "published": "2025-10-30T09:35:37",
+     "fixes": []
+    },
+    {
+     "tag": "v2.40.2",
+     "version": "2.40.2",
+     "published": "2025-10-22T17:38:12",
+     "fixes": []
+    },
+    {
+     "tag": "v2.40.1",
+     "version": "2.40.1",
+     "published": "2025-10-17T13:42:04",
+     "fixes": []
+    },
+    {
+     "tag": "v2.40.0",
+     "version": "2.40.0",
+     "published": "2025-10-03T12:56:38",
+     "fixes": []
+    },
+    {
+     "tag": "v2.39.4",
+     "version": "2.39.4",
+     "published": "2025-09-19T08:49:23",
+     "fixes": []
+    },
+    {
+     "tag": "v2.39.3",
+     "version": "2.39.3",
+     "published": "2025-09-09T08:27:27",
+     "fixes": []
+    },
+    {
+     "tag": "v2.39.2",
+     "version": "2.39.2",
+     "published": "2025-08-08T16:06:06",
+     "fixes": []
+    },
+    {
+     "tag": "v2.39.1",
+     "version": "2.39.1",
+     "published": "2025-07-24T17:02:01",
+     "fixes": []
+    },
+    {
+     "tag": "v2.39.0",
+     "version": "2.39.0",
+     "published": "2025-07-24T08:31:49",
+     "fixes": []
+    },
+    {
+     "tag": "v2.38.2",
+     "version": "2.38.2",
+     "published": "2025-07-08T09:35:14",
+     "fixes": []
+    },
+    {
+     "tag": "v2.38.1",
+     "version": "2.38.1",
+     "published": "2025-06-30T20:07:35",
+     "fixes": []
+    },
+    {
+     "tag": "v2.38.0",
+     "version": "2.38.0",
+     "published": "2025-06-30T18:33:53",
+     "fixes": []
+    },
+    {
+     "tag": "v2.37.3",
+     "version": "2.37.3",
+     "published": "2025-06-24T14:05:33",
+     "fixes": []
+    }
+   ]
+  },
+  "moby/moby": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "releases": [
+    {
+     "tag": "docker-v29.9.1",
+     "version": "29.9.1",
+     "published": "2026-10-14T19:28:37",
+     "fixes": [
+      "CVE-2026-95839",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-vwhp-8p66-mq4f"
+     ]
+    },
+    {
+     "tag": "docker-v29.9.0",
+     "version": "29.9.0",
+     "published": "2026-10-08T21:34:57",
+     "fixes": [
+      "CVE-2026-56857",
+      "CVE-2026-78659",
+      "CVE-2026-78663",
+      "CVE-2026-78669",
+      "CVE-2026-97032"
+     ]
+    },
+    {
+     "tag": "v25.0.18",
+     "version": "25.0.18",
+     "published": "2026-09-30T15:54:00",
+     "fixes": [
+      "CVE-2026-17106"
+     ]
+    },
+    {
+     "tag": "docker-v29.8.2",
+     "version": "29.8.2",
+     "published": "2026-09-30T20:28:33",
+     "fixes": [
+      "CVE-2026-53493",
+      "CVE-2026-92542",
+      "CVE-2026-92543",
+      "CVE-2026-93315",
+      "CVE-2026-93316",
+      "CVE-2026-93317",
+      "CVE-2026-93318",
+      "CVE-2026-93319",
+      "CVE-2026-93320",
+      "CVE-2026-93321",
+      "CVE-2026-93322",
+      "CVE-2026-93323",
+      "CVE-2026-93326",
+      "GHSA-2f5p-x9ph-g97x",
+      "GHSA-4hgw-qrhw-fhg8",
+      "GHSA-66hf-6vf5-87hc",
+      "GHSA-6m9p-4h64-m6vh",
+      "GHSA-7cfq-22r6-qp73",
+      "GHSA-9728-qjrv-2xh2",
+      "GHSA-cv6p-7w7g-xjwq",
+      "GHSA-f2v9-hprr-32q3",
+      "GHSA-fjj4-h6vf-m9hj",
+      "GHSA-mgqf-486f-49vp",
+      "GHSA-p3rc-w3hc-pqvv",
+      "GHSA-pg57-6jwg-q645",
+      "GHSA-r456-g3gm-cvxf"
+     ]
+    },
+    {
+     "tag": "docker-v29.8.1",
+     "version": "29.8.1",
+     "published": "2026-09-15T17:05:26",
+     "fixes": []
+    },
+    {
+     "tag": "docker-v29.8.0",
+     "version": "29.8.0",
+     "published": "2026-09-03T22:31:49",
+     "fixes": []
+    },
+    {
+     "tag": "docker-v29.7.2",
+     "version": "29.7.2",
+     "published": "2026-08-06T10:35:19",
+     "fixes": []
+    },
+    {
+     "tag": "docker-v29.7.1",
+     "version": "29.7.1",
+     "published": "2026-07-31T17:36:24",
+     "fixes": []
+    },
+    {
+     "tag": "docker-v29.7.0",
+     "version": "29.7.0",
+     "published": "2026-07-30T21:38:11",
+     "fixes": [
+      "CVE-2026-17106",
+      "GHSA-hfg8-hc9c-6c3h"
+     ]
+    },
+    {
+     "tag": "docker-v29.6.2",
+     "version": "29.6.2",
+     "published": "2026-07-16T16:55:29",
+     "fixes": [
+      "CVE-2026-15788",
+      "CVE-2026-15789",
+      "CVE-2026-15791",
+      "CVE-2026-15792",
+      "CVE-2026-15793",
+      "GHSA-32pv-7hq5-qhwq",
+      "GHSA-388v-wmr2-g2v2",
+      "GHSA-g2h8-426c-7976",
+      "GHSA-hw3h-2gp9-cxpv",
+      "GHSA-qx3x-mv6r-52p6"
+     ]
+    },
+    {
+     "tag": "v25.0.17",
+     "version": "25.0.17",
+     "published": "2026-08-13T00:25:05",
+     "fixes": [
+      "CVE-2024-40635",
+      "CVE-2026-41567",
+      "CVE-2026-41568",
+      "CVE-2026-42306"
+     ]
+    },
+    {
+     "tag": "docker-v29.6.1",
+     "version": "29.6.1",
+     "published": "2026-06-26T12:29:14",
+     "fixes": [
+      "GHSA-7236-3392-c5c6",
+      "GHSA-72x6-4j93-7w86",
+      "GHSA-jpcc-p29g-p8mq",
+      "GHSA-mjcv-p78q-w5fw"
+     ]
+    },
+    {
+     "tag": "docker-v29.6.0",
+     "version": "29.6.0",
+     "published": "2026-06-18T20:43:10",
+     "fixes": []
+    },
+    {
+     "tag": "docker-v29.5.3",
+     "version": "29.5.3",
+     "published": "2026-06-03T18:50:17",
+     "fixes": []
+    },
+    {
+     "tag": "docker-v29.5.2",
+     "version": "29.5.2",
+     "published": "2026-05-20T18:02:30",
+     "fixes": []
+    }
+   ]
+  },
+  "opencontainers/runc": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "releases": [
+    {
+     "tag": "v1.5.2",
+     "version": "1.5.2",
+     "published": "2026-09-25T21:13:32",
+     "fixes": []
+    },
+    {
+     "tag": "v1.5.1",
+     "version": "1.5.1",
+     "published": "2026-07-14T01:36:25",
+     "fixes": []
+    },
+    {
+     "tag": "v1.5.0",
+     "version": "1.5.0",
+     "published": "2026-06-19T11:44:13",
+     "fixes": []
+    },
+    {
+     "tag": "v1.4.3",
+     "version": "1.4.3",
+     "published": "2026-06-13T17:23:20",
+     "fixes": [
+      "CVE-2025-31133",
+      "CVE-2025-52565",
+      "CVE-2025-52881",
+      "CVE-2026-41579",
+      "GHSA-9493-h29p-rfm2",
+      "GHSA-cgrx-mc8f-2prm",
+      "GHSA-qw9x-cqr3-wc7r",
+      "GHSA-xjvp-4fhw-gc47"
+     ]
+    },
+    {
+     "tag": "v1.3.6",
+     "version": "1.3.6",
+     "published": "2026-06-13T17:23:17",
+     "fixes": [
+      "CVE-2025-31133",
+      "CVE-2025-52565",
+      "CVE-2025-52881",
+      "CVE-2026-41579",
+      "GHSA-9493-h29p-rfm2",
+      "GHSA-cgrx-mc8f-2prm",
+      "GHSA-qw9x-cqr3-wc7r",
+      "GHSA-xjvp-4fhw-gc47"
+     ]
+    },
+    {
+     "tag": "v1.4.2",
+     "version": "1.4.2",
+     "published": "2026-04-03T00:18:14",
+     "fixes": []
+    },
+    {
+     "tag": "v1.3.5",
+     "version": "1.3.5",
+     "published": "2026-03-17T16:59:30",
+     "fixes": []
+    },
+    {
+     "tag": "v1.4.1",
+     "version": "1.4.1",
+     "published": "2026-03-13T05:06:23",
+     "fixes": []
+    },
+    {
+     "tag": "v1.4.0",
+     "version": "1.4.0",
+     "published": "2025-11-27T23:35:58",
+     "fixes": [
+      "CVE-2025-52881",
+      "GHSA-cgrx-mc8f-2prm"
+     ]
+    },
+    {
+     "tag": "v1.3.4",
+     "version": "1.3.4",
+     "published": "2025-11-27T23:35:53",
+     "fixes": [
+      "CVE-2025-52881",
+      "GHSA-cgrx-mc8f-2prm"
+     ]
+    },
+    {
+     "tag": "v1.2.9",
+     "version": "1.2.9",
+     "published": "2025-11-27T23:35:41",
+     "fixes": [
+      "CVE-2025-52881",
+      "GHSA-cgrx-mc8f-2prm"
+     ]
+    },
+    {
+     "tag": "v1.3.3",
+     "version": "1.3.3",
+     "published": "2025-11-05T09:18:19",
+     "fixes": [
+      "CVE-2019-19921",
+      "CVE-2025-31133",
+      "CVE-2025-52565",
+      "CVE-2025-52881",
+      "GHSA-9493-h29p-rfm2",
+      "GHSA-cgrx-mc8f-2prm",
+      "GHSA-fh74-hm69-rqjw",
+      "GHSA-qw9x-cqr3-wc7r"
+     ]
+    },
+    {
+     "tag": "v1.2.8",
+     "version": "1.2.8",
+     "published": "2025-11-05T09:16:04",
+     "fixes": [
+      "CVE-2019-19921",
+      "CVE-2025-31133",
+      "CVE-2025-52565",
+      "CVE-2025-52881",
+      "GHSA-9493-h29p-rfm2",
+      "GHSA-cgrx-mc8f-2prm",
+      "GHSA-fh74-hm69-rqjw",
+      "GHSA-qw9x-cqr3-wc7r"
+     ]
+    },
+    {
+     "tag": "v1.3.2",
+     "version": "1.3.2",
+     "published": "2025-10-03T02:26:31",
+     "fixes": []
+    },
+    {
+     "tag": "v1.3.1",
+     "version": "1.3.1",
+     "published": "2025-09-04T15:26:05",
+     "fixes": []
+    },
+    {
+     "tag": "v1.2.7",
+     "version": "1.2.7",
+     "published": "2025-09-04T15:25:50",
+     "fixes": []
+    },
+    {
+     "tag": "v1.3.0",
+     "version": "1.3.0",
+     "published": "2025-04-29T15:22:05",
+     "fixes": []
+    },
+    {
+     "tag": "v1.2.6",
+     "version": "1.2.6",
+     "published": "2025-03-17T20:50:09",
+     "fixes": []
+    },
+    {
+     "tag": "v1.2.5",
+     "version": "1.2.5",
+     "published": "2025-02-14T01:19:59",
+     "fixes": []
+    },
+    {
+     "tag": "v1.2.4",
+     "version": "1.2.4",
+     "published": "2025-01-07T06:29:57",
+     "fixes": []
+    },
+    {
+     "tag": "v1.2.3",
+     "version": "1.2.3",
+     "published": "2024-12-11T02:02:41",
+     "fixes": []
+    }
+   ]
+  },
+  "restic/restic": {
+   "fetched": "2026-10-19T20:55:00Z",
+   "releases": [
+    {
+     "tag": "v0.19.1",
+     "version": "0.19.1",
+     "published": "2026-07-05T08:13:33",
+     "fixes": []
+    },
+    {
+     "tag": "v0.19.0",
+     "version": "0.19.0",
+     "published": "2026-06-09T17:06:16",
+     "fixes": []
+    },
+    {
+     "tag": "v0.18.1",
+     "version": "0.18.1",
+     "published": "2025-09-21T18:24:38",
+     "fixes": []
+    },
+    {
+     "tag": "v0.18.0",
+     "version": "0.18.0",
+     "published": "2025-03-27T19:34:28",
+     "fixes": []
+    },
+    {
+     "tag": "v0.17.3",
+     "version": "0.17.3",
+     "published": "2024-11-08T19:52:25",
+     "fixes": []
+    },
+    {
+     "tag": "v0.17.2",
+     "version": "0.17.2",
+     "published": "2024-10-27T15:55:08",
+     "fixes": []
+    },
+    {
+     "tag": "v0.17.1",
+     "version": "0.17.1",
+     "published": "2024-09-05T19:41:28",
+     "fixes": []
+    },
+    {
+     "tag": "v0.17.0",
+     "version": "0.17.0",
+     "published": "2024-07-26T09:45:09",
+     "fixes": []
+    },
+    {
+     "tag": "v0.16.5",
+     "version": "0.16.5",
+     "published": "2024-07-01T19:42:28",
+     "fixes": []
+    },
+    {
+     "tag": "v0.16.4",
+     "version": "0.16.4",
+     "published": "2024-02-04T19:18:43",
+     "fixes": []
+    },
+    {
+     "tag": "v0.16.3",
+     "version": "0.16.3",
+     "published": "2024-01-14T19:36:47",
+     "fixes": []
+    },
+    {
+     "tag": "v0.16.2",
+     "version": "0.16.2",
+     "published": "2023-10-29T19:05:02",
+     "fixes": []
+    },
+    {
+     "tag": "v0.16.1",
+     "version": "0.16.1",
+     "published": "2023-10-24T18:20:39",
+     "fixes": []
+    },
+    {
+     "tag": "v0.16.0",
+     "version": "0.16.0",
+     "published": "2023-07-31T18:39:51",
+     "fixes": []
+    },
+    {
+     "tag": "v0.15.2",
+     "version": "0.15.2",
+     "published": "2023-04-24T18:40:25",
+     "fixes": [
+      "CVE-2022-41723"
+     ]
+    },
+    {
+     "tag": "v0.15.1",
+     "version": "0.15.1",
+     "published": "2023-01-30T20:10:28",
+     "fixes": []
+    },
+    {
+     "tag": "v0.15.0",
+     "version": "0.15.0",
+     "published": "2023-01-12T20:08:36",
+     "fixes": []
+    },
+    {
+     "tag": "v0.14.0",
+     "version": "0.14.0",
+     "published": "2022-08-25T18:14:07",
+     "fixes": []
+    },
+    {
+     "tag": "v0.13.1",
+     "version": "0.13.1",
+     "published": "2022-04-10T09:34:56",
+     "fixes": []
+    },
+    {
+     "tag": "v0.13.0",
+     "version": "0.13.0",
+     "published": "2022-03-26T19:37:57",
+     "fixes": []
+    },
+    {
+     "tag": "v0.12.1",
+     "version": "0.12.1",
+     "published": "2021-08-03T10:02:58",
+     "fixes": []
+    },
+    {
+     "tag": "v0.12.0",
+     "version": "0.12.0",
+     "published": "2021-02-14T13:15:37",
+     "fixes": []
+    },
+    {
+     "tag": "v0.11.0",
+     "version": "0.11.0",
+     "published": "2020-11-05T08:56:47",
+     "fixes": []
+    },
+    {
+     "tag": "v0.10.0",
+     "version": "0.10.0",
+     "published": "2020-09-19T16:26:31",
+     "fixes": []
+    },
+    {
+     "tag": "v0.9.6",
+     "version": "0.9.6",
+     "published": "2019-11-22T15:27:00",
+     "fixes": []
+    },
+    {
+     "tag": "v0.9.5",
+     "version": "0.9.5",
+     "published": "2019-04-23T11:28:34",
+     "fixes": []
+    },
+    {
+     "tag": "v0.9.4",
+     "version": "0.9.4",
+     "published": "2019-01-06T20:49:05",
+     "fixes": []
+    },
+    {
+     "tag": "v0.9.3",
+     "version": "0.9.3",
+     "published": "2018-10-13T11:58:10",
+     "fixes": []
+    },
+    {
+     "tag": "v0.9.2",
+     "version": "0.9.2",
+     "published": "2018-08-06T19:37:10",
+     "fixes": []
+    },
+    {
+     "tag": "v0.9.1",
+     "version": "0.9.1",
+     "published": "2018-06-10T09:49:20",
+     "fixes": []
+    }
+   ]
+  }
+ }
+}

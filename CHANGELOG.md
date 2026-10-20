@@ -2,11 +2,31 @@
 
 ## 0.2.0 – 2026-10-20
 
-Cockpit's menu shows the state of Update Gaps next to its entry, and a link of the Status Board that
-comes while the page is hidden still leads to its card.
+Network data: security issues Ubuntu has not fixed yet, fixes upstream and newer versions elsewhere
+in Ubuntu, for selected packages, off until set up on the page. And Cockpit's menu shows the state
+of Update Gaps next to its entry.
 
+- **Radar:** `update-gaps-radar.service` runs once a day as an unprivileged user of its own
+  (`DynamicUser`, no capabilities, exposure 1.1) and writes `/var/lib/update-gaps-radar/radar.json`.
+  It fetches Canonical's CVE OVAL of the release (only the release name leaves the server), the
+  published versions of the selected source packages from Launchpad, and the releases of a fixed
+  list of projects from GitHub. A source that fails keeps its last answers, marked as such; a
+  service that asks to slow down is left alone for that run.
+- **Selected packages:** a fixed list (Cockpit, OpenSSH, sudo, Docker, containerd, runc, restic,
+  skopeo, nginx, Caddy, WireGuard) and packages installed by hand from universe and multiverse.
+  The root scan works the selection out itself and reads `radar.json` as data only.
+- **New cards:** “Security issues Ubuntu has not fixed yet” (open CVEs with Ubuntu's priority, and
+  fixes newer than the installed version that do not reach this server), “Fixes upstream, not here
+  yet” (newer releases whose notes name a CVE or GHSA; a fix still open in Ubuntu is marked) and
+  “Newer versions elsewhere in Ubuntu” (another pocket of this release, or a later release).
+- **The page:** the overview shows the network data (off, daily, last fetched) with Set up, Fetch
+  now and Switch off; the set-up dialog says what leaves the server. Old network data are told.
+- **Status for the Status Board:** a `cve` item (info, warning for high priority or a fix that
+  does not reach the server, danger for critical) once the network data are set up.
+- `gaps-ctl.sh`: the verbs `install radar`, `remove radar` and `radar`; its status names the
+  radar's timer and data.
 - **Status in Cockpit's menu:** the entry “Update Gaps” carries Cockpit's own status icon (blue:
-  something to know, yellow: something to do or a state older than 24 hours, red: support ended)
+  something to know, yellow: something to do or a state older than 24 hours, red: support ended or a critical security issue)
   with the summary of the status as its tooltip, in the session language; nothing found, no icon.
   It is judged as the Status Board judges the status: never better than an item, and an item older
   than its `stale_after` at least a warning, checked again the moment it turns old. For this

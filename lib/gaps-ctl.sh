@@ -7,8 +7,11 @@
 #   gaps-ctl.sh scan             run update-gaps-scan.service now and wait for it (root)
 #   gaps-ctl.sh install timer    enable update-gaps-scan.timer, then run a scan (root)
 #   gaps-ctl.sh remove timer     disable update-gaps-scan.timer (root)
+#   gaps-ctl.sh install radar    enable update-gaps-radar.timer (network data), fetch, scan (root)
+#   gaps-ctl.sh remove radar     disable update-gaps-radar.timer; its data stay until out of date (root)
+#   gaps-ctl.sh radar            fetch the network data now, then scan (root)
 # Everything else is rejected (exit 64). Nothing here changes the system beyond the
-# add-on's own timer; the scan itself only reads (gaps-scan.py).
+# add-on's own timers; the scan only reads (gaps-scan.py), the radar runs unprivileged.
 #
 # Lives in /usr/lib/cockpit-update-gaps (root-owned, from the package cockpit-update-gaps).
 #
@@ -22,6 +25,9 @@ export PATH TZ LC_ALL
 
 SERVICE=update-gaps-scan.service
 TIMER=update-gaps-scan.timer
+RADAR_SERVICE=update-gaps-radar.service
+RADAR_TIMER=update-gaps-radar.timer
+RADAR_FILE=/var/lib/update-gaps-radar/radar.json
 STATE=/var/lib/update-gaps/scan.json
 SETTINGS=/etc/update-gaps.conf
 
@@ -44,22 +50,36 @@ run() {
     "$@"
 }
 
+timer_state() {
+    if [ -d /run/systemd/system ] && unit_exists "$1"; then
+        if systemctl is-active --quiet "$1" 2> /dev/null; then echo active; else echo inactive; fi
+    else
+        echo missing
+    fi
+}
+
+timer_next() {
+    [ "$(timer_state "$1")" = active ] || return 0
+    iso "$(systemctl show "$1" -p NextElapseUSecRealtime --value 2> /dev/null || true)"
+}
+
+is_running() { [ "$(systemctl is-active "$1" 2> /dev/null || true)" = activating ] && echo 1 || echo 0; }
+
+opt_str() { if [ -n "$1" ]; then json_str "$1"; else printf null; fi; }
+
 do_status() {
     is_root=0; [ "$(id -u)" = 0 ] && is_root=1
-    timer=missing; next=""
-    if [ -d /run/systemd/system ] && unit_exists "$TIMER"; then
-        if systemctl is-active --quiet "$TIMER" 2> /dev/null; then timer=active; else timer=inactive; fi
-        next=$(iso "$(systemctl show "$TIMER" -p NextElapseUSecRealtime --value 2> /dev/null || true)")
-    fi
-    running=0
-    if [ "$(systemctl is-active "$SERVICE" 2> /dev/null || true)" = activating ]; then running=1; fi
+    timer=$(timer_state "$TIMER"); next=$(timer_next "$TIMER")
+    radar=$(timer_state "$RADAR_TIMER"); radar_next=$(timer_next "$RADAR_TIMER")
     settings=""; [ -e "$SETTINGS" ] && settings=$SETTINGS
-    printf '{"root": %s, "timer": %s, "next": %s, "running": %s, "state_file": %s, "dpkg_status_mtime": %s, "settings": %s}\n' \
-        "$(json_bool "$is_root")" "$(json_str "$timer")" \
-        "$( [ -n "$next" ] && json_str "$next" || printf null)" "$(json_bool "$running")" \
+    # The radar's data live below /var/lib/private, which only root can enter.
+    radar_file=""; [ "$is_root" = 1 ] && radar_file=$(mtime_iso "$RADAR_FILE")
+    printf '{"root": %s, "timer": %s, "next": %s, "running": %s, "state_file": %s, "dpkg_status_mtime": %s, "settings": %s, "radar": %s, "radar_next": %s, "radar_running": %s, "radar_file": %s}\n' \
+        "$(json_bool "$is_root")" "$(json_str "$timer")" "$(opt_str "$next")" "$(json_bool "$(is_running "$SERVICE")")" \
         "$(json_bool "$( [ -e "$STATE" ] && echo 1 || echo 0)")" \
-        "$(m=$(mtime_iso /var/lib/dpkg/status); [ -n "$m" ] && json_str "$m" || printf null)" \
-        "$( [ -n "$settings" ] && json_str "$settings" || printf null)"
+        "$(opt_str "$(mtime_iso /var/lib/dpkg/status)")" "$(opt_str "$settings")" \
+        "$(json_str "$radar")" "$(opt_str "$radar_next")" "$(json_bool "$(is_running "$RADAR_SERVICE")")" \
+        "$(opt_str "$radar_file")"
 }
 
 do_scan() {
@@ -90,13 +110,51 @@ do_remove_timer() {
     msg "Regelmäßige Prüfung ausgeschaltet. Der letzte Stand bleibt." "Regular check switched off. The last state stays."
 }
 
-[ $# -le 2 ] || die 64 "Aufruf: gaps-ctl.sh status | scan | install timer | remove timer" \
-                       "usage: gaps-ctl.sh status | scan | install timer | remove timer"
+fetch_radar() {
+    msg "Hole die Netzdaten (unprivilegiert, $RADAR_SERVICE) …" "Fetching the network data (unprivileged, $RADAR_SERVICE) …"
+    if ! systemctl start "$RADAR_SERVICE"; then
+        journalctl -u "$RADAR_SERVICE" -n 10 --no-pager -o cat 2> /dev/null || true
+        die 1 "Der Abruf ist fehlgeschlagen: journalctl -u $RADAR_SERVICE" "Fetching failed: journalctl -u $RADAR_SERVICE"
+    fi
+    journalctl -u "$RADAR_SERVICE" -n 1 --no-pager -o cat 2> /dev/null || true
+    run systemctl start "$SERVICE"
+}
+
+do_install_radar() {
+    need_root
+    unit_exists "$RADAR_TIMER" || die 2 "Der Timer $RADAR_TIMER fehlt (Paket cockpit-update-gaps)." \
+                                         "The timer $RADAR_TIMER is missing (package cockpit-update-gaps)."
+    run systemctl enable --now "$RADAR_TIMER"
+    fetch_radar
+    msg "Netzdaten eingerichtet: täglich." "Network data set up: daily."
+}
+
+do_remove_radar() {
+    need_root
+    unit_exists "$RADAR_TIMER" || die 2 "Der Timer $RADAR_TIMER fehlt." "The timer $RADAR_TIMER is missing."
+    run systemctl disable --now "$RADAR_TIMER"
+    msg "Netzdaten ausgeschaltet. Der letzte Stand bleibt, bis er veraltet." \
+        "Network data switched off. The last data stay until they are out of date."
+}
+
+do_radar() {
+    need_root
+    unit_exists "$RADAR_SERVICE" || die 2 "Der Dienst $RADAR_SERVICE fehlt." "The service $RADAR_SERVICE is missing."
+    fetch_radar
+    msg "Fertig." "Done."
+}
+
+USAGE_DE="Aufruf: gaps-ctl.sh status | scan | radar | install timer|radar | remove timer|radar"
+USAGE_EN="usage: gaps-ctl.sh status | scan | radar | install timer|radar | remove timer|radar"
+
+[ $# -le 2 ] || die 64 "$USAGE_DE" "$USAGE_EN"
 case "${1:-} ${2:-}" in
     "status ") do_status ;;
     "scan ") do_scan ;;
+    "radar ") do_radar ;;
     "install timer") do_install_timer ;;
     "remove timer") do_remove_timer ;;
-    *) die 64 "Aufruf: gaps-ctl.sh status | scan | install timer | remove timer" \
-              "usage: gaps-ctl.sh status | scan | install timer | remove timer" ;;
+    "install radar") do_install_radar ;;
+    "remove radar") do_remove_radar ;;
+    *) die 64 "$USAGE_DE" "$USAGE_EN" ;;
 esac

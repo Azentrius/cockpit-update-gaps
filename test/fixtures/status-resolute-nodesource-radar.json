@@ -1,0 +1,106 @@
+{
+ "schema": 1,
+ "addon": "update-gaps",
+ "label": "Update Gaps",
+ "version": "0.1.0",
+ "checked_at": "2026-10-19T20:55:00Z",
+ "state": "info",
+ "summary": "Findings in 3 areas: Security issues not fixed yet, Fixes only with Ubuntu Pro, Package lists.",
+ "items": [
+  {
+   "id": "cve",
+   "state": "info",
+   "title": "Security issues not fixed yet",
+   "value": "44",
+   "detail": "44 open: docker.io-app (24), cockpit (9), containerd-app (5), openssh (5), runc-app (1)",
+   "link": "#/cve",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "held",
+   "state": "ok",
+   "title": "Held packages",
+   "value": "0",
+   "link": "#/held",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "restart",
+   "state": "ok",
+   "title": "Restart",
+   "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "pro",
+   "state": "info",
+   "title": "Fixes only with Ubuntu Pro",
+   "value": "1",
+   "detail": "restic",
+   "link": "#/pro",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "lists",
+   "state": "info",
+   "title": "Package lists",
+   "detail": "apt-daily reported problems",
+   "link": "#/lists",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "eol",
+   "state": "ok",
+   "title": "Support of the release",
+   "detail": "standard support until 2031-05-29",
+   "link": "#/eol",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "updates",
+   "state": "ok",
+   "title": "Regular updates",
+   "value": "0",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  }
+ ],
+ "i18n": {
+  "de": {
+   "summary": "Befunde in 3 Bereichen: Noch nicht behobene Sicherheitslücken, Fixes nur mit Ubuntu Pro, Paketlisten.",
+   "items": {
+    "cve": {
+     "title": "Noch nicht behobene Sicherheitslücken",
+     "detail": "44 offen: docker.io-app (24), cockpit (9), containerd-app (5), openssh (5), runc-app (1)"
+    },
+    "held": {
+     "title": "Gehaltene Pakete"
+    },
+    "restart": {
+     "title": "Neustart"
+    },
+    "pro": {
+     "title": "Fixes nur mit Ubuntu Pro",
+     "detail": "restic"
+    },
+    "lists": {
+     "title": "Paketlisten",
+     "detail": "apt-daily meldete Probleme"
+    },
+    "eol": {
+     "title": "Unterstützung der Version",
+     "detail": "Standard-Unterstützung bis 2031-05-29"
+    },
+    "updates": {
+     "title": "Reguläre Updates"
+    }
+   }
+  }
+ }
+}

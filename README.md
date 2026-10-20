@@ -38,14 +38,17 @@ check on or off, after showing what that does.
 | **Backports not installed** | `apt-cache policy` | a newer backport is offered only for a package from backports already |
 | **Software outside the package manager** | `/usr/local/bin`, `/usr/local/sbin`, `/opt/*/bin`, checked with `dpkg -S` | apt does not know these files |
 | **End of support** | `/usr/share/distro-info/*.csv` | Cockpit does not show when a release stops getting updates |
+| **Security issues Ubuntu has not fixed yet** (network data) | Canonical's CVE OVAL of the release | without a fix there is no update to list |
+| **Fixes upstream, not here yet** (network data) | GitHub releases of Cockpit, Docker, containerd, runc, Compose, restic | Software Updates compares with the package sources only |
+| **Newer versions elsewhere in Ubuntu** (network data) | Launchpad: published versions per pocket and release | another pocket or a later release is not a source here |
 
 The number of regular updates comes from `apt-get -s dist-upgrade`; the page links to “Software
 Updates” for them.
 
 **Not checked** (always listed on the page): container images (the add-on
 [Image Update Monitor](https://github.com/Azentrius/cockpit-image-update-monitor) checks them),
-security issues the distribution has not fixed yet and how far a package is behind its upstream
-release (they need data from the network; planned), Snaps, Flatpaks, pip/npm/gem/cargo installs,
+security issues and upstream versions of packages outside the selection (with the network data
+set up) or of all packages (without), Snaps, Flatpaks, pip/npm/gem/cargo installs,
 AppImages, firmware, software in containers, VMs and home directories, and whether a security issue
 applies to the configuration of the server.
 
@@ -116,6 +119,12 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
 
 - **Read only.** The scan never runs `apt update`, never installs, removes or restarts anything.
   It writes only its state files (`scan.json`, `status.json`) and its lock.
+- **Network data only unprivileged, and only when set up.** The radar of stage 2
+  (`update-gaps-radar.service`) runs once a day as a user of its own (`DynamicUser`, no
+  capabilities, exposure 1.1) and writes only its own folder. What leaves the server: the release
+  name to security-metadata.canonical.com, the names of selected source packages to
+  api.launchpad.net, and which of a fixed list of projects are installed to api.github.com. The
+  root scan reads its file as data, checks every value and asks only about its own selection.
 - **No network for root code.** The scan runs as `update-gaps-scan.service` with
   `PrivateNetwork=yes`, `IPAddressDeny=any`, `ProtectSystem=strict` and more
   (`systemd-analyze security` exposure 4.9, checked in CI). “Refresh” starts the same service, so
@@ -190,6 +199,8 @@ journalctl -u update-gaps-scan.service -n 20            # how the last check wen
 sudo /usr/lib/cockpit-update-gaps/gaps-scan.py | less   # the same checks, on stdout
 /usr/lib/cockpit-update-gaps/gaps-ctl.sh status         # timer, admin, last package change
 /usr/lib/cockpit-update-gaps/gaps-status.py status --lang de   # what the Status Board shows
+sudo systemctl start update-gaps-radar.service          # fetch the network data now (once set up)
+journalctl -u update-gaps-radar.service -n 20            # how the last fetch went
 systemctl list-timers update-gaps-scan.timer            # the regular check
 ```
 

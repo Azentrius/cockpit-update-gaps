@@ -53,6 +53,9 @@ useradd -m ugplain 2> /dev/null || true
 su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-scan.py'" > /tmp/scan-user.json
 sh "$src/lib/gaps-ctl.sh" status > /tmp/status.json
 su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-status.py' status --lang de" > /tmp/board.json
+# The radar of stage 2: never as root; as a user it works out what it would ask about (no network).
+if python3 -I "$src/lib/gaps-radar.py" --dry-run > /dev/null 2>&1; then echo "the radar ran as root"; exit 1; fi
+su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-radar.py' --dry-run" > /tmp/selection.json
 
 python3 - "$ID" <<'EOF'
 import json, sys
@@ -98,6 +101,11 @@ assert items["restart"]["state"] == "warning" and "linux-base" in items["restart
 assert items["held"]["state"] in ("ok", "warning") and "tzdata" in items["held"]["detail"], items
 assert board["state"] in ("warning", "danger") and "Neustart" in board["summary"], board
 assert ("pro" in items) == (ident == "ubuntu"), items
+sel = json.load(open("/tmp/selection.json"))
+assert set(sel) == {"sources", "upstream"}, sel
+print("radar would ask about:", sorted(sel["sources"]), sorted(sel["upstream"]))
+for k in ("cve", "upstream", "newer"):
+    assert c[k]["state"] == "skipped" and c[k]["reason"] in ("radar-off", "not-applicable"), c[k]
 print("SCENARIO OK")
 EOF
 test ! -e /tmp/ug-fake-apt-ran || { echo "the helper ran apt-get from /usr/local/bin"; exit 1; }

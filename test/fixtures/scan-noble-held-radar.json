@@ -1,0 +1,1011 @@
+{
+ "format": 1,
+ "generated": "2026-10-19T20:55:00Z",
+ "root": true,
+ "pm": "apt",
+ "os": {
+  "id": "ubuntu",
+  "version_id": "24.04",
+  "codename": "noble",
+  "name": "Ubuntu 24.04.5 LTS"
+ },
+ "checks": [
+  {
+   "check": "updates",
+   "count": 0,
+   "security": 0,
+   "kept_back": [
+    "containerd.io",
+    "docker-buildx-plugin",
+    "docker-ce",
+    "docker-ce-cli",
+    "docker-ce-rootless-extras",
+    "docker-compose-plugin"
+   ],
+   "phased": [],
+   "source": [
+    "apt-get -s dist-upgrade"
+   ],
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "held",
+   "state": "found",
+   "findings": [
+    {
+     "package": "containerd.io",
+     "installed": "2.3.5-1~ubuntu.24.04~noble",
+     "candidate": "2.4.2-2~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:09"
+    },
+    {
+     "package": "docker-buildx-plugin",
+     "installed": "0.37.0-1~ubuntu.24.04~noble",
+     "candidate": "0.38.0-1~ubuntu.24.04~noble",
+     "newer": 2,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:13"
+    },
+    {
+     "package": "docker-ce",
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "candidate": "5:29.9.1-1~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:10"
+    },
+    {
+     "package": "docker-ce-cli",
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "candidate": "5:29.9.1-1~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:09"
+    },
+    {
+     "package": "docker-ce-rootless-extras",
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "candidate": "5:29.9.1-1~ubuntu.24.04~noble",
+     "newer": 4,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:13"
+    },
+    {
+     "package": "docker-compose-plugin",
+     "installed": "5.5.1-1~ubuntu.24.04~noble",
+     "candidate": "5.6.0-1~ubuntu.24.04~noble",
+     "newer": 1,
+     "security": null,
+     "origin": {
+      "site": "https://download.docker.com/linux/ubuntu",
+      "host": "download.docker.com",
+      "o": "Docker",
+      "a": "noble",
+      "n": "",
+      "l": "Docker CE",
+      "c": "stable"
+     },
+     "installed_at": "2026-09-08T13:48:14"
+    }
+   ],
+   "source": [
+    "apt-mark showhold",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "pro",
+   "state": "found",
+   "findings": [
+    {
+     "package": "python3-pip",
+     "version": "24.0+dfsg-1ubuntu1.3+esm3",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "24.0+dfsg-1ubuntu1.3"
+    },
+    {
+     "package": "python3-wheel",
+     "version": "0.42.0-2ubuntu0.1~esm1",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "0.42.0-2"
+    },
+    {
+     "package": "restic",
+     "version": "0.16.4-2ubuntu0.24.04.3+esm2",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "0.16.4-2ubuntu0.24.04.3"
+    },
+    {
+     "package": "skopeo",
+     "version": "1.13.3+ds1-2ubuntu0.24.04.3+esm2",
+     "service": "esm-apps",
+     "status": "pending_attach",
+     "installed": "1.13.3+ds1-2ubuntu0.24.04.3"
+    }
+   ],
+   "attached": false,
+   "services": [],
+   "counts": {
+    "esm_apps_packages": 0,
+    "esm_apps_updates": 4,
+    "esm_infra_packages": 0,
+    "esm_infra_updates": 0,
+    "installed_packages": 962,
+    "main_packages": 881,
+    "multiverse_packages": 0,
+    "restricted_packages": 0,
+    "standard_security_updates": 0,
+    "third_party_packages": 10,
+    "universe_packages": 70,
+    "unknown_packages": 1
+   },
+   "source": [
+    "pro security-status --format json"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "restart",
+   "source": [
+    "needrestart -b -r l",
+    "/var/run/reboot-required"
+   ],
+   "kernel": {
+    "running": "6.8.0-146-generic",
+    "expected": "6.8.0-147-generic",
+    "state": 3
+   },
+   "microcode": null,
+   "services": [
+    "dbus.service",
+    "NetworkManager.service",
+    "systemd-logind.service",
+    "unattended-upgrades.service",
+    "wpa_supplicant.service"
+   ],
+   "reboot_required": {
+    "since": "2026-10-14T06:04:25Z",
+    "packages": [
+     "linux-base",
+     "linux-image-6.8.0-147-generic"
+    ]
+   },
+   "tool": "needrestart 3.6",
+   "state": "found",
+   "took_ms": 0
+  },
+  {
+   "check": "lists",
+   "state": "none",
+   "findings": [],
+   "last_update": {
+    "ts": "2026-10-19T14:29:37Z",
+    "src": "update-success-stamp",
+    "age_h": 6.4
+   },
+   "apt_daily": {
+    "finished": "2026-10-19T10:04:25Z",
+    "result": "success"
+   },
+   "indexes": [
+    {
+     "file": "cli.github.com_packages_dists_stable_InRelease",
+     "date": "2026-09-30T02:39:10Z",
+     "valid_until": null
+    },
+    {
+     "file": "download.docker.com_linux_ubuntu_dists_noble_InRelease",
+     "date": "2026-10-19T03:59:02Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_noble-backports_InRelease",
+     "date": "2026-10-17T23:38:40Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_noble-updates_InRelease",
+     "date": "2026-10-18T12:26:19Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_packages_dists_noble_InRelease",
+     "date": "2024-04-25T15:10:33Z",
+     "valid_until": null
+    },
+    {
+     "file": "mirror.hetzner.com_ubuntu_security_dists_noble-security_InRelease",
+     "date": "2026-10-17T23:35:54Z",
+     "valid_until": null
+    },
+    {
+     "file": "packages.azentrius.com_apt_dists_stable_InRelease",
+     "date": "2026-10-18T21:11:43Z",
+     "valid_until": null
+    }
+   ],
+   "stale_after_h": 48,
+   "source": [
+    "apt-get indextargets",
+    "/var/lib/apt/lists",
+    "/var/lib/apt/periodic"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "local",
+   "state": "found",
+   "findings": [
+    {
+     "package": "hc-utils",
+     "version": "0.0.6-1",
+     "arch": "all",
+     "cause": "no-source"
+    }
+   ],
+   "source": [
+    "apt-cache policy",
+    "dpkg-query"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "auto",
+   "state": "found",
+   "findings": [
+    {
+     "kind": "source",
+     "site": "https://cli.github.com/packages",
+     "host": "cli.github.com",
+     "o": "gh",
+     "a": "",
+     "n": "stable",
+     "l": "gh",
+     "c": "main",
+     "packages": [
+      "gh"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://download.docker.com/linux/ubuntu",
+     "host": "download.docker.com",
+     "o": "Docker",
+     "a": "noble",
+     "n": "",
+     "l": "Docker CE",
+     "c": "stable",
+     "packages": [
+      "containerd.io",
+      "docker-buildx-plugin",
+      "docker-ce",
+      "docker-ce-cli",
+      "docker-ce-rootless-extras",
+      "docker-compose-plugin"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://mirror.hetzner.com/ubuntu/packages",
+     "host": "mirror.hetzner.com",
+     "o": "Ubuntu",
+     "a": "noble-backports",
+     "n": "noble",
+     "l": "Ubuntu",
+     "c": "universe",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge",
+      "cockpit-files",
+      "cockpit-networkmanager",
+      "cockpit-packagekit",
+      "cockpit-storaged",
+      "cockpit-system",
+      "cockpit-ws"
+     ]
+    },
+    {
+     "kind": "source",
+     "site": "https://packages.azentrius.com/apt",
+     "host": "packages.azentrius.com",
+     "o": "Azentrius",
+     "a": "stable",
+     "n": "stable",
+     "l": "Azentrius",
+     "c": "main",
+     "packages": [
+      "azentrius-repository",
+      "cockpit-cronjobs",
+      "cockpit-image-update-monitor"
+     ]
+    },
+    {
+     "kind": "held",
+     "packages": [
+      "containerd.io",
+      "docker-buildx-plugin",
+      "docker-ce",
+      "docker-ce-cli",
+      "docker-ce-rootless-extras",
+      "docker-compose-plugin"
+     ]
+    }
+   ],
+   "installed": true,
+   "periodic": {
+    "update_lists": "1",
+    "unattended": "1"
+   },
+   "timer": "enabled",
+   "allowed": [
+    "Ubuntu:noble",
+    "Ubuntu:noble-security",
+    "UbuntuESMApps:noble-apps-security",
+    "UbuntuESM:noble-infra-security",
+    "Ubuntu:noble-updates"
+   ],
+   "patterns": [],
+   "blacklist": [],
+   "source": [
+    "apt-config dump",
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "backports",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "outside",
+   "state": "found",
+   "dirs": [
+    {
+     "dir": "/usr/local/bin",
+     "files": [
+      {
+       "name": "local-1",
+       "mtime": "2026-10-16T12:41:38Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "local-2",
+       "mtime": "2026-10-19T07:54:21Z",
+       "kind": "script",
+       "interpreter": "python3"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app1/bin",
+     "files": [
+      {
+       "name": "tool-1",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-2",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-3",
+       "mtime": "2026-09-15T18:45:23Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-4",
+       "mtime": "2026-09-19T10:19:51Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-5",
+       "mtime": "2026-09-08T12:38:38Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-6",
+       "mtime": "2026-09-15T18:04:55Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-7",
+       "mtime": "2026-09-10T21:34:22Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-8",
+       "mtime": "2026-09-09T14:38:58Z",
+       "kind": "script",
+       "interpreter": "python3"
+      },
+      {
+       "name": "tool-9",
+       "mtime": "2026-09-08T12:38:37Z",
+       "kind": "script",
+       "interpreter": "python3"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app2/bin",
+     "files": [
+      {
+       "name": "tool-1.sh",
+       "mtime": "2026-10-18T01:47:24Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-2.sh",
+       "mtime": "2026-10-18T00:16:20Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-3.sh",
+       "mtime": "2026-10-18T01:11:14Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-4.sh",
+       "mtime": "2026-10-18T01:12:18Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app3/bin",
+     "files": [
+      {
+       "name": "tool-1.sh",
+       "mtime": "2026-10-18T03:22:58Z",
+       "kind": "script",
+       "interpreter": "bash"
+      },
+      {
+       "name": "tool-2.sh",
+       "mtime": "2026-10-18T03:22:58Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    },
+    {
+     "dir": "/opt/app4/bin",
+     "files": [
+      {
+       "name": "tool-1.sh",
+       "mtime": "2026-10-19T19:34:37Z",
+       "kind": "script",
+       "interpreter": "bash"
+      }
+     ]
+    }
+   ],
+   "hidden": 0,
+   "hidden_paths": [],
+   "settings": null,
+   "source": [
+    "/usr/local/bin",
+    "/usr/local/sbin",
+    "/opt/*/bin",
+    "dpkg -S"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "eol",
+   "release": "24.04 LTS",
+   "codename": "noble",
+   "standard_until": "2029-05-31",
+   "extended_until": "2034-04-25",
+   "days_left": 955,
+   "source": [
+    "/usr/share/distro-info/ubuntu.csv"
+   ],
+   "state": "none",
+   "took_ms": 0
+  },
+  {
+   "check": "cve",
+   "state": "found",
+   "findings": [
+    {
+     "source": "cockpit",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge",
+      "cockpit-networkmanager",
+      "cockpit-packagekit",
+      "cockpit-storaged",
+      "cockpit-system",
+      "cockpit-ws"
+     ],
+     "installed": "362-1~bpo24.04.1",
+     "open": [
+      {
+       "id": "CVE-2026-91148",
+       "priority": "medium",
+       "public": "2026-10-02",
+       "description": "[Unknown description]",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-91142",
+       "priority": "medium",
+       "cvss": "3.6",
+       "public": "2026-09-18",
+       "description": "A flaw was found in Cockpit. An integer overflow vulnerability in the `do_lastlog()` function, specifically in the offset calculation for `lastlog` entries on ILP32 (Integer, Long, Pointer 32-bit) builds, can be exploited. A low-privileged authenticated user with a specially provisioned large User I",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-91147",
+       "priority": "medium",
+       "cvss": "5.9",
+       "public": "2026-09-18",
+       "description": "A flaw was found in `cockpit-ws`. This vulnerability allows a remote, unauthenticated attacker to cause a Denial of Service (DoS) by sending a specially crafted request. When the `WebService.UrlRoot` is configured and a request is made to the exact URL-root prefix without a trailing slash, `cockpit-",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-91149",
+       "priority": "medium",
+       "cvss": "7.5",
+       "public": "2026-09-18",
+       "description": "A flaw was found in Cockpit. An unauthenticated remote attacker can exploit this vulnerability by initiating and sustaining numerous simultaneous connections to the `cockpit-tls` service. This forces the service to create an unbounded number of detached threads, consuming system resources such as me",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-39275",
+       "priority": "medium",
+       "cvss": "6.1",
+       "public": "2026-08-26",
+       "description": "Cross Site Scripting vulnerability in Cockpit CMS v.2.13.5 and before allows a remote attacker to execute arbitrary code via the item.php, field-select.js and tags.js components",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-76235",
+       "priority": "medium",
+       "cvss": "7.5",
+       "public": "2026-08-19",
+       "description": "A memory leak flaw was found in cockpit-ws. The login page handler leaks a heap allocation on every unauthenticated request that carries a CockpitLang cookie, allowing a remote unauthenticated attacker to exhaust memory on the host and cause a denial of service.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-4802",
+       "priority": "medium",
+       "cvss": "8.0",
+       "public": "2026-05-11",
+       "description": "A flaw was found in Cockpit. This vulnerability allows a remote attacker to achieve arbitrary command execution on the host by exploiting unsanitized user-controlled parameters within crafted links in the system logs user interface (UI). An attacker can inject shell metacharacters and command substi",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-4631",
+       "priority": "medium",
+       "cvss": "9.8",
+       "public": "2026-04-07",
+       "description": "Cockpit's remote login feature passes user-supplied hostnames and usernames from the web interface to the SSH client without validation or sanitization. An attacker with network access to the Cockpit web service can craft a single HTTP request to the login endpoint that injects malicious SSH options",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-31891",
+       "priority": "medium",
+       "cvss": "7.7",
+       "public": "2026-03-18",
+       "description": "Cockpit is a headless content management system. Any Cockpit CMS instance running version 2.13.4 or earlier with API access enabled is potentially affected by a a SQL Injection vulnerability in the MongoLite Aggregation Optimizer. Any deployment where the `/api/content/aggregate/{model}` endpoint is",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2024-6126",
+       "priority": "medium",
+       "cvss": "3.2",
+       "public": "2024-07-03",
+       "description": "A flaw was found in the cockpit package. This flaw allows an authenticated user to kill any process when enabling the pam_env's user_readenv option, which leads to a denial of service (DoS) attack.",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    },
+    {
+     "source": "openssh",
+     "packages": [
+      "openssh-server"
+     ],
+     "installed": "1:9.6p1-3ubuntu13.20",
+     "open": [
+      {
+       "id": "CVE-2026-110924",
+       "priority": "medium",
+       "cvss": "4.8",
+       "public": "2026-10-16",
+       "description": "A flaw was found in OpenSSH. With GSSAPI authentication enabled, a failed GSSAPI attempt can leave delegated credentials stored for the connection even though user authorization did not succeed. A later successful login on that connection is not authorized by the leftover state.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110927",
+       "priority": "medium",
+       "cvss": "4.3",
+       "public": "2026-10-16",
+       "description": "A flaw was found in OpenSSH. After compression is negotiated, a compressed payload can expand past the maximum supported packet size because the inflate loop does not stop at that limit. Memory use grows in the process handling that connection.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110923",
+       "priority": "medium",
+       "cvss": "6.5",
+       "public": "2026-10-15",
+       "description": "A flaw was found in OpenSSH. During an sftp copy, a malicious server can supply an empty name, a slash-only path, or a \"..\" basename that sftp uses as the local destination, writing outside the directory the user selected.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110925",
+       "priority": "medium",
+       "cvss": "5.4",
+       "public": "2026-10-15",
+       "description": "A flaw was found in OpenSSH. A username entered on the ssh command line can still contain '$' or a non-trailing backslash. When a configuration expands %u inside ProxyCommand or Match exec, those characters are passed into the shell.",
+       "status": "needs-fixing"
+      },
+      {
+       "id": "CVE-2026-110926",
+       "priority": "medium",
+       "cvss": "5.3",
+       "public": "2026-10-15",
+       "description": "A flaw was found in OpenSSH. When compression is negotiated, channels on the same connection share one LZ77 dictionary. A peer who can write on one channel can recover plaintext from another channel by chosen-plaintext lengths.",
+       "status": "needs-fixing"
+      }
+     ],
+     "fixed_newer": []
+    }
+   ],
+   "counts": {
+    "medium": 15
+   },
+   "selected": 7,
+   "source": [
+    "security-metadata.canonical.com CVE OVAL (radar)",
+    "dpkg-query"
+   ],
+   "radar": {
+    "generated": "2026-10-19T20:55:00Z",
+    "age_h": 0.0,
+    "stale": false,
+    "service": "ok",
+    "limited": false
+   },
+   "took_ms": 0
+  },
+  {
+   "check": "upstream",
+   "state": "found",
+   "findings": [
+    {
+     "repo": "cockpit-project/cockpit",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge"
+     ],
+     "installed": "362-1~bpo24.04.1",
+     "upstream": "362",
+     "newest": "369",
+     "newest_published": "2026-10-07",
+     "releases": 10,
+     "fixes": [
+      "CVE-2026-76235",
+      "CVE-2026-91147",
+      "CVE-2026-91148",
+      "CVE-2026-91149"
+     ],
+     "distribution": true,
+     "stale": false
+    },
+    {
+     "repo": "containerd/containerd",
+     "packages": [
+      "containerd.io"
+     ],
+     "installed": "2.3.5-1~ubuntu.24.04~noble",
+     "upstream": "2.3.5",
+     "newest": "2.4.2",
+     "newest_published": "2026-10-13",
+     "releases": 5,
+     "fixes": [
+      "CVE-2026-53493",
+      "CVE-2026-95839",
+      "GHSA-5p7c-hggf-c748",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-pg57-6jwg-q645",
+      "GHSA-vwhp-8p66-mq4f"
+     ],
+     "distribution": false,
+     "stale": false
+    },
+    {
+     "repo": "docker/compose",
+     "packages": [
+      "docker-compose-plugin"
+     ],
+     "installed": "5.5.1-1~ubuntu.24.04~noble",
+     "upstream": "5.5.1",
+     "newest": "5.6.0",
+     "newest_published": "2026-10-02",
+     "releases": 1,
+     "fixes": [],
+     "distribution": false,
+     "stale": false
+    },
+    {
+     "repo": "moby/moby",
+     "packages": [
+      "docker-ce"
+     ],
+     "installed": "5:29.8.0-1~ubuntu.24.04~noble",
+     "upstream": "29.8.0",
+     "newest": "29.9.1",
+     "newest_published": "2026-10-14",
+     "releases": 4,
+     "fixes": [
+      "CVE-2026-53493",
+      "CVE-2026-56857",
+      "CVE-2026-78659",
+      "CVE-2026-78663",
+      "CVE-2026-78669",
+      "CVE-2026-92542",
+      "CVE-2026-92543",
+      "CVE-2026-93315",
+      "CVE-2026-93316",
+      "CVE-2026-93317",
+      "CVE-2026-93318",
+      "CVE-2026-93319",
+      "CVE-2026-93320",
+      "CVE-2026-93321",
+      "CVE-2026-93322",
+      "CVE-2026-93323",
+      "CVE-2026-93326",
+      "CVE-2026-95839",
+      "CVE-2026-97032",
+      "GHSA-2f5p-x9ph-g97x",
+      "GHSA-4hgw-qrhw-fhg8",
+      "GHSA-66hf-6vf5-87hc",
+      "GHSA-6m9p-4h64-m6vh",
+      "GHSA-7cfq-22r6-qp73",
+      "GHSA-8647-2jxj-p2rc",
+      "GHSA-9728-qjrv-2xh2",
+      "GHSA-cv6p-7w7g-xjwq",
+      "GHSA-f2v9-hprr-32q3",
+      "GHSA-fjj4-h6vf-m9hj",
+      "GHSA-hc94-p972-ch66",
+      "GHSA-mgqf-486f-49vp",
+      "GHSA-p3rc-w3hc-pqvv",
+      "GHSA-pg57-6jwg-q645",
+      "GHSA-r456-g3gm-cvxf",
+      "GHSA-vwhp-8p66-mq4f"
+     ],
+     "distribution": false,
+     "stale": false
+    },
+    {
+     "repo": "restic/restic",
+     "packages": [
+      "restic"
+     ],
+     "installed": "0.16.4-2ubuntu0.24.04.3",
+     "upstream": "0.16.4",
+     "newest": "0.19.1",
+     "newest_published": "2026-07-05",
+     "releases": 9,
+     "fixes": [],
+     "distribution": true,
+     "stale": false
+    }
+   ],
+   "source": [
+    "api.github.com releases (radar)",
+    "dpkg-query"
+   ],
+   "radar": {
+    "generated": "2026-10-19T20:55:00Z",
+    "age_h": 0.0,
+    "stale": false,
+    "service": "ok",
+    "limited": false
+   },
+   "unchecked": [],
+   "took_ms": 0
+  },
+  {
+   "check": "newer",
+   "state": "found",
+   "findings": [
+    {
+     "source": "cockpit",
+     "packages": [
+      "cockpit",
+      "cockpit-bridge",
+      "cockpit-networkmanager",
+      "cockpit-packagekit",
+      "cockpit-storaged",
+      "cockpit-system",
+      "cockpit-ws"
+     ],
+     "installed": "362-1~bpo24.04.1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "367-1"
+     },
+     "stale": false
+    },
+    {
+     "source": "cockpit-files",
+     "packages": [
+      "cockpit-files"
+     ],
+     "installed": "39-1~bpo24.04.1",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "44-1"
+     },
+     "stale": false
+    },
+    {
+     "source": "openssh",
+     "packages": [
+      "openssh-server"
+     ],
+     "installed": "1:9.6p1-3ubuntu13.20",
+     "here": null,
+     "later": {
+      "series": "stonking",
+      "release": "26.10",
+      "version": "1:10.5p1-1ubuntu3.1"
+     },
+     "stale": false
+    },
+    {
+     "source": "python-pip",
+     "packages": [
+      "python3-pip"
+     ],
+     "installed": "24.0+dfsg-1ubuntu1.3",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "26.1.2+dfsg-1"
+     },
+     "stale": false
+    },
+    {
+     "source": "restic",
+     "packages": [
+      "restic"
+     ],
+     "installed": "0.16.4-2ubuntu0.24.04.3",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "0.19.1-1ubuntu1"
+     },
+     "stale": false
+    },
+    {
+     "source": "skopeo",
+     "packages": [
+      "skopeo"
+     ],
+     "installed": "1.13.3+ds1-2ubuntu0.24.04.3",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "1.22.0+ds1-1"
+     },
+     "stale": false
+    },
+    {
+     "source": "sudo",
+     "packages": [
+      "sudo"
+     ],
+     "installed": "1.9.15p5-3ubuntu5.24.04.4",
+     "here": null,
+     "later": {
+      "series": "tenacious",
+      "release": null,
+      "version": "1.9.17p2-7ubuntu5"
+     },
+     "stale": false
+    }
+   ],
+   "source": [
+    "api.launchpad.net (radar)",
+    "apt-cache policy",
+    "/usr/share/distro-info/ubuntu.csv"
+   ],
+   "radar": {
+    "generated": "2026-10-19T20:55:00Z",
+    "age_h": 0.0,
+    "stale": false,
+    "service": "ok",
+    "limited": false
+   },
+   "unchecked": [],
+   "took_ms": 0
+  }
+ ],
+ "dpkg_status_mtime": "2026-10-19T18:42:39Z",
+ "took_ms": 3300
+}

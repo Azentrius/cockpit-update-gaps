@@ -49,6 +49,9 @@ T = {
         "unreadable.title": "State not readable",
         "unreadable.detail": "Run the check again in Update Gaps.",
         "updates.title": "Regular updates",
+        "cve.title": "Security issues not fixed yet",
+        "cve.open": {"one": "{n} open: {names}", "other": "{n} open: {names}"},
+        "cve.missing": {"one": "{n} fix not offered here", "other": "{n} fixes not offered here"},
         "updates.sec": {"one": "{n} from a security source", "other": "{n} from a security source"},
         "held.title": "Held packages",
         "held.newer": "newer versions for {names}",
@@ -91,6 +94,9 @@ T = {
         "unreadable.title": "Stand nicht lesbar",
         "unreadable.detail": "Prüfen Sie in Update Gaps erneut.",
         "updates.title": "Reguläre Updates",
+        "cve.title": "Noch nicht behobene Sicherheitslücken",
+        "cve.open": {"one": "{n} offen: {names}", "other": "{n} offen: {names}"},
+        "cve.missing": {"one": "{n} Fix hier nicht angeboten", "other": "{n} Fixes hier nicht angeboten"},
         "updates.sec": {"one": "{n} aus einer Sicherheitsquelle", "other": "{n} aus einer Sicherheitsquelle"},
         "held.title": "Gehaltene Pakete",
         "held.newer": "neuere Versionen für {names}",
@@ -246,13 +252,25 @@ def items_of(doc, lang):
         n, sec = int(c.get("count") or 0), int(c.get("security") or 0)
         return item("updates", "info" if n else "ok", n, t(lang, "updates.sec", n=sec) if sec else None, link=False)
 
-    for cid, fn in (("held", held), ("restart", restart), ("pro", pro), ("lists", lists), ("eol", eol),
+    def cve(c):
+        f = c.get("findings") or []
+        opened = [x for e in f for x in (e.get("open") or [])]
+        missing = [x for e in f for x in (e.get("fixed_newer") or []) if not x.get("offered") and not x.get("pro")]
+        prios = {x.get("priority") for x in opened}
+        state = "danger" if "critical" in prios else "warning" if "high" in prios or missing else "info" if opened else "ok"
+        per = [f"{e.get('source')} ({len(e.get('open'))})"
+               for e in sorted(f, key=lambda e: -len(e.get("open") or [])) if e.get("open")]
+        parts = ([t(lang, "cve.open", n=len(opened), names=_names(per))] if opened else []) + \
+                ([t(lang, "cve.missing", n=len(missing))] if missing else [])
+        return item("cve", state, len(opened), "; ".join(parts))
+
+    for cid, fn in (("cve", cve), ("held", held), ("restart", restart), ("pro", pro), ("lists", lists), ("eol", eol),
                     ("updates", updates)):
         c = checks.get(cid)
         if not c:
             continue
         st = c.get("state")
-        if st == "skipped" and c.get("reason") in ("not-applicable", "unsupported-os"):
+        if st == "skipped" and c.get("reason") in ("not-applicable", "unsupported-os", "radar-off"):
             continue
         if st in ("error", "timeout", "skipped"):
             out.append(item(cid, "none", detail=t(lang, "skipped" if st == "skipped" else "failed"),

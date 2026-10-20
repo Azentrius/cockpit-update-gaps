@@ -30,11 +30,18 @@ SCANS = {
     "scan-resolute-stale-lists.json": ("resolute-stale-lists", {}),
     "scan-resolute-nodesource.json": ("resolute-nodesource", {}),
     "scan-resolute-nodesource-user.json": ("resolute-nodesource", {"uid": 1000}),
+    # With the network data of stage 2 (radar-<scenario>.json, written by make_radar.py).
+    "scan-noble-held-radar.json": ("noble-held", {"radar": True}),
+    "scan-resolute-nodesource-radar.json": ("resolute-nodesource", {"radar": True}),
 }
 STATUS_VERSION = "0.1.0"
 
 
 def scan(scenario, kw):
+    kw = dict(kw)
+    if kw.pop("radar", False):
+        with open(os.path.join(HERE, f"radar-{scenario}.json"), encoding="utf-8") as f:
+            kw["files"] = {gapscheck.RADAR: f.read()}
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     doc["took_ms"] = 3300
     for c in doc["checks"]:
@@ -48,9 +55,9 @@ def files():
     for name, (scenario, kw) in SCANS.items():
         doc = scan(scenario, kw)
         out[name] = json.dumps(doc, ensure_ascii=False, indent=1) + "\n"
-        if not kw:
+        if "uid" not in kw:
             status = gapsstatus.status_file(doc, STATUS_VERSION)
-            out["status-" + scenario + ".json"] = json.dumps(status, ensure_ascii=False, indent=1) + "\n"
+            out["status-" + name[len("scan-"):]] = json.dumps(status, ensure_ascii=False, indent=1) + "\n"
     return out
 
 

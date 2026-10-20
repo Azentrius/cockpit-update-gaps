@@ -2,11 +2,14 @@
 # After every install and upgrade of cockpit-update-gaps (as root; also `make install`).
 # SPDX-License-Identifier: Apache-2.0
 #
-# The timer stays as it was: off on a new install (it is set up from the page), on after an
-# upgrade if it was on. A timer that is on gets a scan right away, so the state has the format
-# of this version.
+# The timers stay as they were: off on a new install (they are set up from the page), on after an
+# upgrade if they were on. A scan timer that is on gets a scan right away, so the state has the
+# format of this version; the radar (network data) keeps its own daily schedule.
 if [ -d /run/systemd/system ]; then
     systemctl daemon-reload || true
+    if systemctl is-enabled --quiet update-gaps-radar.timer 2> /dev/null; then
+        systemctl restart update-gaps-radar.timer || true
+    fi
     if systemctl is-enabled --quiet update-gaps-scan.timer 2> /dev/null; then
         systemctl restart update-gaps-scan.timer || true
         systemctl start --no-block update-gaps-scan.service || true

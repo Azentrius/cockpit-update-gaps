@@ -33,6 +33,8 @@ import gapsradar as R  # noqa: E402
 
 FORMAT = 1
 PAUSE = 1.0             # seconds between two requests to the same service
+LAUNCHPAD_PER_RUN = 100 # at most this many source packages per run, the oldest answers first:
+                        # a host with many packages by hand stays well inside TimeoutStartSec
 LAUNCHPAD = ("https://api.launchpad.net/1.0/ubuntu/+archive/primary?ws.op=getPublishedSources"
              "&source_name={src}&exact_match=true&status=Published")
 GITHUB = "https://api.github.com/repos/{repo}/releases?per_page=30"
@@ -70,19 +72,30 @@ def write_atomic(path, doc):
         raise
 
 
-def collect(keys, old, ask, pause=PAUSE, sleep=time.sleep):
-    """Ask `ask(key, previous)` for every key; on a failure keep the previous
-    answer marked stale. Stops asking a service that asks to slow down.
-    -> ({key: entry}, {state, fetched, error})."""
-    out, errors, limited = {}, [], False
-    for i, key in enumerate(keys):
+def collect(keys, old, ask, pause=PAUSE, sleep=time.sleep, limit=None):
+    """Ask `ask(key, previous)` for the keys whose answers are oldest (never
+    asked first), at most `limit` per run; the others keep their previous
+    answers until a later run. On a failure keep the previous answer marked
+    stale. Stops asking a service that asks to slow down.
+    -> ({key: entry}, {state, fetched, errors, limited, deferred})."""
+    def asked_at(key):
+        prev = old.get(key)
+        return (prev.get("fetched") or "") if isinstance(prev, dict) else ""
+    todo = set(sorted(keys, key=asked_at)[:limit] if limit else keys)
+    out, errors, limited, asked = {}, [], False, 0
+    for key in keys:
         prev = old.get(key) if isinstance(old.get(key), dict) else None
+        if key not in todo:
+            if prev:
+                out[key] = prev
+            continue
         if limited:
             if prev:
                 out[key] = dict(prev, stale=True)
             continue
-        if i:
+        if asked:
             sleep(pause)
+        asked += 1
         try:
             out[key] = ask(key, prev)
         except R.FetchError as e:
@@ -90,8 +103,9 @@ def collect(keys, old, ask, pause=PAUSE, sleep=time.sleep):
             limited = e.limited
             if prev:
                 out[key] = dict(prev, stale=True)
-    state = "ok" if not errors else "error" if len(errors) == len(keys) or limited else "partial"
-    return out, {"state": state, "fetched": now(), "errors": errors[:20], "limited": limited}
+    state = "ok" if not errors else "error" if len(errors) == len(todo) or limited else "partial"
+    return out, {"state": state, "fetched": now(), "errors": errors[:20], "limited": limited,
+                 "deferred": len(keys) - len(todo)}
 
 
 def ask_launchpad(opener=None):
@@ -158,7 +172,8 @@ def radar(system=None, old=None, opener=None, sleep=time.sleep, state_dir=None):
             ctx.codename, list(sel["sources"]), state_dir, old, opener)
     if ident == "ubuntu":
         doc["launchpad"], doc["services"]["launchpad"] = collect(
-            list(sel["sources"]), old.get("launchpad") or {}, ask_launchpad(opener), sleep=sleep)
+            list(sel["sources"]), old.get("launchpad") or {}, ask_launchpad(opener), sleep=sleep,
+            limit=LAUNCHPAD_PER_RUN)
     doc["github"], doc["services"]["github"] = collect(
         list(sel["upstream"]), old.get("github") or {}, ask_github(opener), sleep=sleep)
     doc["generated"] = now()

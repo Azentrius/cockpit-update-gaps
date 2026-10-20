@@ -58,7 +58,8 @@ applies to the configuration of the server.
   checks again (with administrative access) or reads the last state (without).
 - **Overview:** the regular updates, the areas with findings (a click scrolls to the card) and the
   regular check: off, or every 6 hours with the next run.
-- **Cards:** one per area with findings, in a fixed order: what keeps a fix back first, then the
+- **Cards:** one per area with findings, in a fixed order, each opened and closed through its title (the
+  browser remembers which are closed): what keeps a fix back first, then the
   state of the system, then what the automatic updates cover, then the inventory. Each card has
   “Why Software Updates does not show it”, “What you can do” and the source of the data.
 - **No findings:** the areas checked without a finding, and what was only partly checked.

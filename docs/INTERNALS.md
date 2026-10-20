@@ -243,7 +243,9 @@ ETags, a 30-second limit and a size limit:
 
 Together with the server's IP address; no versions, no host names, no accounts. A request that
 fails keeps the source's previous answers with `stale: true`; a `403` or `429` ends the requests
-to that service for this run.
+to that service for this run. Launchpad gets at most 100 source packages per run, those with the
+oldest answers first (never asked first); the others keep their answers until a later run
+(`deferred` in the service's state).
 
 **Selected** are the source packages of a fixed list of binary packages when they come from the
 distribution (`cockpit`, `cockpit-bridge`, `openssh-server`, `sudo`, `docker.io`, `docker-ce`,
@@ -322,6 +324,9 @@ public state and logs below `$XDG_CACHE_HOME`.
   Values from the system go through `tr()`/`esc()`: escaped, and a backtick in a value cannot open a
   `<code>` of the text.
 - Loading: `safeLoad()` never runs twice at once; the state file's watch reloads only on a new tag.
+- Cards fold through their title (`.ug-toggle`, `aria-expanded`, `aria-controls`); the closed ones are kept in
+  `localStorage` (`update-gaps:collapsed`, a list of check names), so per browser and not on the server. A chip of
+  the overview and a link `#/<check>` open their card. Storage that is blocked or broken leaves every card open.
 - `#/<check>` (a status item's `link`) scrolls to that card once the cards are there and the page
   is shown (`cockpit.hidden` false, again on `visibilitychange`), again on `locationchanged`
   (Cockpit keeps the page loaded and only changes its location, sometimes while it is hidden).

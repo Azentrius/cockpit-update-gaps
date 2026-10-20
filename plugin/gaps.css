@@ -127,7 +127,17 @@ dialog.ug-dialog::backdrop { background: var(--backdrop); }
     .ug-kv { grid-template-columns: 1fr; }
     .ug-kv dd { margin-block-end: var(--space-xs); }
 }
+/* A card opens and closes through its title. */
+.ug-toggle {
+    display: inline-flex; align-items: center; gap: var(--space-sm);
+    margin: 0; padding: 0; border: 0; background: none; color: inherit;
+    font: inherit; text-align: start; cursor: pointer;
+}
+.ug-toggle .ug-fold { display: inline-flex; color: var(--text-subtle); transition: transform 120ms ease; }
+.ug-toggle[aria-expanded="true"] .ug-fold { transform: rotate(90deg); }
+.ug-card.is-collapsed .az-card__header { padding-block-end: var(--space-lg); }
+
 @media (prefers-reduced-motion: reduce) {
     .ug-spinner, .ug-btn-spinner { animation: none; }
-    .ug-dir > summary .ug-fold { transition: none; }
+    .ug-dir > summary .ug-fold, .ug-toggle .ug-fold { transition: none; }
 }

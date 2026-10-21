@@ -294,6 +294,11 @@ window.UpdateGapsI18n = {
         "reason.radar-no-data": "the network data have no answer from this source yet",
         "reason.radar": "`radar.json` is not usable: {msg}",
         "missing.radar-entries": "Some packages have no answer in the network data yet; they come with the next fetch.",
+        "missing.radar-old": "The network data are older than three days: what came since is missing. Check `journalctl -u update-gaps-radar.service`.",
+        "missing.radar-origin": "Some packages were not checked: their installed version is in no package list any more, and nothing shows it is the distribution's.",
+        "reason.radar-fetch": "Canonical's list of security issues could not be fetched, and there is no earlier copy: {msg}",
+        "radar.lastFailed": "The last fetch failed ({msg}); these are the data of {when}.",
+        "radar.unverified": "Not checked, because the installed version is in no package list any more and its origin is unclear: {list}. Update these packages, or check them by hand.",
         "unchecked.networkOn": "Unfixed security issues and upstream versions: only for the selected packages, not for every installed one. The others: Software Updates and Ubuntu's security notices.",
 
         "chk.cpu": "CPU vulnerabilities the kernel reports",
@@ -662,6 +667,11 @@ window.UpdateGapsI18n = {
         "reason.radar-no-data": "die Netzdaten haben von dieser Quelle noch keine Antwort",
         "reason.radar": "`radar.json` ist nicht verwendbar: {msg}",
         "missing.radar-entries": "Für einige Pakete fehlt in den Netzdaten noch eine Antwort; sie kommt mit dem nächsten Abruf.",
+        "missing.radar-old": "Die Netzdaten sind älter als drei Tage: Was seither dazukam, fehlt. Prüfen Sie `journalctl -u update-gaps-radar.service`.",
+        "missing.radar-origin": "Einige Pakete wurden nicht geprüft: Ihre installierte Version steht in keiner Paketliste mehr, und nichts zeigt, dass sie von der Distribution stammt.",
+        "reason.radar-fetch": "Canonicals Liste der Sicherheitslücken ließ sich nicht holen, und eine frühere Kopie gibt es nicht: {msg}",
+        "radar.lastFailed": "Der letzte Abruf ist fehlgeschlagen ({msg}); das sind die Daten vom {when}.",
+        "radar.unverified": "Nicht geprüft, weil die installierte Version in keiner Paketliste mehr steht und ihre Herkunft unklar ist: {list}. Aktualisieren Sie diese Pakete, oder prüfen Sie sie von Hand.",
         "unchecked.networkOn": "Offene Sicherheitslücken und Upstream-Versionen: nur für die ausgewählten Pakete, nicht für jedes installierte. Für die übrigen: Software-Updates und Ubuntus Sicherheitsmeldungen.",
 
         "chk.cpu": "CPU-Schwachstellen laut Kernel",

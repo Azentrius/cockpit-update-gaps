@@ -811,11 +811,14 @@
    ],
    "radar": {
     "generated": "2026-10-19T20:55:00Z",
+    "data_at": "2026-10-19T20:55:00Z",
     "age_h": 0.0,
     "stale": false,
     "service": "ok",
-    "limited": false
+    "limited": false,
+    "errors": []
    },
+   "unverified": [],
    "took_ms": 0
   },
   {
@@ -1002,10 +1005,12 @@
    ],
    "radar": {
     "generated": "2026-10-19T20:55:00Z",
+    "data_at": "2026-10-19T20:55:00Z",
     "age_h": 0.0,
     "stale": false,
     "service": "ok",
-    "limited": false
+    "limited": false,
+    "errors": []
    },
    "unchecked": [],
    "took_ms": 0
@@ -1152,12 +1157,15 @@
    ],
    "radar": {
     "generated": "2026-10-19T20:55:00Z",
+    "data_at": "2026-10-19T20:55:00Z",
     "age_h": 0.0,
     "stale": false,
     "service": "ok",
-    "limited": false
+    "limited": false,
+    "errors": []
    },
    "unchecked": [],
+   "unverified": [],
    "took_ms": 0
   }
  ],

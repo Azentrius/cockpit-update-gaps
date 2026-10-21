@@ -972,30 +972,80 @@ def check_snaps(ctx):
 
 # ----------------------------------------------------------------- stage 2 --
 
+def _utc(value):
+    """A time of radar.json (2026-10-20T12:00:00Z) -> aware datetime or None."""
+    if not isinstance(value, str):
+        return None
+    try:
+        return datetime.strptime(value, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
+    except ValueError:
+        return None
+
+
+def _data_time(ctx, doc, service, svc):
+    """(when the data a stage-2 check uses were last fetched successfully,
+    whether radar.json says so). radar.json itself is written on every run,
+    also when every request failed and the last answers are kept, so its
+    `generated` says nothing about the data. The OVAL: its last good download
+    (or 304), `services.oval.data_fetched`, null when a copy has no known
+    time. Launchpad and GitHub: the oldest answer of the scan's selection (an
+    answer keeps its `fetched` when a later request fails)."""
+    if service == "oval":
+        if "data_fetched" not in svc:
+            return None, False
+        return _utc(svc.get("data_fetched")), True
+    section = doc.get(service) if isinstance(doc.get(service), dict) else {}
+    keys = R.selection(ctx)["sources" if service == "launchpad" else "upstream"]
+    times = [_utc(section[k].get("fetched")) for k in keys if isinstance(section.get(k), dict)]
+    times = [t for t in times if t]
+    return (min(times), True) if times else (None, False)
+
+
 def _radar(ctx, service):
     """(radar doc, fields every stage-2 check reports) or (None, the check's
-    result when there are no usable network data)."""
+    result when there are no usable network data). `data_at` and `age_h` are
+    the age of the data (see _data_time); `generated` is the radar's last run.
+    radar.json without the times (older radars, the recorded fixtures) counts
+    from `generated`."""
     doc = ctx.radar()
     if doc is None:
         return None, {"state": "skipped", "reason": "radar-off"}
     ident = (ctx.osr.get("ID") or "").lower()
     if doc.get("distro") != ident or doc.get("codename") != (ctx.codename or None):
         return None, {"state": "skipped", "reason": "radar-other-release"}
-    generated = doc.get("generated") if isinstance(doc.get("generated"), str) else None
-    age_h = None
-    if generated:
-        try:
-            dt = datetime.strptime(generated, "%Y-%m-%dT%H:%M:%SZ").replace(tzinfo=timezone.utc)
-            age_h = round((ctx.now - dt).total_seconds() / 3600, 1)
-        except ValueError:
-            generated = None
+    generated = _utc(doc.get("generated"))
     services = doc.get("services") if isinstance(doc.get("services"), dict) else {}
     svc = services.get(service) if isinstance(services.get(service), dict) else {}
-    meta = {"radar": {"generated": generated, "age_h": age_h,
+    data_at, known = _data_time(ctx, doc, service, svc)
+    if not known:
+        data_at = generated
+    age_h = round((ctx.now - data_at).total_seconds() / 3600, 1) if data_at else None
+    errors = [L.strip_credentials(L.clean_text(e, 200)) for e in (svc.get("errors") or [])[:3] if isinstance(e, str)]
+    meta = {"radar": {"generated": L.iso(generated) if generated else None,
+                      "data_at": L.iso(data_at) if data_at else None, "age_h": age_h,
                       "stale": age_h is None or age_h > RADAR_STALE_H,
                       "service": svc.get("state") if svc.get("state") in ("ok", "partial", "error") else None,
-                      "limited": svc.get("limited") is True}}
+                      "limited": svc.get("limited") is True, "errors": errors}}
     return doc, meta
+
+
+def _partial_if_old(out):
+    """Nothing found in old network data is not "nothing found"."""
+    if out["radar"]["stale"] and out["state"] == "none":
+        out["state"] = "partial"
+        out["missing"] = out.get("missing", []) + ["radar-old"]
+    return out
+
+
+def _with_unverified(ctx, out):
+    """Packages the selection could not assign to the distribution (see
+    gapsradar.origins) are named; without other findings the check is
+    partial."""
+    out["unverified"] = sorted(R.selection(ctx).get("unverified") or {})[:MAX_ITEMS]
+    if out["unverified"] and out["state"] == "none":
+        out["state"] = "partial"
+        out["missing"] = out.get("missing", []) + ["radar-origin"]
+    return out
 
 
 def _answer(doc, section, key):
@@ -1080,7 +1130,7 @@ def check_newer(ctx):
            **meta}
     if more:
         out["more"] = more
-    return _partial_if_unchecked(out, unchecked)
+    return _partial_if_old(_with_unverified(ctx, _partial_if_unchecked(out, unchecked)))
 
 
 CVE_KEYS = ("id", "priority", "cvss", "public", "description", "status", "version")
@@ -1110,6 +1160,10 @@ def check_cve(ctx):
         return meta
     if not isinstance(doc.get("oval"), dict):
         return dict(meta, state="skipped", reason="radar-no-data")
+    if meta["radar"]["service"] == "error" and not doc["oval"]:
+        # The download failed and there is no copy (or it was unreadable): nothing could be checked. An empty
+        # section after a good download is a real "nothing found" and goes on below.
+        return dict(meta, state="error", reason="radar-fetch", error=(meta["radar"]["errors"] or ["no data"])[0])
     findings, counts = [], {p: 0 for p in R.PRIORITIES}
     for src, packages in R.selection(ctx)["sources"].items():
         entry = _answer(doc, "oval", src) or {}
@@ -1133,7 +1187,7 @@ def check_cve(ctx):
            "counts": {k: v for k, v in counts.items() if v},
            "selected": len(R.selection(ctx)["sources"]),
            "source": ["security-metadata.canonical.com CVE OVAL (radar)", "dpkg-query"], **meta}
-    return out
+    return _partial_if_old(_with_unverified(ctx, out))
 
 
 def check_upstream(ctx):
@@ -1175,7 +1229,7 @@ def check_upstream(ctx):
         findings.append(finding)
     out = {"state": "found" if findings else "none", "findings": findings,
            "source": ["api.github.com releases (radar)", "dpkg-query"], **meta}
-    return _partial_if_unchecked(out, unchecked)
+    return _partial_if_old(_partial_if_unchecked(out, unchecked))
 
 
 CHECKS = (

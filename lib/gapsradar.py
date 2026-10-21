@@ -52,9 +52,13 @@ MAX_BYTES = 8 << 20
 # ------------------------------------------------------------- selection --
 
 def selection(ctx):
-    """{"sources": {source: [binary, ...]}, "upstream": {repo: [binary, ...]}}
-    for this host, from dpkg, apt-mark and apt-cache (all readable without
-    root). ctx is a gapscheck.Context; the result is computed once per ctx."""
+    """{"sources": {source: [binary, ...]}, "upstream": {repo: [binary, ...]},
+    "unverified": {source: [binary, ...]}} for this host, from dpkg, apt-mark
+    and apt-cache (all readable without root). "unverified": packages that
+    would be selected if they are the distribution's, but whose installed
+    version no package list has any more and does not say who built it; the
+    checks report them instead of dropping them. ctx is a gapscheck.Context;
+    the result is computed once per ctx."""
     return ctx._cached("radar-selection", lambda: _selection(ctx))
 
 
@@ -62,40 +66,93 @@ def _selection(ctx):
     inst = ctx.installed()
     names = ctx.installed_names()
     manual = set(ctx.cmd(["apt-mark", "showmanual"]).out.split())
-    sources, upstream = {}, {}
+    sources, upstream, unverified = {}, {}, {}
 
-    def add(name):
+    def add(name, into):
         src = (inst.get(name) or {}).get("source") or name.split(":")[0]
         if SOURCE_RE.match(src):
-            sources.setdefault(src, set()).add(ctx.display(name))
+            into.setdefault(src, set()).add(ctx.display(name))
 
     for name in names:
         base = name.split(":")[0]
+        by_hand = name in manual or base in manual
         if base in FIXED and from_distribution(ctx, name):
-            add(name)
-        elif (name in manual or base in manual) and _component(ctx, name) in UNSUPPORTED_COMPONENTS:
-            add(name)
+            add(name, sources)
+        elif by_hand and _component(ctx, name) in UNSUPPORTED_COMPONENTS:
+            add(name, sources)
+        elif origins(ctx, name)[1] == "unknown":
+            successor = _successor(ctx, name)
+            if successor and (base in FIXED or (by_hand and _ubuntu_component(successor) in UNSUPPORTED_COMPONENTS)):
+                add(name, unverified)
         repo = UPSTREAM.get(base)
         if repo:
             upstream.setdefault(repo, set()).add(ctx.display(name))
     return {"sources": {k: sorted(v) for k, v in sorted(sources.items())},
-            "upstream": {k: sorted(v) for k, v in sorted(upstream.items())}}
+            "upstream": {k: sorted(v) for k, v in sorted(upstream.items())},
+            "unverified": {k: sorted(v) for k, v in sorted(unverified.items()) if k not in sources}}
 
 
-def _origins(ctx, name):
-    entry = L.installed_entry(ctx.pkg(name))
-    return [ctx.origin_of(k)[0] for k in L.entry_sources(entry)] if entry else []
+# The version of a distribution's own build says so: 1.9.15p5-3ubuntu5.24.04.4, 1.9.13p3-1+deb12u1.
+DISTRO_BUILD = {"Ubuntu": re.compile(r"ubuntu\d"), "Debian": re.compile(r"[+~]deb\d+u\d+")}
+NOT_DISTRO_BUILD = re.compile(r"ppa|nodesource|~ubuntu\.", re.I)
+
+
+def _versions_above(pkg):
+    """The versions a source offers above the installed one, newest first."""
+    inst = (pkg or {}).get("installed")
+    if not inst:
+        return []
+    return sorted((v for v in pkg.get("versions") or [] if L.entry_sources(v) and L.vercmp(v["version"], inst) > 0),
+                  key=lambda v: L.Version(v["version"]), reverse=True)
+
+
+def _successor(ctx, name):
+    """The release attributes of the newest version above the installed one
+    that Ubuntu or Debian offers, or []."""
+    for v in _versions_above(ctx.pkg(name)):
+        rels = [r for r in (ctx.origin_of(k)[0] for k in L.entry_sources(v)) if r.get("o") in DISTRO_BUILD]
+        if rels:
+            return rels
+    return []
+
+
+def origins(ctx, name):
+    """(release attributes of the sources of the installed version, how they
+    were found). "archive": a package list has the installed version.
+    "successor": only dpkg's status knows it (the archive has moved on, as
+    after a security update that was itself replaced), the distribution offers
+    a newer version, and the installed version is a build of that
+    distribution by its version string; the newer version's sources stand in.
+    "unknown": only dpkg's status knows it otherwise. ([], None): not
+    installed. A third-party build is never taken for the distribution's on a
+    guess: a PPA, NodeSource or Docker version does not count."""
+    pkg = ctx.pkg(name)
+    entry = L.installed_entry(pkg)
+    if entry is None:
+        return [], None
+    keys = L.entry_sources(entry)
+    if keys:
+        return [ctx.origin_of(k)[0] for k in keys], "archive"
+    rels = _successor(ctx, name)
+    inst = pkg["installed"]
+    if rels and DISTRO_BUILD[rels[0]["o"]].search(inst) and not NOT_DISTRO_BUILD.search(inst):
+        return rels, "successor"
+    return [], "unknown"
 
 
 def from_distribution(ctx, name):
-    return any(r.get("o") in ("Ubuntu", "Debian") for r in _origins(ctx, name))
+    return any(r.get("o") in ("Ubuntu", "Debian") for r in origins(ctx, name)[0])
 
 
-def _component(ctx, name):
-    for r in _origins(ctx, name):
+def _ubuntu_component(rels):
+    for r in rels:
         if r.get("o") == "Ubuntu":
             return r.get("c")
     return None
+
+
+def _component(ctx, name):
+    return _ubuntu_component(origins(ctx, name)[0])
 
 
 # ----------------------------------------------------------------- fetch --

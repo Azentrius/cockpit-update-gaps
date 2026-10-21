@@ -102,7 +102,7 @@ assert items["held"]["state"] in ("ok", "warning") and "tzdata" in items["held"]
 assert board["state"] in ("warning", "danger") and "Neustart" in board["summary"], board
 assert ("pro" in items) == (ident == "ubuntu"), items
 sel = json.load(open("/tmp/selection.json"))
-assert set(sel) == {"sources", "upstream"}, sel
+assert set(sel) == {"sources", "upstream", "unverified"}, sel
 print("radar would ask about:", sorted(sel["sources"]), sorted(sel["upstream"]))
 for k in ("cve", "upstream", "newer"):
     assert c[k]["state"] == "skipped" and c[k]["reason"] in ("radar-off", "not-applicable"), c[k]

@@ -161,9 +161,9 @@
                 out.push(alertHtml("info", t("status.changedTitle"), tr("status.changed", { when: fmtDate(doc.generated) })));
             }
             const c = checksOf(doc);
-            const old = RADAR_CHECKS.map((k) => c[k]).find((x) => x && x.radar && x.radar.stale && x.radar.generated);
+            const old = RADAR_CHECKS.map((k) => c[k]).find((x) => x && x.radar && x.radar.stale && radarTime(x.radar));
             if (old && status && status.radar === "active") {
-                out.push(alertHtml("warning", t("status.radarOldTitle", { age: age(old.radar.generated) }), rich(t("status.radarOld"))));
+                out.push(alertHtml("warning", t("status.radarOldTitle", { age: age(radarTime(old.radar)) }), rich(t("status.radarOld"))));
             }
         }
         $("ug-status").innerHTML = out.join("");
@@ -318,10 +318,21 @@
         const what = [o.o, o.a || o.n].filter(Boolean).join(", ");
         return esc(host) + (what ? ` <span class="az-cell-sub">${esc(what)}</span>` : "");
     }
-    // When the network data of a stage-2 card are old, the card says from when they are.
+    // The time of the network data a stage-2 check used: their last good fetch (data_at), which the
+    // radar's own runs do not renew; a state of 0.4.1 and older only has the run (generated).
+    function radarTime(r) { return (r && (r.data_at || r.generated)) || null; }
+    // When the network data of a stage-2 card are old, or their last fetch failed, the card says so.
     function radarNote(c) {
         const r = c.radar || {};
-        return r.stale && r.generated ? `<p class="ug-note">${esc(t("status.radarOldTitle", { age: age(r.generated) }))}</p>` : "";
+        const when = radarTime(r);
+        const out = [];
+        if (r.stale && when) out.push(esc(t("status.radarOldTitle", { age: age(when) })));
+        if (r.service === "error" || r.service === "partial") {
+            out.push(tr("radar.lastFailed", { when: when ? fmtDate(when) : "?", msg: (r.errors || [])[0] || "?" }));
+        }
+        const un = c.unverified || [];
+        if (un.length) out.push(tr("radar.unverified", { list: un.join(", ") }));
+        return out.map((x) => `<p class="ug-note">${x}</p>`).join("");
     }
     function pkgList(names, more) {
         return `<span class="ug-pkgs">${(names || []).map(esc).join(", ")}${more ? " " + esc(t("held.more", { n: more })) : ""}</span>`;
@@ -648,7 +659,9 @@
 
     function reasonText(c) {
         if (c.state === "timeout") return tr("reason.timeout", { s: c.limit_s || "?" });
-        if (c.state === "error" && c.reason === "settings") return tr("reason.settings", { msg: c.error || "" });
+        if (c.state === "error" && ["settings", "radar", "radar-fetch"].includes(c.reason)) {
+            return tr("reason." + c.reason, { msg: c.error || "" });
+        }
         if (c.state === "error") return tr("reason.error", { msg: c.error || "" });
         if (c.check === "firmware" && c.reason === "tool-missing" && c.tool === "fwupd") {
             return rich(t(c.machine === "vm" ? "reason.fwupd-vm" : "reason.fwupd"));

@@ -362,7 +362,7 @@ FWUPD_UPDATES = json.dumps({"Devices": [
 
 
 def fwupd(updates=(0, FWUPD_UPDATES), mtime=1792400000, timer="enabled"):
-    remotes = json.dumps({"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": "true", "ModificationTime": mtime},
+    remotes = json.dumps({"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": True, "Mtime": mtime},
                                       {"Id": "vendor-directory", "Kind": "directory", "Enabled": "true"}]})
     return {"dpkg-query-W": dpkg_plus("resolute-stale-lists", "fwupd\t2.1.1-1ubuntu3.1\tfwupd\tii \tamd64"),
             "fwupdmgr-get-updates": gapsproc.Result(updates[0], updates[1], ""),
@@ -395,6 +395,15 @@ class Firmware(unittest.TestCase):
     def test_fwupdmgr_fails(self):
         c = scan("resolute-stale-lists", results=fwupd(updates=(1, "")))[1]["firmware"]
         self.assertEqual(c["state"], "error")
+
+    def test_old_metadata_alone(self):
+        """Refresh timer on, nothing to update, metadata 40 days old (fwupd's key `Mtime`): a finding."""
+        old = 1792400000 - 40 * 86400
+        c = scan("resolute-stale-lists", results=fwupd(updates=(2, "No updatable devices\n"), mtime=old))[1]["firmware"]
+        self.assertEqual(c["state"], "found")
+        self.assertEqual([(f["kind"], f.get("remote")) for f in c["findings"]], [("metadata-old", "lvfs")])
+        self.assertGreaterEqual(c["findings"][0]["days"], 40)
+        self.assertGreaterEqual(c["remotes"][0]["age_days"], 40)
 
 
 NOW_SNAP = "2026-10-19T20:55:00Z"

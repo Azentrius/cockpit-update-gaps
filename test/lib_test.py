@@ -279,9 +279,15 @@ class FirmwareSnapTest(unittest.TestCase):
             L.parse_fwupd_updates("[]")
 
     def test_fwupd_remotes(self):
-        doc = '{"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": true, "ModificationTime": 1792400000}, {"Id": ""}]}'
+        # fwupdmgr --json names the time of the metadata "Mtime" (fwupd_remote_to_json); "ModificationTime" is
+        # the key of the D-Bus variant and is read only when "Mtime" is missing.
+        doc = '{"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": true, "Mtime": 1792400000}, {"Id": ""}]}'
         self.assertEqual(L.parse_fwupd_remotes(doc), [{"id": "lvfs", "enabled": True, "kind": "download",
                                                        "mtime": 1792400000}])
+        doc = '{"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": "true", "ModificationTime": 1792400000}]}'
+        self.assertEqual(L.parse_fwupd_remotes(doc)[0]["mtime"], 1792400000)
+        doc = '{"Remotes": [{"Id": "lvfs", "Kind": "download", "Enabled": true, "Mtime": 0}]}'
+        self.assertIsNone(L.parse_fwupd_remotes(doc)[0]["mtime"], "0: never refreshed")
 
     def test_rfc3339(self):
         self.assertEqual(L.iso(L.parse_rfc3339("2026-10-20T15:11:00.123456789+02:00")), "2026-10-20T13:11:00Z")

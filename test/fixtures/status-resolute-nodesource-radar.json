@@ -15,7 +15,7 @@
    "detail": "44 open: docker.io-app (24), cockpit (9), containerd-app (5), openssh (5), runc-app (1)",
    "link": "#/cve",
    "checked_at": "2026-10-19T20:55:00Z",
-   "stale_after": 86400
+   "stale_after": 259200
   },
   {
    "id": "held",

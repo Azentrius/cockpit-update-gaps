@@ -717,14 +717,15 @@ def parse_fwupd_updates(text):
 def parse_fwupd_remotes(text):
     """`fwupdmgr get-remotes --json` -> [{"id", "enabled", "kind", "mtime"}]
     (mtime: when the metadata of the remote were last refreshed, epoch
-    seconds, or None)."""
+    seconds, or None). fwupd's JSON names it `Mtime` (fwupd_remote_to_json);
+    `ModificationTime` is the key of its D-Bus variant, read as a fallback."""
     doc = json.loads(text or "")
     out = []
     for r in (doc.get("Remotes") if isinstance(doc, dict) else None) or []:
         if not isinstance(r, dict) or not _fw_text(r.get("Id"), 40):
             continue
         enabled = r.get("Enabled")
-        mtime = r.get("ModificationTime")
+        mtime = r.get("Mtime") if "Mtime" in r else r.get("ModificationTime")
         out.append({"id": _fw_text(r.get("Id"), 40), "enabled": enabled is True or enabled == "true",
                     "kind": _fw_text(r.get("Kind"), 20),
                     "mtime": int(mtime) if isinstance(mtime, (int, float)) and mtime > 0 else None})

@@ -25,9 +25,11 @@ SCHEMA = 1
 ADDON = "update-gaps"
 LABEL = "Update Gaps"
 STALE_AFTER = 86400     # seconds; the page, too, calls a state older than 24 hours old
+RADAR_STALE_AFTER = 72 * 3600   # the network data (daily): old after 72 hours, as gapscheck.RADAR_STALE_H
 ORDER = {"none": 0, "ok": 1, "info": 2, "warning": 3, "danger": 4}
 ID_RE = re.compile(r"^[a-z0-9-]{1,40}$")
 LINK_RE = re.compile(r"^#/[A-Za-z0-9/_-]{0,80}$")
+TIME_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
 MAX_NAMES = 6
 MAX_DETAIL = 200        # the Status Board cuts a detail there; cut it at a word boundary first
 # The version lives in the page (const VERSION in gaps.js): next to lib/ in a checkout, else installed.
@@ -52,6 +54,7 @@ T = {
         "cve.title": "Security issues not fixed yet",
         "cve.open": {"one": "{n} open: {names}", "other": "{n} open: {names}"},
         "cve.missing": {"one": "{n} fix not offered here", "other": "{n} fixes not offered here"},
+        "cve.fetch": "Canonical's list of security issues could not be fetched",
         "updates.sec": {"one": "{n} from a security source", "other": "{n} from a security source"},
         "held.title": "Held packages",
         "held.newer": "newer versions for {names}",
@@ -112,6 +115,7 @@ T = {
         "cve.title": "Noch nicht behobene Sicherheitslücken",
         "cve.open": {"one": "{n} offen: {names}", "other": "{n} offen: {names}"},
         "cve.missing": {"one": "{n} Fix hier nicht angeboten", "other": "{n} Fixes hier nicht angeboten"},
+        "cve.fetch": "Canonicals Liste der Sicherheitslücken ließ sich nicht holen",
         "updates.sec": {"one": "{n} aus einer Sicherheitsquelle", "other": "{n} aus einer Sicherheitsquelle"},
         "held.title": "Gehaltene Pakete",
         "held.newer": "neuere Versionen für {names}",
@@ -224,6 +228,15 @@ def items_of(doc, lang):
             i["link"] = "#/" + cid
         i["checked_at"] = at
         i["stale_after"] = STALE_AFTER
+        radar = (checks.get(cid) or {}).get("radar")
+        if cid == "cve" and isinstance(radar, dict):
+            # Network data: as old as their last good fetch, not as the local scan that read them, so a new
+            # scan never makes old data look new to the Status Board.
+            for when in (radar.get("data_at"), radar.get("generated")):
+                if isinstance(when, str) and TIME_RE.match(when):
+                    i["checked_at"] = when
+                    break
+            i["stale_after"] = RADAR_STALE_AFTER
         return i
 
     def held(c):
@@ -353,8 +366,11 @@ def items_of(doc, lang):
         if cid in ("firmware", "snaps") and st in ("none", "skipped"):
             continue          # an item only when there is something to see
         if st in ("error", "timeout", "skipped"):
-            out.append(item(cid, "none", detail=t(lang, "skipped" if st == "skipped" else "failed"),
-                            link=cid != "updates"))
+            if cid == "cve" and c.get("reason") == "radar-fetch":
+                why = "cve.fetch"       # the network data could not be fetched: no CVE check at all
+            else:
+                why = "skipped" if st == "skipped" else "failed"
+            out.append(item(cid, "none", detail=t(lang, why), link=cid != "updates"))
             continue
         i = fn(c)
         if st == "partial":

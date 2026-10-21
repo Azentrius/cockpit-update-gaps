@@ -20,6 +20,7 @@ sys.path.insert(0, LIB)
 sys.path.insert(0, HERE)
 sys.dont_write_bytecode = True
 import gapscheck  # noqa: E402
+import gapsproc  # noqa: E402
 import gapsradar as R  # noqa: E402
 import gapsstatus  # noqa: E402
 from fakesys import FakeSystem  # noqa: E402
@@ -326,6 +327,162 @@ class Checks(unittest.TestCase):
         self.assertTrue(item["detail"].startswith(item["value"] + " open: docker.io-app (24)"), item["detail"])
         self.assertEqual(gapsstatus.problems(st), [])
         self.assertNotIn("cve", [i["id"] for i in gapsstatus.document(gapscheck.scan(FakeSystem("noble-held")), "en", "0.2.0")["items"]])
+
+
+SUDO_RECORDED = """sudo:
+  Installed: 1.9.15p5-3ubuntu5.24.04.4
+  Candidate: 1.9.15p5-3ubuntu5.24.04.4
+  Version table:
+ *** 1.9.15p5-3ubuntu5.24.04.4 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble-updates/main amd64 Packages
+        500 https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages
+        100 /var/lib/dpkg/status
+     1.9.15p5-3ubuntu5 500
+        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages
+"""
+
+
+def superseded(installed="1.9.15p5-3ubuntu5.24.04.4", newer="1.9.15p5-3ubuntu5.24.04.5",
+               newer_source="https://mirror.hetzner.com/ubuntu/security noble-security/main amd64 Packages"):
+    """noble-held with sudo's installed version only in dpkg's status: the archive has moved on to
+    `newer` (from `newer_source`), the package lists no longer have the installed one."""
+    with open(os.path.join(FIX, "noble-held", "commands", "apt-cache-policy-installed.txt"), encoding="utf-8") as f:
+        text = f.read()
+    assert SUDO_RECORDED in text
+    block = (f"sudo:\n  Installed: {installed}\n  Candidate: {newer}\n  Version table:\n"
+             f"     {newer} 500\n        500 {newer_source}\n"
+             f" *** {installed} 100\n        100 /var/lib/dpkg/status\n"
+             "     1.9.15p5-3ubuntu5 500\n        500 https://mirror.hetzner.com/ubuntu/packages noble/main amd64 Packages\n")
+    return {"apt-cache-policy-installed": gapsproc.Result(0, text.replace(SUDO_RECORDED, block), "")}
+
+
+class Selection(unittest.TestCase):
+    """Which packages the radar and the scan check: a package must not drop out unnoticed."""
+
+    def sel(self, results):
+        return R.selection(gapscheck.Context(FakeSystem("noble-held", results=results)))
+
+    def test_recorded_host(self):
+        sel = self.sel({})
+        self.assertIn("sudo", sel["sources"])
+        self.assertEqual(sel["unverified"], {})
+
+    def test_superseded_ubuntu_build_stays_selected(self):
+        """The installed sudo is only in dpkg's status, noble-security has a newer one: still Ubuntu's."""
+        sel = self.sel(superseded())
+        self.assertEqual(sel["sources"].get("sudo"), ["sudo"])
+        self.assertEqual(sel["unverified"], {})
+
+    def test_superseded_without_a_mark_is_reported(self):
+        """Nothing in the installed version says Ubuntu built it: not taken for Ubuntu's, but reported."""
+        results = superseded(installed="1.9.15p5-3")
+        sel = self.sel(results)
+        self.assertNotIn("sudo", sel["sources"])
+        self.assertEqual(sel["unverified"], {"sudo": ["sudo"]})
+        doc = json.loads(radar_text("noble-held"))
+        fs = FakeSystem("noble-held", results=results, files={gapscheck.RADAR: json.dumps(doc)})
+        c = {x["check"]: x for x in gapscheck.scan(fs, only={"cve", "newer"})["checks"]}
+        for k in ("cve", "newer"):
+            self.assertEqual(c[k]["unverified"], ["sudo"], k)
+        # without other findings the check is partial, never "nothing found"
+        doc["oval"] = {}
+        fs = FakeSystem("noble-held", results=results, files={gapscheck.RADAR: json.dumps(doc)})
+        cve = {x["check"]: x for x in gapscheck.scan(fs, only={"cve"})["checks"]}["cve"]
+        self.assertEqual((cve["state"], cve["missing"]), ("partial", ["radar-origin"]))
+
+    def test_third_party_builds_are_not_ubuntus(self):
+        """A third-party build (here a PPA) whose version vanished is not taken for Ubuntu's."""
+        sel = self.sel(superseded(installed="1.9.15p5-3ubuntu5~ppa1"))
+        self.assertNotIn("sudo", sel["sources"])
+        self.assertEqual(sel["unverified"], {"sudo": ["sudo"]})
+        sel = self.sel(superseded(newer_source="https://download.docker.com/linux/ubuntu noble/stable amd64 Packages"))
+        self.assertNotIn("sudo", sel["sources"])
+        self.assertEqual(sel["unverified"], {}, "no newer version from Ubuntu: nothing to check against Ubuntu")
+
+
+class Freshness(unittest.TestCase):
+    """The age of the network data is the age of the last good answer, not of radar.json."""
+    SIX_WEEKS = "2026-09-07T20:55:00Z"     # the recordings' clock is 2026-10-19T20:55:00Z
+
+    def doc(self):
+        return json.loads(radar_text("resolute-nodesource"))
+
+    def test_oval_download_failed_without_a_copy(self):
+        """No copy and the download failed: an error on the page and in the status, not "no findings"."""
+        doc = self.doc()
+        doc["oval"] = {}
+        doc["services"]["oval"] = {"state": "error", "fetched": doc["generated"], "errors": ["HTTP 503"],
+                                   "limited": False}
+        c = checks("resolute-nodesource", json.dumps(doc))
+        self.assertEqual((c["cve"]["state"], c["cve"]["reason"], c["cve"]["error"]), ("error", "radar-fetch", "HTTP 503"))
+        scan = gapscheck.scan(FakeSystem("resolute-nodesource", files={gapscheck.RADAR: json.dumps(doc)}))
+        for lang, detail in (("en", "Canonical's list of security issues could not be fetched"),
+                             ("de", "Canonicals Liste der Sicherheitslücken ließ sich nicht holen")):
+            item = next(i for i in gapsstatus.document(scan, lang, "0.4.1")["items"] if i["id"] == "cve")
+            self.assertEqual((item["state"], item["detail"]), ("none", detail))
+
+    def test_good_download_without_an_entry_is_nothing_found(self):
+        doc = self.doc()
+        doc["oval"] = {}
+        doc["services"]["oval"] = {"state": "ok", "fetched": doc["generated"], "errors": [], "limited": False,
+                                   "data_fetched": doc["generated"]}
+        c = checks("resolute-nodesource", json.dumps(doc))
+        self.assertEqual((c["cve"]["state"], c["cve"]["radar"]["stale"]), ("none", False))
+
+    def test_old_copy_after_a_failed_download(self):
+        """Six weeks old OVAL, today's download failed: kept, but old, also for the Status Board."""
+        doc = self.doc()
+        doc["services"]["oval"].update(state="partial", errors=["HTTP 503"], data_fetched=self.SIX_WEEKS)
+        c = checks("resolute-nodesource", json.dumps(doc))
+        r = c["cve"]["radar"]
+        self.assertEqual(c["cve"]["state"], "found", "the copy is still used")
+        self.assertEqual((r["stale"], r["data_at"], r["generated"], r["service"]), (True, self.SIX_WEEKS, doc["generated"], "partial"))
+        self.assertGreater(r["age_h"], 1000)
+        self.assertEqual(r["errors"], ["HTTP 503"])
+        scan = gapscheck.scan(FakeSystem("resolute-nodesource", files={gapscheck.RADAR: json.dumps(doc)}))
+        item = next(i for i in gapsstatus.document(scan, "en", "0.4.1")["items"] if i["id"] == "cve")
+        self.assertEqual((item["checked_at"], item["stale_after"]), (self.SIX_WEEKS, gapscheck.RADAR_STALE_H * 3600),
+                         "a new local scan must not make old network data look new")
+        # nothing found in old data: partly checked, not "no findings"
+        doc["oval"] = {}
+        c = checks("resolute-nodesource", json.dumps(doc))
+        self.assertEqual((c["cve"]["state"], c["cve"]["missing"]), ("partial", ["radar-old"]))
+
+    def test_never_fetched_copy_is_old(self):
+        doc = self.doc()
+        doc["services"]["oval"].update(state="partial", data_fetched=None)
+        self.assertTrue(checks("resolute-nodesource", json.dumps(doc))["cve"]["radar"]["stale"])
+
+    def test_old_answers_of_github_and_launchpad(self):
+        doc = self.doc()
+        for section in ("github", "launchpad"):
+            for e in doc[section].values():
+                e.update(fetched=self.SIX_WEEKS, stale=True)
+            doc["services"][section]["state"] = "error"
+        c = checks("resolute-nodesource", json.dumps(doc))
+        for k in ("upstream", "newer"):
+            self.assertTrue(c[k]["radar"]["stale"], k)
+            self.assertEqual(c[k]["radar"]["data_at"], self.SIX_WEEKS, k)
+        self.assertFalse(c["cve"]["radar"]["stale"], "the OVAL of the same run is fresh")
+        # one old answer among fresh ones makes the data as old as it
+        doc = self.doc()
+        first = sorted(doc["github"])[0]
+        doc["github"][first]["fetched"] = self.SIX_WEEKS
+        self.assertEqual(checks("resolute-nodesource", json.dumps(doc))["upstream"]["radar"]["data_at"], self.SIX_WEEKS)
+
+    def test_radar_keeps_the_time_of_the_last_good_download(self):
+        """gaps-radar.py: a failed download keeps the copy and the time it was fetched."""
+        with tempfile.TemporaryDirectory() as d:
+            oval = bz2.compress(OVAL.encode())
+            run = lambda answers, old: radar_mod.radar(system=FakeSystem("resolute-nodesource"), old=old, state_dir=d,  # noqa: E731
+                                                       opener=opener_for(answers), sleep=lambda s: None)
+            first = run({"https://security-metadata.canonical.com/": oval}, None)
+            fetched = first["services"]["oval"]["data_fetched"]
+            self.assertTrue(fetched)
+            second = run({}, first)
+            self.assertEqual(second["services"]["oval"]["state"], "partial")
+            self.assertEqual(second["services"]["oval"]["data_fetched"], fetched)
+            self.assertIn("cockpit", second["oval"])
 
 
 if __name__ == "__main__":

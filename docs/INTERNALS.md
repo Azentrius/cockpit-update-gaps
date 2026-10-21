@@ -211,7 +211,7 @@ provider looks after it). `machine`, `timer`, `remotes[]` (`id`, `enabled`, `kin
 | `kind` | Fields | Meaning |
 |---|---|---|
 | `update` | `device`, `vendor`, `version`, `new`, `urgency` (`critical`, `high`, `medium`, `low` or `null`), `issues[]` (CVE and GHSA ids) | fwupd has a newer release for the device (the newest per device) |
-| `metadata-old` | `remote`, `days` | the metadata of an enabled download remote are older than 30 days |
+| `metadata-old` | `remote`, `days` | the metadata of an enabled download remote are older than 30 days (`Mtime` in the JSON of `get-remotes`; `ModificationTime`, the D-Bus name, is read when it is missing) |
 | `refresh-off` | `timer` | `fwupd-refresh.timer` is not enabled |
 | `no-remote` | | no download remote is enabled |
 
@@ -312,19 +312,31 @@ Together with the server's IP address; no versions, no host names, no accounts. 
 fails keeps the source's previous answers with `stale: true`; a `403` or `429` ends the requests
 to that service for this run. Launchpad gets at most 100 source packages per run, those with the
 oldest answers first (never asked first); the others keep their answers until a later run
-(`deferred` in the service's state).
+(`deferred` in the service's state). `generated` is the time of the run and is new every day, also
+when every request failed; how old the data are says each answer's `fetched` (kept when a later
+request for it fails, renewed by a 304) and for the OVAL `services.oval.data_fetched`: the last
+good download or 304 of the copy in the state directory (`null` for a copy of unknown time). A
+failed download keeps that copy (`partial`); without a copy the OVAL service is `error` and the
+section `oval` empty.
 
 **Selected** are the source packages of a fixed list of binary packages when they come from the
 distribution (`cockpit`, `cockpit-bridge`, `openssh-server`, `sudo`, `docker.io`, `docker-ce`,
 `containerd`, `containerd.io`, `runc`, `restic`, `skopeo`, `nginx`, `caddy`, `wireguard-tools`)
 and packages installed by hand from Ubuntu's universe and multiverse (no security commitment);
 upstream projects: `cockpit-project/cockpit`, `moby/moby`, `containerd/containerd`,
-`opencontainers/runc`, `docker/compose`, `restic/restic`.
+`opencontainers/runc`, `docker/compose`, `restic/restic`. Where a package comes from is what
+`apt-cache policy` says of the installed version. When only dpkg's status knows that version (the
+archive has moved on, as when a security update was replaced by the next one), a newer version
+from Ubuntu or Debian stands in, but only when the installed version is that distribution's build
+by its version string (`…ubuntu5.24.04.4`, `…+deb12u1`; never a PPA, NodeSource or Docker version).
+Otherwise such a package of the fixed list (or one installed by hand whose newer version is in
+universe or multiverse) goes to `unverified`: not asked about, and named by the checks.
 
 ```json
 {"format": 1, "generated": "2026-10-20T09:36:28Z", "distro": "ubuntu", "codename": "resolute",
- "selection": {"sources": {"cockpit": ["cockpit"]}, "upstream": {"cockpit-project/cockpit": ["cockpit"]}},
- "services": {"oval": {"state": "ok", "fetched": "…", "errors": [], "limited": false}, "launchpad": {…}, "github": {…}},
+ "selection": {"sources": {"cockpit": ["cockpit"]}, "upstream": {"cockpit-project/cockpit": ["cockpit"]}, "unverified": {}},
+ "services": {"oval": {"state": "ok", "fetched": "…", "errors": [], "limited": false, "data_fetched": "…"},
+              "launchpad": {…}, "github": {…}},
  "oval": {"cockpit": {"open": [{"id": "CVE-2026-4631", "priority": "medium", "cvss": "9.8", "public": "2026-04-07",
                                 "description": "…", "status": "needs-fixing"}],
                       "fixed": [{"id": "…", "version": "1:10.2p1-2ubuntu3.2", …}]}},
@@ -336,14 +348,23 @@ upstream projects: `cockpit-project/cockpit`, `moby/moby`, `containerd/container
 distribution and release as the host (else `skipped`, `radar-other-release`), and only the
 answers to its **own** selection; every version, series and id is checked by pattern before it is
 used. A file that is too large, not JSON or of another format makes the checks `error` with
-`reason: "radar"`. Each stage-2 check carries `radar` (`generated`, `age_h`, `stale` after 72
-hours, `service`, `limited`); without the radar it is `skipped`, `radar-off`.
+`reason: "radar"`. Each stage-2 check carries `radar`: `generated` (the radar's run), `data_at`
+(when its data were last fetched successfully: the OVAL's `data_fetched`; for Launchpad and GitHub
+the oldest answer of the selection; a file without these times counts from `generated`), `age_h`
+and `stale` (older than 72 hours) from `data_at`, `service` (`ok`, `partial`, `error`), `limited`
+and `errors` (at most three, 200 characters). Without the radar it is `skipped`, `radar-off`. A
+check without findings in old data is `partial` with `missing: ["radar-old"]`; `cve` and `newer`
+name the `unverified` packages and are `partial` with `missing: ["radar-origin"]` when there is
+nothing else.
 
 **`cve`** (Ubuntu only): `findings[]` per source package: `source`, `packages[]`, `installed`,
 `open[]` (`id`, `priority` as Ubuntu rates it, `cvss`, `public`, `description` (300 characters),
 `status`: `needs-fixing`, `deferred`, `pending`) and `fixed_newer[]` (fixes with a version above
 the installed one, `offered` when the candidate has it, `pro` for an `esm` version); `counts` per
-priority, `selected`.
+priority, `selected`, `unverified[]`. When the OVAL could not be fetched and there is no copy
+(service `error`, section empty), `cve` is `error` with `reason: "radar-fetch"` and the first
+`error` of the radar, never `none`: an empty section after a good download is a real "nothing
+found".
 
 **`upstream`**: `findings[]` per project with newer releases: `repo`, `packages[]`, `installed`,
 `upstream` (the upstream part of the installed version), `newest`, `newest_published`, `releases`
@@ -357,7 +378,10 @@ newest version in a later release: `series`, `release` when distro-info knows it
 
 The status for the Status Board adds the item `cve` once the network data are set up: `info` for
 open CVEs, `warning` for a `high` one or a fix that does not reach the server, `danger` for a
-`critical` one; `value` is the number of open CVEs.
+`critical` one; `value` is the number of open CVEs. Its `checked_at` is the data's `data_at`, not
+the scan's time, and `stale_after` is 72 hours: a new local scan never makes old network data look
+new. When the OVAL could not be fetched it is `none` with “Canonical's list of security issues
+could not be fetched”.
 
 ## Settings (`/etc/update-gaps.conf`)
 
@@ -426,9 +450,9 @@ public state and logs below `$XDG_CACHE_HOME`.
 |---|---|
 | `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy`, `apt-get -s`, needrestart, deb822, `apt-config`, dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed; stage 3: CPU vulnerabilities sorted, `/proc/cpuinfo`, the kernel command line, DMI values and dates, the JSON of fwupd, snapd's times |
 | `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current; stage 3: the VMs of the recorded hosts where only the provider can fix `tsa`, an Intel VM, a physical server with and without its microcode package (Debian without `non-free-firmware`), protections switched off, containers (also without `systemd-detect-virt`), fwupd with an update, old metadata and the refresh timer off, nothing to update, a failing fwupdmgr; snaps held, put off, failing and on an old base, snapd not asked without snaps, snapd not answering |
-| `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item |
+| `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item; the selection with a superseded installed version (an Ubuntu build stays selected, an unmarked or third-party build is named as unverified), a failed OVAL download without a copy (an error, not "nothing found"), a good download without entries, an old copy after failed downloads and old Launchpad and GitHub answers (their own age, also in the status), a copy of unknown time, the radar keeping the time of its last good download |
 | `test/status_test.py` | the status (schema 1) of every recorded host in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status`; the items `cpu` (info in a VM, a warning for this server), `firmware` and `snaps` (only with a finding) |
-| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages |
+| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the network data after a failed fetch without a copy (under “Not checked”, not “No findings”), an old copy (its age on the card and at the top, partly checked without findings), packages of unclear origin, a state of 0.4.1 without `data_at`; the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |
 | `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local`; `cpu` and `firmware` skipped in the container, no snaps |
 | `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card; since 0.2.0 the page loaded hidden after the login without checking, the menu icon as `gaps-status.py status` says (English, and German before the page is opened), `cockpit.jump` into the loaded page (another card while it is shown, a card while it is hidden, no reload); since 0.4.0 `cpu`, `firmware` and `snaps` in the real service (the runner is a VM); no JavaScript or resource errors beyond Cockpit's own |

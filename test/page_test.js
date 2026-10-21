@@ -430,6 +430,50 @@ test("network data: the stage-2 cards, their place in the overview, a link betwe
     assert.ok(!/network data are \d/i.test(text(d.getElementById("ug-status"))), "fresh data: no hint");
 });
 
+test("network data: a failed fetch without a copy, old data, packages of unclear origin", async () => {
+    const radarOn = { ...STATUS, radar: "active", radar_file: NOW };
+    const cveOf = (s) => s.checks.find((x) => x.check === "cve");
+    // Canonical's list could not be fetched and there is no copy: not "no findings", but not checked.
+    let s = scan("noble-held-radar");
+    let cve = cveOf(s);
+    const radar = { ...cve.radar, service: "error", errors: ["HTTP 503"] };
+    Object.keys(cve).forEach((k) => { if (k !== "check") delete cve[k]; });
+    Object.assign(cve, { state: "error", reason: "radar-fetch", error: "HTTP 503", radar });
+    let { d } = boot({ state: s, status: radarOn });
+    await settle();
+    assert.ok(!d.getElementById("ug-card-cve"));
+    assert.doesNotMatch(text(d.getElementById("ug-clean-list")), /Unfixed security issues/);
+    assert.match(text(d.getElementById("ug-unchecked-list")),
+        /Unfixed security issues: Canonical's list of security issues could not be fetched, and there is no earlier copy: HTTP 503\./);
+    ({ d } = boot({ state: s, status: radarOn, language: "de" }));
+    await settle();
+    assert.match(text(d.getElementById("ug-unchecked-list")), /Canonicals Liste der Sicherheitslücken ließ sich nicht holen/);
+    // A six weeks old copy after failed fetches: still shown, with its age, also at the top of the page.
+    s = scan("noble-held-radar");
+    cve = cveOf(s);
+    Object.assign(cve.radar, { data_at: "2026-09-07T20:55:00Z", stale: true, service: "partial", errors: ["HTTP 503"] });
+    ({ d } = boot({ state: s, status: radarOn }));
+    await settle();
+    const card = text(d.getElementById("ug-card-cve"));
+    assert.match(card, /The network data are 42 days old/);
+    assert.match(card, /The last fetch failed \(HTTP 503\); these are the data of /);
+    assert.match(text(d.getElementById("ug-status")), /The network data are 42 days old/);
+    // Nothing found in that old copy: partly checked, and why.
+    Object.assign(cve, { state: "partial", findings: [], counts: {}, missing: ["radar-old"] });
+    ({ d } = boot({ state: s, status: radarOn }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")),
+        /Unfixed security issues: partly: The network data are older than three days: what came since is missing\./);
+    // Packages the scan could not assign to Ubuntu: named, never dropped.
+    s = scan("noble-held-radar");
+    cveOf(s).unverified = ["sudo"];
+    ({ d } = boot({ state: s, status: radarOn }));
+    await settle();
+    assert.match(text(d.getElementById("ug-card-cve")),
+        /Not checked, because the installed version is in no package list any more and its origin is unclear: sudo\./);
+    assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+});
+
 test("network data: set up through the dialog, fetch now, switched off, old data told", async () => {
     let radar = "inactive";
     const { d, calls } = boot({
@@ -468,8 +512,14 @@ test("network data: set up through the dialog, fetch now, switched off, old data
     await settle();
     assert.ok(calls.spawn.some((c) => c.argv[1] === "remove" && c.argv[2] === "radar"));
 
+    // A state of 0.4.1 and older has no data_at: the age then comes from the radar's run.
     const old = scan("noble-held-radar");
-    old.checks.forEach((c) => { if (c.radar) c.radar = { ...c.radar, stale: true, generated: "2026-10-10T00:00:00Z" }; });
+    old.checks.forEach((c) => {
+        if (c.radar) {
+            c.radar = { ...c.radar, stale: true, generated: "2026-10-10T00:00:00Z" };
+            delete c.radar.data_at;
+        }
+    });
     const r = boot({ state: old, status: { ...STATUS, radar: "active", radar_file: "2026-10-10T00:00:00Z" } });
     await settle();
     assert.match(text(r.d.getElementById("ug-status")), /network data are 10 days old/i);

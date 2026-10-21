@@ -1,0 +1,2 @@
+pub:-:4096:1:D94AA3F0EFE21092:1336774248:::-:::scSC::::::23::0:
+uid:-::::1336774248::77355A0B96082B2694009775B6490C605BD16B6F::Ubuntu CD Image Automatic Signing Key (2012) <cdimage@ubuntu.com>::::::::::0:

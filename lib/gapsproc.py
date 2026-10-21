@@ -103,7 +103,7 @@ def run(argv, limit, stdin=None, user=None, home=None):
     return Result(proc.returncode, _text(out), _text(err))
 
 
-def run_unprivileged(argv, limit):
+def run_unprivileged(argv, limit, stdin=None):
     """argv without root, for tools that write a log or cache of their own.
     `pro` as root always writes /var/log/ubuntu-advantage.log and takes its
     lock in /var/lib/ubuntu-advantage, which the read-only scan service does
@@ -121,7 +121,7 @@ def run_unprivileged(argv, limit):
     try:
         if user:
             os.chown(home, *user)
-        return run(argv, limit, user=user, home=home)
+        return run(argv, limit, stdin=stdin, user=user, home=home)
     finally:
         shutil.rmtree(home, ignore_errors=True)
 

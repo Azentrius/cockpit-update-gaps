@@ -1,0 +1,2 @@
+pub:-:4096:1:871920D1991BC93C:1537196506:::-:::scSC::::::23::0:
+uid:-::::1537196506::BE438F08F546424C0EA810FD722053597EB5127B::Ubuntu Archive Automatic Signing Key (2018) <ftpmaster@ubuntu.com>::::::::::0:

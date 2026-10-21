@@ -72,13 +72,60 @@ def phased_results(scenario="resolute-nodesource"):
             "apt-cache-policy-installed": gapsproc.Result(0, policy, "")}
 
 
+def command_text(scenario, key):
+    with open(os.path.join(FIXTURES, scenario, "commands", key + ".txt"), encoding="utf-8") as f:
+        return f.read()
+
+
+# The scenario noble-held after upkeep went wrong. /boot, a file system of its own, was nearly full
+# when unattended-upgrades installed kernel 6.8.0-147 on 2026-10-19: its initramfs could not be
+# written, dpkg stopped and left the kernel half configured, and two old kernels keep the room.
+# And the keyring of GitHub CLI holds only the key that expired on 2026-09-06 (GitHub published
+# the next one in April 2026; hosts that never fetched it stopped reading cli.github.com).
+UPKEEP_UU_LOG = """2026-10-18 06:31:20,105 INFO Starting unattended upgrades script
+2026-10-18 06:31:20,106 INFO Allowed origins are: o=Ubuntu,a=noble, o=Ubuntu,a=noble-security, o=UbuntuESMApps,a=noble-apps-security, o=UbuntuESM,a=noble-infra-security, o=Ubuntu,a=noble-updates
+2026-10-18 06:31:21,861 INFO No packages found that can be upgraded unattended and no pending auto-removals
+2026-10-19 06:20:58,105 INFO Starting unattended upgrades script
+2026-10-19 06:20:58,106 INFO Allowed origins are: o=Ubuntu,a=noble, o=Ubuntu,a=noble-security, o=UbuntuESMApps,a=noble-apps-security, o=UbuntuESM,a=noble-infra-security, o=Ubuntu,a=noble-updates
+2026-10-19 06:21:02,410 INFO Packages that will be upgraded: linux-generic linux-image-6.8.0-147-generic linux-image-generic linux-image-virtual
+2026-10-19 06:21:02,411 INFO Writing dpkg log to /var/log/unattended-upgrades/unattended-upgrades-dpkg.log
+2026-10-19 06:22:40,118 ERROR Installing the upgrades failed!
+2026-10-19 06:22:40,119 ERROR error message: installArchives() failed
+2026-10-19 06:22:40,119 ERROR dpkg returned an error! See /var/log/unattended-upgrades/unattended-upgrades-dpkg.log for details
+2026-10-19 10:04:22,105 INFO Starting unattended upgrades script
+"""
+GITHUB_OLD_KEY = """pub:e:4096:1:23F3D4EA75716059:1662463626:1788612228::-:::sc::::::23::0:
+uid:e::::1725540228::8112F49127753770F34E73A49614E0AFC050A705::GitHub CLI <opensource+cli@github.com>::::::::::0:
+sub:e:4096:1:E5FAF19590714157:1662463626:1788612228:::::e::::::23:
+"""
+
+
+def upkeep(scenario="noble-held"):
+    """Keyword arguments for FakeSystem: noble-held as described above."""
+    boot = {"vmlinuz-6.8.0-136-generic": 14989704, "initrd.img-6.8.0-136-generic": 76012422,
+            "vmlinuz-6.8.0-142-generic": 15030664, "initrd.img-6.8.0-142-generic": 76340119,
+            "vmlinuz-6.8.0-146-generic": 15067528, "initrd.img-6.8.0-146-generic": 76568571,
+            "vmlinuz-6.8.0-147-generic": 15083912}
+    dq = command_text(scenario, "dpkg-query-W").replace(
+        "linux-image-6.8.0-147-generic\t6.8.0-147.147\tlinux-signed\tii ", "linux-image-6.8.0-147-generic\t6.8.0-147.147\tlinux-signed\tiF ")
+    return {"files": {"/var/log/unattended-upgrades/unattended-upgrades.log": UPKEEP_UU_LOG},
+            "results": {"dpkg-query-W": gapsproc.Result(0, dq, ""),
+                        "gpg-githubcli-archive-keyring.gpg": gapsproc.Result(0, GITHUB_OLD_KEY, "")},
+            "meta": {"dirs": {"/boot": sorted(boot)},
+                     "stat": dict({"/boot/" + n: {"type": "file", "mtime": 1792400000, "mode": "644", "uid": 0, "size": size}
+                                   for n, size in boot.items()}, **{"/boot/initrd.img-6.8.0-147-generic": None}),
+                     "statvfs": {"/boot": [29696 * 4096, 253107 * 4096]}}}
+
+
 class FakeSystem:
-    def __init__(self, scenario, uid=None, missing=(), results=None, files=None, now=None, snapd=None):
+    def __init__(self, scenario, uid=None, missing=(), results=None, files=None, now=None, snapd=None, meta=None):
         self.dir = os.path.join(FIXTURES, scenario)
         with open(os.path.join(self.dir, "meta.json")) as f:
             self.meta = json.load(f)
         if files:
             self.meta["files"].update(files)
+        for section, values in (meta or {}).items():     # {section of meta.json: entries to set}
+            self.meta.setdefault(section, {}).update(values)
         self._uid = self.meta.get("uid", 0) if uid is None else uid
         self.missing = set(missing)
         self.results = dict(results or {})
@@ -99,6 +146,8 @@ class FakeSystem:
             return "apt-cache-policy-" + a[2]
         if a[:2] == ["apt-cache", "policy"]:
             return "apt-cache-policy-installed"
+        if a[:1] == ["gpg"]:     # the keyring it shows: gpg-<file name>, gpg-stdin for an inline key
+            return "gpg-" + (os.path.basename(a[-1]) if a[-1].startswith("/") else "stdin")
         if a == ["systemd-detect-virt"]:
             return "systemd-detect-virt"
         if a[:2] == ["fwupdmgr", "get-updates"]:
@@ -121,6 +170,8 @@ class FakeSystem:
             return "pro"
         if a[:1] == ["needrestart"]:
             return "needrestart"
+        if a[:3] == ["systemctl", "show", "apt-daily-upgrade.service"]:
+            return "systemctl-show-apt-daily-upgrade"
         if a[:3] == ["systemctl", "show", "apt-daily.service"]:
             return "systemctl-show-apt-daily"
         if a[:3] == ["systemctl", "is-enabled", "apt-daily-upgrade.timer"]:
@@ -149,8 +200,10 @@ class FakeSystem:
                 return gapsproc.Result(rc, text, "")
         return gapsproc.Result(None, missing=True)
 
-    def run_unprivileged(self, argv, limit=120):
+    def run_unprivileged(self, argv, limit=120, stdin=None):
         self.unprivileged = getattr(self, "unprivileged", []) + [argv[0]]
+        if stdin is not None:
+            self.stdin = getattr(self, "stdin", []) + [stdin]
         return self.run(argv, limit)
 
     # -- files
@@ -176,7 +229,7 @@ class FakeSystem:
             else:
                 return None
         return SimpleNamespace(st_mode=MODES[st["type"]] | int(st.get("mode", "644"), 8),
-                               st_mtime=float(st["mtime"]), st_uid=st.get("uid", 0))
+                               st_mtime=float(st["mtime"]), st_uid=st.get("uid", 0), st_size=int(st.get("size", 0)))
 
     def readlink(self, path):
         return (self.meta["stat"].get(path) or {}).get("target")
@@ -196,6 +249,11 @@ class FakeSystem:
 
     def kernel(self):
         return self.meta.get("kernel", "")
+
+    def statvfs(self, path):
+        """(free, size) in bytes from meta.json's "statvfs", or None (not recorded)."""
+        v = (self.meta.get("statvfs") or {}).get(path)
+        return tuple(v) if v else None
 
     SNAPD_FILES = {"/v2/snaps": "snapd-snaps.json", "/v2/system-info": "snapd-system-info.json",
                    "/v2/changes?select=all": "snapd-changes.json"}

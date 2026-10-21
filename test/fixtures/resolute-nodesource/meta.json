@@ -1,8 +1,14 @@
 {
  "dirs": {
   "/boot": [
+   "initrd.img-7.0.0-34-generic",
+   "initrd.img-7.0.0-38-generic",
    "vmlinuz-7.0.0-34-generic",
    "vmlinuz-7.0.0-38-generic"
+  ],
+  "/etc/apt/trusted.gpg.d": [
+   "ubuntu-keyring-2012-cdimage.gpg",
+   "ubuntu-keyring-2018-archive.gpg"
   ],
   "/opt": [
    "app1"
@@ -120,11 +126,15 @@
    "packages.azentrius.com_apt_dists_stable_main_binary-amd64_Packages",
    "partial"
   ],
+  "/var/lib/dpkg/updates": [],
   "/var/log": [
    "dpkg.log"
   ]
  },
  "files": {
+  "/etc/apt/sources.list.d/azentrius.sources": "Types: deb\nURIs: https://packages.azentrius.com/apt\nSuites: stable\nComponents: main\nSigned-By: /usr/share/keyrings/azentrius.asc\n",
+  "/etc/apt/sources.list.d/nodesource.sources": "Types: deb\nURIs: https://deb.nodesource.com/node_24.x\nSuites: nodistro\nComponents: main\nSigned-By: /usr/share/keyrings/nodesource.gpg\n",
+  "/etc/apt/sources.list.d/ubuntu.sources": "Types: deb\nURIs: https://mirror.hetzner.com/ubuntu/packages\nSuites: resolute resolute-updates resolute-backports\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nTypes: deb\nURIs: https://mirror.hetzner.com/ubuntu/security\nSuites: resolute-security\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n",
   "/etc/os-release": "PRETTY_NAME=\"Ubuntu 26.04.1 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04.1 LTS (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n",
   "/proc/cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-38-generic root=/dev/sda1 ro consoleblank=0\n",
   "/proc/cpuinfo": "processor\t: 0\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 17\nmodel name\t: AMD EPYC-Genoa Processor\nstepping\t: 0\nmicrocode\t: 0x1000065\n\nprocessor\t: 1\nvendor_id\t: AuthenticAMD\ncpu family\t: 25\nmodel\t\t: 17\nmodel name\t: AMD EPYC-Genoa Processor\nstepping\t: 0\nmicrocode\t: 0x1000065\n\n",
@@ -153,7 +163,8 @@
   "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_packages_dists_resolute_InRelease": "Date: Thu, 23 Apr 2026 17:07:15 UTC\n",
   "/var/lib/apt/lists/mirror.hetzner.com_ubuntu_security_dists_resolute-security_InRelease": "Date: Sat, 17 Oct 2026 23:34:23 UTC\n",
   "/var/lib/apt/lists/packages.azentrius.com_apt_dists_stable_InRelease": "Date: Sun, 18 Oct 2026 21:11:43 +0000\n",
-  "/var/log/dpkg.log": ""
+  "/var/log/dpkg.log": "",
+  "/var/log/unattended-upgrades/unattended-upgrades.log": "2026-10-18 06:12:30,105 INFO Starting unattended upgrades script\n2026-10-18 06:12:30,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-18 06:12:30,106 INFO Initial blacklist: \n2026-10-18 06:12:30,106 INFO Initial whitelist (not strict): \n2026-10-18 06:12:31,861 INFO No packages found that can be upgraded unattended and no pending auto-removals\n2026-10-18 16:02:11,105 WARNING Could not figure out development release: Distribution data outdated. Please check for an update for distro-info-data. See /usr/share/doc/distro-info-data/README.Debian\n2026-10-18 16:02:11,105 INFO Starting unattended upgrades script\n2026-10-18 16:02:11,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-18 16:02:11,106 INFO Initial blacklist: \n2026-10-18 16:02:11,106 INFO Initial whitelist (not strict): \n2026-10-19 06:56:57,105 INFO Starting unattended upgrades script\n2026-10-19 06:56:57,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-19 06:56:57,106 INFO Initial blacklist: \n2026-10-19 06:56:57,106 INFO Initial whitelist (not strict): \n2026-10-19 06:56:58,861 INFO No packages found that can be upgraded unattended and no pending auto-removals\n2026-10-19 20:35:25,105 WARNING Could not figure out development release: Distribution data outdated. Please check for an update for distro-info-data. See /usr/share/doc/distro-info-data/README.Debian\n2026-10-19 20:35:25,105 INFO Starting unattended upgrades script\n2026-10-19 20:35:25,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-19 20:35:25,106 INFO Initial blacklist: \n2026-10-19 20:35:25,106 INFO Initial whitelist (not strict): \n"
  },
  "heads": {
   "/opt/app1/bin/tool-1": "#!/usr/bin/env python3",
@@ -172,6 +183,69 @@
  "kernel": "7.0.0-38-generic",
  "now": "2026-10-19T20:55:00Z",
  "stat": {
+  "/boot/initrd.img-7.0.0-34-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 27465180,
+   "type": "file",
+   "uid": 0
+  },
+  "/boot/initrd.img-7.0.0-38-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 27636794,
+   "type": "file",
+   "uid": 0
+  },
+  "/boot/vmlinuz-7.0.0-34-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 17303944,
+   "type": "file",
+   "uid": 0
+  },
+  "/boot/vmlinuz-7.0.0-38-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 17320328,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/sources.list.d/azentrius.sources": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 129,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/sources.list.d/nodesource.sources": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 134,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/sources.list.d/ubuntu.sources": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 412,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1165,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1167,
+   "type": "file",
+   "uid": 0
+  },
   "/etc/os-release": {
    "mode": "644",
    "mtime": 1792400000,
@@ -280,6 +354,27 @@
    "type": "file",
    "uid": 0
   },
+  "/usr/share/keyrings/azentrius.asc": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1664,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/share/keyrings/nodesource.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1207,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/share/keyrings/ubuntu-archive-keyring.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 3607,
+   "type": "file",
+   "uid": 0
+  },
   "/var/lib/apt/lists/deb.nodesource.com_node%5f24.x_dists_nodistro_InRelease": {
    "mode": "644",
    "mtime": 1791997926,
@@ -363,7 +458,20 @@
    "mtime": 1792400000,
    "type": "file",
    "uid": 0
+  },
+  "/var/log/unattended-upgrades/unattended-upgrades.log": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 2162,
+   "type": "file",
+   "uid": 0
   }
+ },
+ "statvfs": {
+  "/boot": [
+   72253059072,
+   80279486464
+  ]
  },
  "uid": 0
 }

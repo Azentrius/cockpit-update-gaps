@@ -35,6 +35,34 @@
    "took_ms": 0
   },
   {
+   "check": "dpkg",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "dpkg-query -W",
+    "/var/lib/dpkg/updates"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "boot",
+   "state": "none",
+   "findings": [],
+   "kernels": [
+    "7.0.0-34-generic",
+    "7.0.0-38-generic"
+   ],
+   "running": "7.0.0-38-generic",
+   "free": 72253059072,
+   "size": 80279486464,
+   "need": 67435683,
+   "source": [
+    "/boot",
+    "statvfs /boot"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "held",
    "state": "none",
    "findings": [],
@@ -53,7 +81,8 @@
      "version": "0.18.1-3ubuntu1+esm1",
      "service": "esm-apps",
      "status": "pending_attach",
-     "installed": "0.18.1-3ubuntu1"
+     "installed": "0.18.1-3ubuntu1",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "attached": false,
@@ -112,7 +141,8 @@
      "text": "Vulnerable: No microcode",
      "kind": "vulnerable",
      "microcode": true,
-     "fix": "provider"
+     "fix": "provider",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "mitigated": 4,
@@ -155,7 +185,8 @@
      "result": "success",
      "lines": [
       "E: Sub-process nm-online returned an error code (1)"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "last_update": {
@@ -208,6 +239,42 @@
    "took_ms": 0
   },
   {
+   "check": "keys",
+   "state": "none",
+   "findings": [],
+   "keyrings": [
+    {
+     "file": "/usr/share/keyrings/azentrius.asc",
+     "sources": [
+      "https://packages.azentrius.com/apt"
+     ],
+     "expires": "never"
+    },
+    {
+     "file": "/usr/share/keyrings/nodesource.gpg",
+     "sources": [
+      "https://deb.nodesource.com/node_24.x"
+     ],
+     "expires": "never"
+    },
+    {
+     "file": "/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+     "sources": [
+      "https://mirror.hetzner.com/ubuntu/packages",
+      "https://mirror.hetzner.com/ubuntu/security"
+     ],
+     "expires": "never"
+    }
+   ],
+   "soon_days": 60,
+   "source": [
+    "apt-get indextargets",
+    "Signed-By",
+    "gpg --show-keys"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "local",
    "state": "found",
    "findings": [
@@ -215,7 +282,8 @@
      "package": "hc-utils",
      "version": "0.0.8",
      "arch": "all",
-     "cause": "no-source"
+     "cause": "no-source",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "source": [
@@ -239,7 +307,8 @@
      "c": "main",
      "packages": [
       "nodejs"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "kind": "source",
@@ -254,7 +323,8 @@
       "azentrius-repository",
       "cockpit-cronjobs",
       "cockpit-image-update-monitor"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "installed": true,
@@ -275,6 +345,21 @@
    "source": [
     "apt-config dump",
     "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "uu",
+   "state": "none",
+   "findings": [],
+   "off": false,
+   "last_run": "2026-10-19T06:56:57Z",
+   "outcome": "nothing",
+   "upgraded": [],
+   "service": "success",
+   "source": [
+    "/var/log/unattended-upgrades/unattended-upgrades.log",
+    "systemctl show apt-daily-upgrade.service"
    ],
    "took_ms": 0
   },

@@ -1,8 +1,14 @@
 {
  "dirs": {
   "/boot": [
+   "initrd.img-7.0.0-34-generic",
+   "initrd.img-7.0.0-38-generic",
    "vmlinuz-7.0.0-34-generic",
    "vmlinuz-7.0.0-38-generic"
+  ],
+  "/etc/apt/trusted.gpg.d": [
+   "ubuntu-keyring-2012-cdimage.gpg",
+   "ubuntu-keyring-2018-archive.gpg"
   ],
   "/opt": [
    "app1"
@@ -175,11 +181,15 @@
    "security.ubuntu.com_ubuntu_dists_resolute-security_universe_dep11_Components-amd64.yml.gz",
    "security.ubuntu.com_ubuntu_dists_resolute-security_universe_i18n_Translation-en"
   ],
+  "/var/lib/dpkg/updates": [],
   "/var/log": [
    "dpkg.log"
   ]
  },
  "files": {
+  "/etc/apt/sources.list.d/azentrius.sources": "Types: deb\nURIs: https://packages.azentrius.com/apt\nSuites: stable\nComponents: main\nSigned-By: /usr/share/keyrings/azentrius.asc\n",
+  "/etc/apt/sources.list.d/hetzner-mirror.sources": "Types: deb\nURIs: http://mirror.hetzner.com/ubuntu/packages\nSuites: resolute resolute-updates resolute-backports resolute-security\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n",
+  "/etc/apt/sources.list.d/ubuntu.sources": "Types: deb\nURIs: http://archive.ubuntu.com/ubuntu/\nSuites: resolute resolute-updates resolute-backports\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n\nTypes: deb\nURIs: http://security.ubuntu.com/ubuntu/\nSuites: resolute-security\nComponents: main universe restricted multiverse\nSigned-By: /usr/share/keyrings/ubuntu-archive-keyring.gpg\n",
   "/etc/os-release": "PRETTY_NAME=\"Ubuntu 26.04.1 LTS\"\nNAME=\"Ubuntu\"\nVERSION_ID=\"26.04\"\nVERSION=\"26.04.1 LTS (Resolute Raccoon)\"\nVERSION_CODENAME=resolute\nID=ubuntu\nID_LIKE=debian\nHOME_URL=\"https://www.ubuntu.com/\"\nSUPPORT_URL=\"https://help.ubuntu.com/\"\nBUG_REPORT_URL=\"https://bugs.launchpad.net/ubuntu/\"\nPRIVACY_POLICY_URL=\"https://www.ubuntu.com/legal/terms-and-policies/privacy-policy\"\nUBUNTU_CODENAME=resolute\nLOGO=ubuntu-logo\n",
   "/proc/cmdline": "BOOT_IMAGE=/boot/vmlinuz-7.0.0-34-generic root=/dev/md2 ro consoleblank=0\n",
   "/proc/cpuinfo": "processor\t: 0\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 1\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 2\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 3\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 4\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 5\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 6\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 7\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 8\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 9\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 10\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\nprocessor\t: 11\nvendor_id\t: AuthenticAMD\ncpu family\t: 23\nmodel\t\t: 113\nmodel name\t: AMD Ryzen 5 3600 6-Core Processor\nstepping\t: 0\nmicrocode\t: 0x8701034\n\n",
@@ -220,6 +230,7 @@
   "/var/lib/apt/lists/packages.azentrius.de_apt_dists_stable_InRelease": "Date: Sun, 18 Oct 2026 21:11:43 +0000\n",
   "/var/lib/apt/lists/security.ubuntu.com_ubuntu_dists_resolute-security_InRelease": "Date: Sun, 18 Oct 2026 23:53:25 UTC\n",
   "/var/log/dpkg.log": "",
+  "/var/log/unattended-upgrades/unattended-upgrades.log": "2026-10-18 06:33:09,105 INFO Starting unattended upgrades script\n2026-10-18 06:33:09,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-18 06:33:09,106 INFO Initial blacklist: \n2026-10-18 06:33:09,106 INFO Initial whitelist (not strict): \n2026-10-18 06:33:10,861 INFO No packages found that can be upgraded unattended and no pending auto-removals\n2026-10-18 14:23:26,105 INFO Starting unattended upgrades script\n2026-10-18 14:23:26,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-18 14:23:26,106 INFO Initial blacklist: \n2026-10-18 14:23:26,106 INFO Initial whitelist (not strict): \n2026-10-19 06:08:41,105 INFO Starting unattended upgrades script\n2026-10-19 06:08:41,106 INFO Allowed origins are: o=Ubuntu,a=resolute, o=Ubuntu,a=resolute-security, o=UbuntuESMApps,a=resolute-apps-security, o=UbuntuESM,a=resolute-infra-security, o=Ubuntu,a=resolute-updates\n2026-10-19 06:08:41,106 INFO Initial blacklist: \n2026-10-19 06:08:41,106 INFO Initial whitelist (not strict): \n2026-10-19 06:08:42,861 INFO No packages found that can be upgraded unattended and no pending auto-removals\n",
   "/var/run/reboot-required": "*** System restart required ***\n",
   "/var/run/reboot-required.pkgs": "linux-image-7.0.0-38-generic\nlinux-base\n"
  },
@@ -237,6 +248,69 @@
  "kernel": "7.0.0-34-generic",
  "now": "2026-10-19T20:55:00Z",
  "stat": {
+  "/boot/initrd.img-7.0.0-34-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 120970814,
+   "type": "file",
+   "uid": 0
+  },
+  "/boot/initrd.img-7.0.0-38-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 121217463,
+   "type": "file",
+   "uid": 0
+  },
+  "/boot/vmlinuz-7.0.0-34-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 17303944,
+   "type": "file",
+   "uid": 0
+  },
+  "/boot/vmlinuz-7.0.0-38-generic": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 17320328,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/sources.list.d/azentrius.sources": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 129,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/sources.list.d/hetzner-mirror.sources": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 236,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/sources.list.d/ubuntu.sources": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 395,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1165,
+   "type": "file",
+   "uid": 0
+  },
+  "/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1167,
+   "type": "file",
+   "uid": 0
+  },
   "/etc/os-release": {
    "mode": "644",
    "mtime": 1792400000,
@@ -324,6 +398,20 @@
   "/usr/share/distro-info/ubuntu.csv": {
    "mode": "644",
    "mtime": 1792400000,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/share/keyrings/azentrius.asc": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1664,
+   "type": "file",
+   "uid": 0
+  },
+  "/usr/share/keyrings/ubuntu-archive-keyring.gpg": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 3607,
    "type": "file",
    "uid": 0
   },
@@ -429,6 +517,13 @@
    "type": "file",
    "uid": 0
   },
+  "/var/log/unattended-upgrades/unattended-upgrades.log": {
+   "mode": "644",
+   "mtime": 1792400000,
+   "size": 1374,
+   "type": "file",
+   "uid": 0
+  },
   "/var/run/reboot-required": {
    "mode": "644",
    "mtime": 1791182167,
@@ -441,6 +536,12 @@
    "type": "file",
    "uid": 0
   }
+ },
+ "statvfs": {
+  "/boot": [
+   670838784,
+   1036726272
+  ]
  },
  "uid": 0
 }

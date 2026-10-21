@@ -280,6 +280,45 @@ class Contract(unittest.TestCase):
         st = gapsstatus.status_file(doc, "0.1.0")
         self.assertEqual(gapsstatus.problems(st), [])
 
+    def test_upkeep_items_only_with_a_finding(self):
+        """dpkg, /boot, the signing keys and the runs of unattended-upgrades:
+        an item only with a finding (fakesys.upkeep: noble-held with /boot
+        full, a kernel half configured, a failed run, GitHub CLI's expired key)."""
+        for s in SCENARIOS:
+            ids = [i["id"] for i in gapsstatus.document(fixture(f"scan-{s}.json"), "en", "0.1.0")["items"]]
+            self.assertFalse({"dpkg", "boot", "keys", "uu"} & set(ids), s)
+        doc = fixture("scan-noble-held-upkeep.json")
+        en = gapsstatus.document(doc, "en", "0.1.0")
+        self.assertEqual([i["id"] for i in en["items"]][:4], ["dpkg", "held", "restart", "boot"])
+        items = {i["id"]: (i["state"], i.get("value"), i.get("detail")) for i in en["items"]}
+        self.assertEqual(items["dpkg"], ("warning", "1", "1 package left half done: linux-image-6.8.0-147-generic"))
+        self.assertEqual(items["boot"], ("warning", None, "122 MB free, the next kernel update needs about 137 MB; 2 old kernels"))
+        self.assertEqual(items["keys"], ("warning", "1", "expired: githubcli-archive-keyring.gpg"))
+        self.assertEqual(items["uu"], ("warning", None, "the last run failed"))
+        de = {i["id"]: i.get("detail") for i in gapsstatus.document(doc, "de", "0.1.0")["items"]}
+        self.assertEqual(de["boot"], "122 MB frei, das nächste Kernel-Update braucht etwa 137 MB; 2 alte Kernel")
+        self.assertEqual(gapsstatus.problems(gapsstatus.status_file(doc, "0.1.0")), [])
+        for lang in ("en", "de"):
+            for x in texts(gapsstatus.document(doc, lang, "0.1.0")):
+                self.assertIsNone(PRIVATE.search(x), (lang, x))
+
+    def test_old_kernels_and_keys_that_expire_are_info(self):
+        doc = fixture("scan-noble-held-upkeep.json")
+        checks = {c["check"]: c for c in doc["checks"]}
+        checks["boot"]["findings"] = [f for f in checks["boot"]["findings"] if f["kind"] == "old-kernels"]
+        ring = {"file": "/usr/share/keyrings/azentrius.asc", "sources": ["https://packages.azentrius.com/apt"],
+                "expires": "2026-12-01T00:00:00Z", "kind": "expires", "days": 42}
+        checks["keys"]["findings"] = [ring]
+        checks["uu"]["findings"] = [{"kind": "conffile", "packages": ["nginx-common"]}]
+        items = {i["id"]: (i["state"], i.get("detail")) for i in gapsstatus.document(doc, "en", "0.1.0")["items"]}
+        self.assertEqual(items["boot"], ("info", "2 old kernels"))
+        self.assertEqual(items["keys"], ("info", "expires on 2026-12-01: azentrius.asc"))
+        self.assertEqual(items["uu"], ("info", "left for an upgrade by hand: nginx-common"))
+        ring["days"] = 9
+        self.assertEqual(self.item(doc, "keys")["state"], "warning", "under 14 days")
+        checks["keys"].update(state="partial", findings=[], missing=["keyrings"])
+        self.assertIsNone(self.item(doc, "keys"), "partly checked without a finding: no item")
+
 
 class Verb(unittest.TestCase):
     def setUp(self):
@@ -366,12 +405,15 @@ class Scan(unittest.TestCase):
     def test_writes_both_files(self):
         mod = load_module("gaps_scan", os.path.join(LIB, "gaps-scan.py"))
         doc = fixture("scan-noble-held.json")
-        mod.gapscheck.scan = lambda: doc
+        seen = []
+        mod.gapscheck.scan = lambda previous=None: seen.append(previous) or doc
         mod.lock = lambda: None
         with tempfile.TemporaryDirectory() as d:
             scan, status = os.path.join(d, "scan.json"), os.path.join(d, "status.json")
             with redirect_stdout(io.StringIO()):
                 self.assertEqual(mod.main(["--output", scan, "--status", status]), 0)
+                self.assertEqual(mod.main(["--output", scan, "--status", status]), 0)
+            self.assertEqual(seen, [None, doc], "the second scan gets the first one's file")
             self.assertEqual(sorted(os.listdir(d)), ["scan.json", "status.json"])
             for p in (scan, status):
                 self.assertEqual(oct(os.stat(p).st_mode & 0o777), "0o644")

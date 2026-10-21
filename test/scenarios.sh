@@ -6,9 +6,9 @@
 #
 # NEVER on a machine you use: it holds a package, installs a package without a source, adds a
 # package source that does not exist, writes into /usr/local, /opt and /etc and sets the reboot
-# flag. Then it runs gaps-scan.py from the checkout, as root (with the files the service writes)
-# and as a user, reads the status as a user and checks what it found. No systemd runs in the
-# container: the scan runs directly, as the service would.
+# flag, and leaves a package half configured. Then it runs gaps-scan.py from the checkout, as root
+# (with the files the service writes, twice) and as a user, reads the status as a user and checks
+# what it found. No systemd runs in the container: the scan runs directly, as the service would.
 set -eu
 src=${1:?usage: scenarios.sh CHECKOUT}
 export DEBIAN_FRONTEND=noninteractive LC_ALL=C
@@ -16,7 +16,7 @@ export DEBIAN_FRONTEND=noninteractive LC_ALL=C
 echo "== $PRETTY_NAME"
 
 apt-get update -qq
-apt-get install -y -qq --no-install-recommends python3 unattended-upgrades needrestart distro-info-data dpkg-dev > /dev/null
+apt-get install -y -qq --no-install-recommends python3 unattended-upgrades needrestart distro-info-data dpkg-dev gpg > /dev/null
 
 # A held package, a package without a source, a source without package lists.
 # apt-mark holds a package that is not installed as well; it must be installed to count.
@@ -27,6 +27,14 @@ mkdir -p "$pkg/DEBIAN" "$pkg/usr/share/doc/ug-local"
 printf 'Package: ug-local\nVersion: 1.0\nArchitecture: all\nMaintainer: Test <test@example.invalid>\nDescription: a package without a source\n' > "$pkg/DEBIAN/control"
 dpkg-deb --build "$pkg" /tmp/ug-local.deb > /dev/null
 dpkg -i /tmp/ug-local.deb > /dev/null
+# A package dpkg leaves half configured: its postinst fails.
+broken=$(mktemp -d)
+mkdir -p "$broken/DEBIAN"
+printf 'Package: ug-broken\nVersion: 1.0\nArchitecture: all\nMaintainer: Test <test@example.invalid>\nDescription: a package whose configuration fails\n' > "$broken/DEBIAN/control"
+printf '#!/bin/sh\nexit 1\n' > "$broken/DEBIAN/postinst"
+chmod 755 "$broken/DEBIAN/postinst"
+dpkg-deb --build "$broken" /tmp/ug-broken.deb > /dev/null
+if dpkg -i /tmp/ug-broken.deb > /dev/null 2>&1; then echo "ug-broken was configured"; exit 1; fi
 echo "deb http://update-gaps.invalid/debian stable main" > /etc/apt/sources.list.d/ug-test.list
 # Kept out of the automatic updates by name.
 printf 'Unattended-Upgrade::Package-Blacklist { "^ug-local$"; };\n' > /etc/apt/apt.conf.d/99ug-test
@@ -49,6 +57,9 @@ chmod 755 /usr/local/bin/apt-get
 mkdir -p /var/lib/update-gaps
 python3 -I "$src/lib/gaps-scan.py" --output /var/lib/update-gaps/scan.json --status /var/lib/update-gaps/status.json
 cp /var/lib/update-gaps/scan.json /tmp/scan-root.json
+sleep 2
+# Again: every finding keeps the time the first scan saw it.
+python3 -I "$src/lib/gaps-scan.py" --output /var/lib/update-gaps/scan.json
 useradd -m ugplain 2> /dev/null || true
 su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-scan.py'" > /tmp/scan-user.json
 sh "$src/lib/gaps-ctl.sh" status > /tmp/status.json
@@ -63,7 +74,7 @@ ident = sys.argv[1]
 doc = json.load(open("/tmp/scan-root.json"))
 c = {x["check"]: x for x in doc["checks"]}
 for x in doc["checks"]:
-    print(f'{x["check"]:10} {x["state"]:8} {x.get("reason") or x.get("error") or ""}')
+    print(f'{x["check"]:10} {x["state"]:8} {x.get("reason") or x.get("error") or x.get("tool") or ""}')
 assert doc["root"] and doc["pm"] == "apt", doc
 assert not [x for x in doc["checks"] if x["state"] in ("error", "timeout")], "a check failed"
 assert "tzdata" in [f["package"] for f in c["held"]["findings"]], c["held"]
@@ -112,6 +123,20 @@ for k in ("cpu", "firmware"):
     assert c[k]["state"] == "skipped" and c[k]["reason"] == "container", c[k]
 assert c["snaps"]["state"] == "none" and c["snaps"]["installed"] == 0, c["snaps"]
 assert not {"cpu", "firmware", "snaps"} & set(items), items
+# Package states, /boot, signing keys, the runs of unattended-upgrades.
+assert [(f["package"], f["state"]) for f in c["dpkg"]["findings"] if f["kind"] == "package"] == [("ug-broken", "half-configured")], c["dpkg"]
+assert items["dpkg"]["state"] == "warning" and "ug-broken" in items["dpkg"]["detail"], items
+assert c["boot"]["state"] == "skipped" and c["boot"]["reason"] == "not-applicable", c["boot"]   # no kernel of its own
+k = c["keys"]
+print("keyrings:", [(r["file"], r["expires"], bool(r.get("default"))) for r in k["keyrings"]])
+assert k["state"] == "none" and k["keyrings"] and all(r["expires"] for r in k["keyrings"]), k
+assert u["keys"]["state"] == "none" and u["keys"]["keyrings"] == k["keyrings"], u["keys"]
+uu = c["uu"]
+assert [f["kind"] for f in uu["findings"]] == ([] if uu["off"] else ["never"]), uu   # it never ran here
+again = json.load(open("/var/lib/update-gaps/scan.json"))
+def held_since(d):
+    return [f["since"] for x in d["checks"] if x["check"] == "held" for f in x["findings"] if f["package"] == "tzdata"]
+assert again["generated"] > doc["generated"] and held_since(again) == held_since(doc) == [doc["generated"]], (held_since(again), doc["generated"])
 print("SCENARIO OK")
 EOF
 test ! -e /tmp/ug-fake-apt-ran || { echo "the helper ran apt-get from /usr/local/bin"; exit 1; }

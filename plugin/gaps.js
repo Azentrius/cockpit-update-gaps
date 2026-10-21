@@ -24,15 +24,15 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.5.0";
+    const VERSION = "0.6.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
     const MONITOR_MANIFEST = "/usr/share/cockpit/image-updates/manifest.json";
     const FORMAT = 1;          // newest scan.json format this page knows
     const STALE_H = 24;        // a state older than this gets a hint
-    const CARDS = ["phased", "held", "pro", "cve", "upstream", "restart", "cpu", "firmware", "snaps", "lists", "local", "auto",
-                   "backports", "newer", "outside", "eol"];
+    const CARDS = ["phased", "dpkg", "boot", "held", "pro", "cve", "upstream", "restart", "cpu", "firmware", "snaps", "lists",
+                   "keys", "local", "auto", "uu", "backports", "newer", "outside", "eol"];
     const RADAR_CHECKS = ["cve", "upstream", "newer"];   // stage 2: they read the radar's network data
     const ALL = ["updates"].concat(CARDS);
 
@@ -355,6 +355,25 @@
         return I18N.en[key] ? esc(t(key)) + `<span class="az-cell-sub">${code(name)}</span>` : code(name);
     }
     function until(iso) { return iso ? fmtDate(iso) : t("snaps.forever"); }
+    // When a scan first saw a finding (`since` in scan.json), once an earlier scan saw it as well.
+    function seen(f, inList) {
+        const s = f && f.since;
+        if (!s || !doc || !(Date.parse(s) < Date.parse(doc.generated))) return "";
+        return ` <span class="${inList ? "ug-seen" : "az-cell-sub"}">${esc(t("seen.since", { date: fmtDay(s) }))}</span>`;
+    }
+    function bytes(n) {
+        if (typeof n !== "number" || !isFinite(n)) return "?";
+        const gb = n >= 1e9;
+        return (gb ? n / 1e9 : n / 1e6).toLocaleString(LOCALE, { maximumFractionDigits: gb ? 1 : 0 }) + (gb ? " GB" : " MB");
+    }
+    const PKG_RE = /^[a-z0-9][a-z0-9+.:-]*$/;
+    // Keyrings the scan could not read (not a finding: apt may read them all the same).
+    function keysUnchecked(c, bare) {
+        const un = c.unchecked || [];
+        if (!un.length) return "";
+        const html = rich(t("keys.unchecked", { list: un.map((u) => t("keys.reason." + u.reason, { file: String(u.file || "?").replace(/`/g, "'") })).join(", ") }));
+        return bare ? " " + html : `<p class="ug-note">${html}</p>`;
+    }
 
     // Commands for a terminal, to copy (the page itself installs nothing): the command, then what it does.
     function commands(list) {
@@ -376,12 +395,12 @@
                 fail += " " + esc(t("phased.blocks", { n: u.count })) + (u.security ? " " + esc(t("sum.updatesSec", { n: u.security })) : "");
             }
             const rows = pk.map((f) => [
-                cell(esc(f.package)),
+                cell(esc(f.package) + seen(f)),
                 ver(f.installed),
                 ver(f.version),
                 cell(typeof f.percent === "number" ? esc(t("phased.percent", { n: f.percent })) : "?"),
             ]);
-            const names = pk.map((f) => f.package).filter((n) => /^[a-z0-9][a-z0-9+.:-]*$/.test(String(n || "")));
+            const names = pk.map((f) => f.package).filter((n) => PKG_RE.test(String(n || "")));
             const cmds = [["sudo apt-get upgrade", rich(t("phased.cmdUpgrade"))]];
             if (names.length) cmds.push(["sudo apt-get install --only-upgrade " + names.join(" "), rich(t("phased.cmdOnly"))]);
             let setting = "";
@@ -396,9 +415,47 @@
                 (setting ? `<p class="ug-note">${setting}</p>` : "") + sourceLine(c));
         },
 
+        // dpkg left packages half done or its run was interrupted: every further update fails.
+        dpkg(c) {
+            const parts = [];
+            const stopped = c.findings.find((f) => f.kind === "interrupted");
+            if (stopped) parts.push(alertHtml("warning", t("dpkg.interruptedTitle"), rich(t("dpkg.interrupted")) + seen(stopped, true)));
+            const pk = c.findings.filter((f) => f.kind === "package");
+            if (pk.length) {
+                parts.push(table(["col.package", "col.version", "col.state"], pk.map((f) => [
+                    cell(esc(f.package) + seen(f)), ver(f.version), cell(esc(t("dpkg.state." + f.state))),
+                ])));
+            }
+            if (c.more) parts.push(`<p class="ug-note">${esc(t("held.more", { n: c.more }))}</p>`);
+            const cmds = [["sudo dpkg --configure -a", rich(t("dpkg.cmdConfigure"))], ["sudo apt-get -f install", rich(t("dpkg.cmdFix"))]];
+            const broken = pk.filter((f) => f.state === "reinst-required" && PKG_RE.test(String(f.package || ""))).map((f) => f.package);
+            if (broken.length) cmds.push(["sudo apt-get install --reinstall " + broken.join(" "), rich(t("dpkg.cmdReinstall"))]);
+            const n = pk.length + (c.more || 0);
+            return card("dpkg", n ? t("dpkg.count", { n }) : t("dpkg.interruptedLabel"),
+                explain("dpkg", "", "card.whyFails") + parts.join("") +
+                `<p class="ug-sub">${esc(t("card.cmdTitle"))}</p>` + commands(cmds) + sourceLine(c));
+        },
+
+        // /boot cannot take the next kernel, or keeps kernels apt no longer needs.
+        boot(c) {
+            const parts = [];
+            const sp = c.findings.find((f) => f.kind === "space");
+            if (sp) parts.push(alertHtml("warning", t("boot.spaceTitle"), tr("boot.space", { free: bytes(sp.free), need: bytes(sp.need) }) + seen(sp, true)));
+            const old = c.findings.find((f) => f.kind === "old-kernels");
+            if (old) parts.push(`<p>${tr("boot.old", { list: (old.kernels || []).join(", ") })}${seen(old, true)}</p>`);
+            const k = c.kernels || [];
+            if (k.length) {
+                parts.push(`<p class="ug-note">${tr("boot.line", { n: k.length, running: c.running || "?", free: bytes(c.free), size: bytes(c.size) })}</p>`);
+            }
+            const label = sp ? t("boot.countFree", { free: bytes(sp.free) }) : old ? t("boot.countOld", { n: (old.kernels || []).length }) : "";
+            return card("boot", label, explain("boot", "", "card.whyFails") + parts.join("") +
+                `<p class="ug-sub">${esc(t("card.cmdTitle"))}</p>` +
+                commands([["sudo apt autoremove --purge", rich(t("boot.cmdAutoremove"))]]) + sourceLine(c));
+        },
+
         held(c) {
             const rows = c.findings.map((f) => [
-                cell(esc(f.package)),
+                cell(esc(f.package) + seen(f)),
                 ver(f.installed),
                 f.candidate
                     ? cell(esc(f.candidate) + (f.newer > 1 ? ` <span class="az-cell-sub">${esc(t("held.more", { n: f.newer - 1 }))}</span>` : "") +
@@ -415,7 +472,7 @@
             const auto = all.auto;
             const esm = auto && (auto.allowed || []).concat(auto.patterns || []).some((a) => /ESM/i.test(a));
             const rows = c.findings.map((f) => [
-                cell(esc(f.package)),
+                cell(esc(f.package) + seen(f)),
                 ver(f.installed),
                 ver(f.version),
                 cell(esc(f.service || "") + (f.status ? ` <span class="az-cell-sub">${tr("pro.status." + f.status, { service: f.service || "" })}</span>` : "")),
@@ -454,7 +511,7 @@
             }
             if ((c.findings || []).length) {
                 parts.push(table(["col.vulnerability", "col.kernel", "col.fixBy"], c.findings.map((f) => [
-                    cell(vulnName(f.name)),
+                    cell(vulnName(f.name) + seen(f)),
                     cell(esc(f.text)),
                     cell(esc(t(f.fix === "provider" ? "cpu.fix.provider" : "cpu.fix.here"))),
                 ])));
@@ -493,7 +550,7 @@
                 if (f.kind === "refresh-off") return tr("firmware.refreshOff", { state: f.timer });
                 if (f.kind === "no-remote") return rich(t("firmware.noRemote"));
                 return esc(f.kind);
-            });
+            }).map((line, i) => line + seen((c.findings || []).filter((f) => f.kind !== "update")[i], true));
             if (other.length) parts.push(`<ul class="ug-plain-list">${other.map((i) => `<li>${i}</li>`).join("")}</ul>`);
             return card("firmware", ups.length ? t("firmware.count", { n: ups.length }) : "", explain("firmware") + parts.join("") + sourceLine(c));
         },
@@ -512,7 +569,7 @@
                            (f.error ? `<pre class="ug-lines">${esc(f.error)}</pre>` : "");
                 }
                 return esc(f.kind);
-            });
+            }).map((line, i) => line + seen(c.findings[i], true));
             return card("snaps", t("snaps.count", { n: items.length }),
                 explain("snaps") + `<ul class="ug-plain-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>` +
                 `<p class="ug-note">${esc(t("snaps.installed", { n: c.installed || 0 }))}</p>` + sourceLine(c));
@@ -529,15 +586,29 @@
                     return head + ((f.lines || []).length ? `<pre class="ug-lines">${esc(f.lines.join("\n"))}</pre>` : "");
                 }
                 return esc(f.kind);
-            });
+            }).map((line, i) => line + seen(c.findings[i], true));
             const last = c.last_update
                 ? `<p class="ug-note">${tr("lists.last", { ago: ago(c.last_update.ts), src: t("lists.src." + c.last_update.src) })}</p>` : "";
             return card("lists", t("lists.count", { n: c.findings.length }),
                 explain("lists") + `<ul class="ug-plain-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>` + last + sourceLine(c));
         },
 
+        // The keys apt checks the sources with: expired, about to expire, or their file is gone.
+        keys(c) {
+            const rows = c.findings.map((f) => [
+                cell(code(f.file) + seen(f) + (f.inline ? `<span class="az-cell-sub">${esc(t("keys.inline"))}</span>` : "") +
+                     (f.default ? `<span class="az-cell-sub">${esc(t("keys.default"))}</span>` : "")),
+                cell(pkgList(f.sources)),
+                cell(f.kind === "missing" ? esc(t("keys.missing"))
+                    : f.kind === "expired" ? `<span class="az-label az-label--warning">${esc(t("keys.expired", { date: fmtDay(f.expires) }))}</span>`
+                    : esc(t("keys.expires", { date: fmtDay(f.expires), n: f.days }))),
+            ]);
+            return card("keys", t("keys.count", { n: c.findings.length }),
+                explain("keys") + table(["col.keyring", "col.sources", "col.expires"], rows) + keysUnchecked(c) + sourceLine(c));
+        },
+
         local(c) {
-            const rows = c.findings.map((f) => [cell(esc(f.package)), ver(f.version), cell(esc(f.arch || ""))]);
+            const rows = c.findings.map((f) => [cell(esc(f.package) + seen(f)), ver(f.version), cell(esc(f.arch || ""))]);
             const lm = c.findings.some((f) => f.cause === "lists-missing")
                 ? alertHtml("warning", t("chk.lists"), rich(t("local.listsMissing"))) : "";
             const more = c.more ? `<p class="ug-note">${esc(t("held.more", { n: c.more }))}</p>` : "";
@@ -549,12 +620,12 @@
             const parts = [];
             c.findings.filter((f) => f.kind === "disabled").forEach((f) => {
                 const key = f.what === "not-installed" ? "auto.notInstalled" : f.what === "periodic-off" ? "auto.periodicOff" : "auto.timerOff";
-                parts.push(alertHtml("warning", t("chk.auto"), tr(key, { state: f.timer || "" })));
+                parts.push(alertHtml("warning", t("chk.auto"), tr(key, { state: f.timer || "" }) + seen(f, true)));
             });
             const sources = c.findings.filter((f) => f.kind === "source");
             if (sources.length) {
                 parts.push(`<p class="ug-sub">${esc(t("auto.sourceTitle"))}</p>` +
-                    table(["col.origin", "col.packages"], sources.map((f) => [cell(originText(f)), cell(pkgList(f.packages, f.more))])));
+                    table(["col.origin", "col.packages"], sources.map((f) => [cell(originText(f) + seen(f)), cell(pkgList(f.packages, f.more))])));
             }
             const bl = c.findings.filter((f) => f.kind === "blacklist");
             if (bl.length) {
@@ -570,8 +641,29 @@
             return card("auto", t("auto.count", { n: c.findings.length }), explain("auto") + parts.join("") + sourceLine(c));
         },
 
+        // What the last run of unattended-upgrades did (its configuration is the card "auto").
+        uu(c) {
+            const items = c.findings.map((f) => {
+                let line;
+                if (f.kind === "never") line = rich(t(f.log ? "uu.never" : "uu.noLog"));
+                else if (f.kind === "old") line = tr("uu.old", { ago: ago(c.last_run) });
+                else if (f.kind === "failed") {
+                    line = tr("uu.failed", { when: fmtDate(c.last_run) }) +
+                           ((f.lines || []).length ? `<pre class="ug-lines">${esc(f.lines.join("\n"))}</pre>` : "");
+                } else if (f.kind === "kept-back") line = tr("uu.keptBack", { pkgs: (f.packages || []).join(", ") });
+                else if (f.kind === "conffile") line = tr("uu.conffile", { pkgs: (f.packages || []).join(", ") });
+                else if (f.kind === "service") line = tr("uu.service", { result: f.result });
+                else line = esc(f.kind);
+                return line + seen(f, true);
+            });
+            const last = c.last_run && c.outcome
+                ? `<p class="ug-note">${esc(t("uu.last", { ago: ago(c.last_run), outcome: t("uu.outcome." + c.outcome) }))}</p>` : "";
+            return card("uu", t("uu.count", { n: items.length }),
+                explain("uu") + `<ul class="ug-plain-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>` + last + sourceLine(c));
+        },
+
         backports(c) {
-            const rows = c.findings.map((f) => [cell(esc(f.source)), cell(pkgList(f.packages)), ver(f.installed),
+            const rows = c.findings.map((f) => [cell(esc(f.source) + seen(f)), cell(pkgList(f.packages)), ver(f.installed),
                                                 ver(f.backport), cell(esc(f.suite))]);
             const n = c.findings.reduce((s, f) => s + (f.packages || []).length, 0);
             return card("backports", t("backports.count", { n }),
@@ -694,8 +786,13 @@
         if (k === "cpu" && c.state === "none") parts.push(esc(t("clean.cpu", { m: c.mitigated || 0, n: c.not_affected || 0 })));
         if (k === "firmware" && c.state === "none") parts.push(esc(t("clean.firmware")));
         if (k === "snaps" && c.state === "none" && !c.installed) parts.push(esc(t(c.snapd ? "clean.snapsNone" : "clean.snapdNone")));
+        if (k === "dpkg" && c.state === "none") parts.push(esc(t("clean.dpkg")));
+        if (k === "boot" && typeof c.free === "number") parts.push(esc(t("clean.boot", { free: bytes(c.free) })));
+        if (k === "keys" && (c.keyrings || []).length) parts.push(esc(t("clean.keys", { n: c.keyrings.length })));
+        if (k === "uu" && c.last_run && c.outcome) parts.push(esc(t("clean.uu", { ago: ago(c.last_run), outcome: t("uu.outcome." + c.outcome) })));
         if (c.state === "partial") {
-            parts.push(esc(t("clean.partly", { what: "" })) + (c.missing || []).map((m) => rich(t("missing." + m))).join(" "));
+            parts.push(esc(t("clean.partly", { what: "" })) + (c.missing || []).map((m) => rich(t("missing." + m))).join(" ") +
+                       (k === "keys" ? keysUnchecked(c, true) : ""));
         }
         return parts.length ? ": " + parts.join("; ") : "";
     }

@@ -8,7 +8,8 @@
 # Only reads. It runs every command the scan runs, plus `pro security-status` once without
 # network (systemd-run, as the scan service does), and writes nothing but a temporary folder and
 # the archive in the current directory. Credentials in source URIs are removed; host names are
-# removed later by the import. Look at the archive before you share it.
+# removed later by the import. The keyrings are public keys (gpg's view of them). Look at the
+# archive before you share it.
 set -u
 export LC_ALL=C TZ=UTC PATH=/usr/sbin:/usr/bin:/sbin:/bin
 strip() { sed -E 's#(https?://)[^/@ ]+@#\1***@#g'; }
@@ -89,5 +90,27 @@ if command -v fwupdmgr > /dev/null; then
   timeout 60 fwupdmgr get-remotes --json < /dev/null > fwupd-remotes.json 2> /dev/null
   systemctl is-enabled fwupd-refresh.timer > fwupd-refresh.txt 2>&1
 fi
+# /boot (sizes and room), the journal of an interrupted dpkg, the log of unattended-upgrades, the
+# sources and their keyrings as gpg shows them (as nobody, in a fresh home, as the scan does).
+for k in /boot/vmlinuz-* /boot/initrd.img-*; do
+  [ -f "$k" ] && printf '%s\t%s\t%s\n' "$(basename "$k")" "$(stat -c %s "$k")" "$(stat -c %Y "$k")"
+done > boot-files.txt
+stat -f -c '%a %S %b' /boot > boot-statvfs.txt
+ls -A /var/lib/dpkg/updates > dpkg-updates.txt 2> /dev/null
+tail -n 300 /var/log/unattended-upgrades/unattended-upgrades.log 2> /dev/null | strip > uu.log
+mkdir sources keyrings
+for f in /etc/apt/sources.list /etc/apt/sources.list.d/*.list /etc/apt/sources.list.d/*.sources; do
+  [ -f "$f" ] && strip < "$f" > "sources/$(basename "$f")"
+done
+rings=$( (grep -hoE 'signed-by=[^] ]+' sources/*.list 2> /dev/null | cut -d= -f2 | tr ',' '\n'
+          grep -hE '^Signed-By:' sources/*.sources 2> /dev/null | cut -d: -f2- | tr ', ' '\n\n') | grep '^/' | sort -u)
+home=$(mktemp -d) && chown nobody "$home"
+for k in $rings /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/*; do
+  [ -f "$k" ] || continue
+  runuser -u nobody -- env HOME="$home" gpg --batch --no-autostart --with-colons --show-keys "$k" \
+    > "keyrings/$(basename "$k").txt" 2> /dev/null
+  printf '%s\t%s\n' "$k" "$(stat -c %s "$k")" >> keyrings.txt
+done
+rm -rf -- "${home:?}"
 tar -czf "$dest" -C "$out" .
 echo "$dest"

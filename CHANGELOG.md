@@ -1,5 +1,45 @@
 # Changelog
 
+## 0.6.0 – 2026-10-21
+
+Four new checks for what keeps updates back on the server itself, and since when each finding has
+been there.
+
+- **New card “Packages dpkg left half done”:** packages dpkg left unpacked, half configured,
+  waiting for triggers or in need of a reinstall (its status letters in `dpkg-query -W`), and a
+  run of dpkg that was interrupted (its journal in `/var/lib/dpkg/updates`). Until that is
+  finished every update fails, Software Updates included, with a message that does not say why.
+  The card gives `sudo dpkg --configure -a` and `sudo apt-get -f install` to copy.
+- **New card “Room for the next kernel in /boot”:** too little room for the next kernel update
+  (1.5 times the largest kernel with its initramfs; such an update stops halfway and leaves dpkg
+  half done), and the kernels apt's autoremove no longer keeps; `sudo apt autoremove --purge` to
+  copy.
+- **New card “Signing keys of the sources”:** the keyrings of `Signed-By`, or apt's trusted ones
+  for a source without it, as `gpg --show-keys` shows them, run as `nobody` in a fresh home: a
+  keyring whose last signing key has expired (apt then reads the source no more and its updates
+  drop out of every list, as on hosts that kept only the key of GitHub CLI that expired on
+  2026-09-06), one that expires within 60 days, and a keyring file that is missing.
+- **New card “Automatic updates: what the last run did”:** from the log of unattended-upgrades and
+  `apt-daily-upgrade.service`: no finished run, none for 72 hours, a failed run with its error
+  lines, a stopped service, packages kept back or left for an upgrade by hand because their
+  configuration file was changed. apt-daily's download run, which writes no end to the log, is
+  left out.
+- **Since when:** every finding that stays the same from one scan to the next carries the time a
+  scan first saw it (`since`, kept in `scan.json` only); the page shows “seen since <date>” once an
+  earlier scan saw it.
+- **Status Board:** the items `dpkg`, `boot`, `keys` and `uu`, only with a finding.
+- **On a phone:** a long title in the overview's chips (the German one of the phased updates)
+  wraps instead of widening the page. The preview's phone check now covers the phased-updates and
+  upkeep scenarios as well.
+- **AppStream:** screenshots of the page.
+- **Formats:** `scan.json` has the checks `dpkg` and `boot` after `phased`, `keys` after `lists`
+  and `uu` after `auto`, and `since` on their findings and those of most other checks;
+  `gaps-scan.py --output` reads its previous file for it.
+- **Tests:** the new data of the three recorded hosts, read on them on 2026-10-21; a scenario of
+  upkeep gone wrong (`/boot` full, a kernel half configured, a failed run, an expired key); in the
+  containers a package whose postinst fails, gpg reading the image's keyrings as root and as a
+  user, and a second scan that keeps `since`.
+
 ## 0.5.0 – 2026-10-21
 
 Phased updates that make Software Updates fail, explained with the commands that get around them;

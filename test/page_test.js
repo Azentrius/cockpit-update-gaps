@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.5.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.6.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -747,6 +747,77 @@ test("phased updates: the failure quoted, what is deferred, commands to copy, th
     assert.match(text(d.getElementById("ug-clean-list")), /Schrittweise verteilte Updates: dieser Server nimmt sie sofort/);
 });
 
+test("upkeep gone wrong: dpkg, /boot, signing keys, the last run of unattended-upgrades", async () => {
+    let { d } = boot({ state: scan("noble-held-upkeep") });
+    await settle();
+    assert.deepStrictEqual(ids(d, "#ug-cards > section"),
+        ["ug-card-dpkg", "ug-card-boot", "ug-card-held", "ug-card-pro", "ug-card-restart", "ug-card-cpu", "ug-card-keys",
+         "ug-card-local", "ug-card-auto", "ug-card-uu", "ug-card-outside"]);
+    const dpkg = d.getElementById("ug-card-dpkg");
+    assert.match(text(dpkg), /Packages dpkg left half done\s*1 package/);
+    assert.match(text(dpkg), /Why Software Updates fails\s*An earlier installation stopped halfway/);
+    assert.match(text(dpkg), /linux-image-6\.8\.0-147-generic 6\.8\.0-147\.147 half configured/);
+    assert.deepStrictEqual([...dpkg.querySelectorAll("pre.ug-cmd")].map((p) => p.textContent),
+        ["sudo dpkg --configure -a", "sudo apt-get -f install"]);
+    const bootCard = d.getElementById("ug-card-boot");
+    assert.match(text(bootCard), /Room for the next kernel in \/boot\s*122 MB free/);
+    assert.match(text(bootCard.querySelector(".az-alert--warning")), /122 MB are free in \/boot; the next kernel update needs about 137 MB\./);
+    assert.match(text(bootCard), /Kernels apt no longer keeps: 6\.8\.0-136-generic, 6\.8\.0-142-generic\./);
+    assert.match(text(bootCard), /4 kernels in \/boot, running 6\.8\.0-146-generic; 122 MB of 1 GB free\./);
+    assert.deepStrictEqual([...bootCard.querySelectorAll("pre.ug-cmd")].map((p) => p.textContent), ["sudo apt autoremove --purge"]);
+    const keys = text(d.getElementById("ug-card-keys"));
+    assert.match(keys, /\/usr\/share\/keyrings\/githubcli-archive-keyring\.gpg https:\/\/cli\.github\.com\/packages expired on 5 Sept? 2026/);
+    assert.match(keys, /only `?apt update`? warns/);
+    const uu = d.getElementById("ug-card-uu");
+    assert.match(text(uu), /The last run, .*, failed:/);
+    assert.match(uu.querySelector("pre.ug-lines").textContent, /ERROR Installing the upgrades failed!/);
+    assert.match(text(uu), /Last finished run .* ago: failed\./);
+    assert.ok(!text(d.body).includes("seen since"), "every finding is from this scan");
+    assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+
+    // German
+    ({ d } = boot({ state: scan("noble-held-upkeep"), language: "de" }));
+    await settle();
+    assert.match(text(d.getElementById("ug-card-dpkg")), /Pakete, die dpkg halb fertig liegen ließ\s*1 Paket/);
+    assert.match(text(d.getElementById("ug-card-dpkg")), /halb eingerichtet/);
+    assert.match(text(d.getElementById("ug-card-boot")), /In \/boot sind 122 MB frei; das nächste Kernel-Update braucht etwa 137 MB\./);
+    assert.match(text(d.getElementById("ug-card-keys")), /abgelaufen am 05\.09\.2026/);
+    assert.match(text(d.getElementById("ug-card-uu")), /Der letzte Lauf am .* schlug fehl:/);
+    // (unattended-upgrades-dpkg.log in a quoted log line is no key)
+    assert.ok(!/(?<![\w/-])(chk|card|name|reason|missing|dpkg|boot|keys|uu)\.[a-z]/.test(text(d.body)), "no raw text keys");
+
+    // Seen in an earlier scan: since when, in tables and lists.
+    const s = scan("noble-held-upkeep");
+    const by = Object.fromEntries(s.checks.map((c) => [c.check, c]));
+    by.held.findings[0].since = "2026-10-01T08:00:00Z";
+    by.uu.findings[0].since = "2026-10-12T06:00:00Z";
+    ({ d } = boot({ state: s }));
+    await settle();
+    const heldRow = d.querySelector("#ug-card-held tbody tr");
+    assert.match(text(heldRow), /containerd\.io\s*seen since 1 Oct 2026/);
+    assert.strictEqual(d.querySelectorAll("#ug-card-held .az-cell-sub").length > 0, true);
+    assert.match(text(d.getElementById("ug-card-uu")), /failed:.*seen since 12 Oct 2026/s);
+    assert.strictEqual((text(d.body).match(/seen since/g) || []).length, 2, "only the two seen before");
+
+    // Nothing found: what was checked, under "No findings".
+    ({ d } = boot({ state: scan("noble-held") }));
+    await settle();
+    const clean = text(d.getElementById("ug-clean-list"));
+    assert.match(clean, /Package states: every package complete/);
+    assert.match(clean, /Room in \/boot: 57\.1 GB free/);
+    assert.match(clean, /Signing keys: 4 keyrings, none expires soon/);
+    assert.match(clean, /Runs of the automatic updates: last run 15 hours ago: nothing to install/);
+
+    // A keyring gpg could not read: partly checked, and which.
+    const p = scan("resolute-nodesource");
+    Object.assign(p.checks.find((c) => c.check === "keys"), { state: "partial", missing: ["keyrings"],
+        unchecked: [{ file: "/usr/share/keyrings/node`source.gpg", reason: "unreadable" }] });
+    ({ d } = boot({ state: p }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")),
+        /Signing keys: 3 keyrings, none expires soon; partly: Not every keyring could be read\. Not checked: \/usr\/share\/keyrings\/node'source\.gpg \(not readable\)\./);
+});
+
 test("texts: every key in both languages, same plural shape, no em dash", () => {
     global.window = {};
     require(path.join(PLUGIN, "i18n.js"));
@@ -755,7 +826,8 @@ test("texts: every key in both languages, same plural shape, no em dash", () => 
     Object.keys(en).forEach((k) => assert.strictEqual(typeof en[k], typeof de[k], k));
     const all = JSON.stringify({ en, de });
     assert.ok(!all.includes(String.fromCharCode(0x2014)), "no em dash (U+2014)");
-    ["updates", "phased", "held", "pro", "restart", "lists", "local", "auto", "backports", "outside", "eol"].forEach((k) => {
+    ["updates", "phased", "dpkg", "boot", "held", "pro", "restart", "lists", "keys", "local", "auto", "uu", "backports",
+     "outside", "eol"].forEach((k) => {
         assert.ok(en["name." + k] && en["chk." + k], k);
     });
     ["needs-root", "tool-missing", "not-applicable", "unsupported-os", "unknown-release", "timeout", "error", "settings"]

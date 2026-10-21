@@ -68,10 +68,11 @@ install without a state checks once by itself when an administrator opens the pa
 - `format`: 1. A page that knows a lower format says so and shows what it can.
 - `pm`: `apt`, or `null` on a system without `/usr/bin/apt-get`; then every check is `skipped` with
   `reason: "unsupported-os"` and nothing runs.
-- `checks`: always in this order: `updates`, `phased` (0.5.0), `held`, `pro`, `restart`, `cpu`,
-  `firmware`, `snaps`, `lists`, `local`, `auto`, `backports`, `outside`, `eol`, `cve`, `upstream`,
-  `newer`. Each has `check`, `state`, `took_ms` and, when it ran, `source` (the commands and files,
-  for the page's “Source” line). A page that does not know a check leaves it out.
+- `checks`: always in this order: `updates`, `phased` (0.5.0), `dpkg`, `boot` (0.6.0), `held`,
+  `pro`, `restart`, `cpu`, `firmware`, `snaps`, `lists`, `keys` (0.6.0), `local`, `auto`, `uu`
+  (0.6.0), `backports`, `outside`, `eol`, `cve`, `upstream`, `newer`. Each has `check`, `state`,
+  `took_ms` and, when it ran, `source` (the commands and files, for the page's “Source” line). A
+  page that does not know a check leaves it out.
 
 `state`:
 
@@ -79,7 +80,7 @@ install without a state checks once by itself when an administrator opens the pa
 |---|---|---|
 | `found` | checked, with findings | the check's own |
 | `none` | checked, nothing found (never “safe”) | the check's own |
-| `partial` | checked in part, nothing found in that part | `missing`: `services`, `needrestart`, `journal` |
+| `partial` | checked in part, nothing found in that part | `missing`: `services`, `needrestart`, `journal`, `boot-room`, `keyrings` |
 | `skipped` | not checked | `reason`: `needs-root`, `tool-missing` (+ `tool`), `not-applicable`, `unsupported-os`, `unknown-release`, `container` |
 | `timeout` | a command ran longer than its limit | `limit_s`, `command` |
 | `error` | the check failed | `error` (short, credentials removed); `reason: "settings"` for `/etc/update-gaps.conf` |
@@ -88,6 +89,18 @@ A failing command breaks only the checks that need it (`apt-cache policy` of the
 `held`, `local`, `auto`, `backports`; `apt-get -s dist-upgrade`: `updates` and `phased`;
 `apt-config dump`: `auto`). `phased` keeps going without the other two: without `apt-cache policy`
 its packages have no versions, without `apt-config dump` its `include` is `null`.
+
+**`since`** (0.6.0): every finding of the checks whose findings stay the same from one scan to the
+next has `since`, the time a scan first saw it (ISO, UTC). `gaps-scan.py --output FILE` reads the
+previous `FILE` first (at most 64 MiB, as data: only a `since` in the format of `generated` is
+taken) and carries the time over when the same finding is there again; a new one gets the scan's
+`generated`, one that is gone is gone. Which fields name a finding (the others, such as versions,
+counts and ages, may change): `phased` (`packages[]`) `package`; `dpkg` `kind`, `package`; `boot`,
+`uu` `kind`; `held`, `pro`, `local` `package`; `cpu` `name`; `firmware` `kind`, `remote`; `snaps`
+`kind`, `snap`; `lists` `kind`, `site`, `release`, `file`; `keys` `kind`, `file`, `inline`; `auto`
+`kind`, `what`, `site`, `o`, `a`, `pattern`; `backports` `source`. Findings from the network data
+(`cve`, `upstream`, `newer`) change with every download and have none. The page shows “seen since
+<date>” once an earlier scan saw a finding. A scan to stdout (no `--output`) starts afresh.
 
 ### The checks
 
@@ -122,6 +135,32 @@ package, counts the other updates from `updates`, and gives commands to copy, ne
 `always` or `never`, the host-wide setting in `/etc/apt/apt.conf.d/99-phased-updates` with its
 price (the server is among the first of every rollout). The status for the Status Board has no
 item for it.
+
+**`dpkg`** (0.6.0; the status letters of `dpkg-query -W` (`${db:Status-Abbrev}`), the folder
+`/var/lib/dpkg/updates`): packages dpkg left half done and a run of dpkg that was interrupted. Until
+that is finished, apt and Software Updates refuse every further update. `findings[]` (at most 300,
+the rest in `more`):
+
+| `kind` | Fields | Meaning |
+|---|---|---|
+| `interrupted` | | `/var/lib/dpkg/updates` holds a journal entry (a name of digits): apt stops with “dpkg was interrupted” |
+| `package` | `package`, `version`, `state` | `half-installed` (H), `unpacked` (U), `half-configured` (F), `triggers-awaited` (W), `triggers-pending` (t), or `reinst-required` (R in the third letter) |
+
+The page gives `sudo dpkg --configure -a`, `sudo apt-get -f install` and, for `reinst-required`,
+`sudo apt-get install --reinstall <packages>` to copy.
+
+**`boot`** (0.6.0; `/boot`, `statvfs` of it): `kernels[]` (from `vmlinuz-*`, in version order),
+`running`, `free` and `size` (bytes of the file system of `/boot`, `free` as a user may use it),
+`need`: 1.5 times the largest kernel with its initramfs (the largest, not the newest: an update
+that ran out of room left the newest without one). `findings[]`:
+
+| `kind` | Fields | Meaning |
+|---|---|---|
+| `space` | `free`, `need` | less room than the next kernel update needs: it would stop halfway, its initramfs not written, dpkg half done |
+| `old-kernels` | `kernels[]` | kernels besides the running one and the two newest (those apt's autoremove keeps) |
+
+`skipped`/`not-applicable` without a kernel in `/boot` (a container); `partial` with
+`missing: ["boot-room"]` when the room could not be measured.
 
 **`held`** (`apt-mark showhold`, `apt-cache policy`, `/var/log/dpkg.log*`): `findings[]`:
 
@@ -168,6 +207,29 @@ sees only the user's processes).
 
 Without root the journal is not read: `missing: ["journal"]`.
 
+**`keys`** (0.6.0; the files of the `Sourcesentry` of `apt-get indextargets`, their `Signed-By`,
+`/etc/apt/trusted.gpg` and `/etc/apt/trusted.gpg.d/*.{gpg,asc}`, `gpg --batch --no-autostart
+--with-colons --show-keys <keyring>`): the keys apt checks the signatures of the enabled sources
+with. The keyrings are those of `Signed-By` (deb822 `Signed-By:`, one-line `[signed-by=…]`; files
+only, fingerprints are left out), a key in `Signed-By` itself (handed to gpg on stdin), and, for
+entries without either, apt's trusted ones (`default: true`). gpg runs through
+`gapsproc.run_unprivileged` (as `nobody` with a fresh home it may create, so not with
+`--no-options`) and imports nothing. A keyring is valid until its latest signing key (`s` among
+the capabilities, a subkey no longer than its primary key, revoked ones left out) expires, or for
+ever (`never`). `keyrings[]`: `file`, `sources[]` (the URIs, at most 20), `expires` (ISO or
+`never`), `inline` or `default` when so; `soon_days` (60); `findings[]` (the fields of the keyring
+and):
+
+| `kind` | Fields | Meaning |
+|---|---|---|
+| `expired` | `expires` | every signing key has expired: apt reads the source no more |
+| `expires` | `expires`, `days` | the last signing key expires within 60 days |
+| `missing` | | the file named in `Signed-By` is not there: apt cannot check the source |
+
+`unchecked[]` (`file`, `reason`: `unreadable`, a sources file or a keyring gpg could not read, or
+`no-key`, a keyring without a signing key) with `missing: ["keyrings"]`, `partial` when there is no
+finding. `skipped`/`tool-missing` with `tool: "gpg"` without gpg.
+
 **`local`** (`apt-cache policy`, `dpkg-query`): `findings[]`: `package`, `version`, `arch`, `cause`
 (`no-source`, or `lists-missing` when `lists` found a source without lists in the same scan), at most
 300, the rest in `more`.
@@ -187,6 +249,28 @@ Without root the journal is not read: `missing: ["journal"]`.
 Matching follows unattended-upgrades: `Allowed-Origins` `origin:archive` and `Origins-Pattern`
 `key=value,…` (keys `o`/`origin`, `a`/`archive`/`suite`, `n`/`codename`, `l`/`label`,
 `c`/`component`, `site`), shell wildcards, `\:` and `\,` escaped.
+
+**`uu`** (0.6.0; `/var/log/unattended-upgrades/unattended-upgrades.log` and `.log.1`, `systemctl
+show apt-daily-upgrade.service -p Result`): what the automatic updates did, where `auto` says how
+they are set up. The last finished run counts: one that ends with “All upgrades installed”, “No
+packages found that can be upgraded unattended”, or an error (`ERROR`, `CRITICAL`, “Lock could not
+be acquired”, “dpkg returned an error”). apt-daily's download run (`unattended-upgrade
+--download-only`, twice a day) writes no end and is left out, as is a run still going. The log has
+the server's local time, read as UTC. `off` (from `auto`: switched off, then `never` and `old` are
+no findings), `last_run`, `outcome` (`installed`, `nothing`, `failed`), `upgraded[]` (the packages
+of that run), `service` (the last `Result` of `apt-daily-upgrade.service`, or `null`). `findings[]`:
+
+| `kind` | Fields | Meaning |
+|---|---|---|
+| `never` | `log` (whether a log is there) | no finished run in the log |
+| `old` | `hours` | the last finished run is older than 72 hours |
+| `failed` | `lines[]` (at most 10) | the last run ended with an error |
+| `kept-back` | `packages[]` | packages it kept back |
+| `conffile` | `packages[]` | packages it left for an upgrade by hand: their configuration file was changed here |
+| `service` | `result` | `apt-daily-upgrade.service` ended with something else than `success` (a run that is stopped writes no end) |
+
+`skipped`/`tool-missing` with `tool: "unattended-upgrades"` when it is not installed (that is a
+finding of `auto`).
 
 **`backports`** (`apt-cache policy`): packages installed from the release (not held) for which a
 `-backports` suite has a higher version and the candidate is not higher already; `findings[]` per
@@ -292,16 +376,21 @@ exit 0, as does every finding, `danger` included.
 
 The items, in this order (`cve` of stage 2 first, see there). A check that does not apply here
 (`pro` outside Ubuntu, every check without apt, `cpu` in a container) has no item, nor do
-`firmware` and `snaps` without a finding; one that was skipped, failed or ran out of time is `none`
-with “not checked” or “check failed”; a partial check adds “partly checked” to its detail.
+`dpkg`, `boot`, `keys`, `uu`, `firmware` and `snaps` without a finding (the first four not when
+partly checked either); one that was skipped, failed or ran out of time is `none` with “not
+checked” or “check failed”; a partial check adds “partly checked” to its detail.
 
 | `id` | `ok` | `info` | `warning` | `danger` | `value` |
 |---|---|---|---|---|---|
+| `dpkg` (only with a finding) | | | a package left half done, an interrupted run | | packages |
 | `held` | nothing held, or held without a newer version | | a held package has a newer version | | packages with a newer version |
 | `restart` | nothing pending | | kernel, microcode, services on old libraries or the reboot flag | | |
+| `boot` (only with a finding) | | old kernels | too little room for the next kernel | | |
 | `cpu` | nothing reported as vulnerable | only vulnerabilities the provider of a VM can fix | a vulnerability this server can fix, a protection switched off, no microcode package on a physical server | | findings |
 | `pro` | no fix only with Ubuntu Pro | fixes only with Ubuntu Pro | | | packages |
 | `lists` | no finding | only left-over lists or messages of apt-daily | a source without lists, lists older than 48 hours, an expired Release file, apt-daily failed | | |
+| `keys` (only with a finding) | | a key expires within 60 days | a key expired, expires within 14 days, or its file is missing | | keyrings |
+| `uu` (only with a finding) | | packages kept back or left for an upgrade by hand | no finished run, none for 72 hours, the last one failed, the service failed | | |
 | `eol` | standard support continues | | ends within 180 days | ended | days left |
 | `firmware` (only with a finding) | | old metadata, the refresh timer off, no download remote | a firmware update | | updates |
 | `snaps` (only with a finding) | | held, put off, a base out of support | a failed refresh | | findings |
@@ -309,8 +398,8 @@ with “not checked” or “check failed”; a partial check adds “partly che
 
 The add-on's state is the worst of `danger`, `warning` and `info`; without any of them `ok` when an
 item is `ok`, else `none`. `stale_after` is 24 hours, as on the page; `link` is `#/<id>` and opens
-the page at that card. Texts hold only numbers, states and names of packages, services and kernels
-(at most 6 names, services 2, then `(+n)`; a detail longer than 200 characters, where the Status Board cuts it, ends at a word with ` …`): no addresses, URLs, user names or paths.
+the page at that card. Texts hold only numbers, states and names of packages, services, kernels
+and keyring files (at most 6 names, services 2, then `(+n)`; a detail longer than 200 characters, where the Status Board cuts it, ends at a word with ` …`): no addresses, URLs, user names or paths.
 
 The file holds the English document plus the German texts under `i18n.de` (`summary`,
 `items.<id>.title` and `.detail`), a field readers of schema 1 ignore. The verb returns the document
@@ -442,7 +531,8 @@ package); at the deadline the group gets SIGTERM, then SIGKILL. `pro security-st
 `gapsproc.run_unprivileged`: as `nobody` with an empty private `HOME` (removed afterwards). As root
 pro always writes `/var/log/ubuntu-advantage.log` and a lock in `/var/lib/ubuntu-advantage`, which
 the service (`ProtectSystem=strict`, no exceptions) does not allow; without root it reads the same
-public state and logs below `$XDG_CACHE_HOME`.
+public state and logs below `$XDG_CACHE_HOME`. `gpg --show-keys` for the keyrings of the sources
+(`keys`) runs the same way; a key from a sources file goes to it on stdin.
 
 ## Page internals
 
@@ -487,13 +577,13 @@ public state and logs below `$XDG_CACHE_HOME`.
 
 | File | Checks |
 |---|---|
-| `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy` (with the share of a phased version), `apt-get -s`, needrestart, deb822, `apt-config` (and how it treats phased updates: both keys, the fallback, case, apt's booleans), dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed; stage 3: CPU vulnerabilities sorted, `/proc/cpuinfo`, the kernel command line, DMI values and dates, the JSON of fwupd, snapd's times |
-| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current; stage 3: the VMs of the recorded hosts where only the provider can fix `tsa`, an Intel VM, a physical server with and without its microcode package (Debian without `non-free-firmware`), protections switched off, containers (also without `systemd-detect-virt`), fwupd with an update, old metadata and the refresh timer off, nothing to update, a failing fwupdmgr; snaps held, put off, failing and on an old base, snapd not asked without snaps, snapd not answering; phased updates: none on the recorded hosts, systemd deferred during a rollout (versions, share, the updates beside it), the setting on or set to never, a failing `apt-config dump` or `apt-cache policy`, a time-out of the simulation, names that are no package names |
+| `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy` (with the share of a phased version), `apt-get -s`, needrestart, deb822, `apt-config` (and how it treats phased updates: both keys, the fallback, case, apt's booleans), dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed; stage 3: CPU vulnerabilities sorted, `/proc/cpuinfo`, the kernel command line, DMI values and dates, the JSON of fwupd, snapd's times; 0.6.0: when a keyring expires (real keyrings of Docker and GitHub CLI, the expired key beside the new one, a subkey and its primary key, revoked keys, no signing key), `Signed-By` in deb822 and one-line sources (disabled entries, fingerprints, a key in the file, comments), the last finished run in the log of unattended-upgrades (the download run left out, failed, kept back, conffile), dpkg's status letters |
+| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current; stage 3: the VMs of the recorded hosts where only the provider can fix `tsa`, an Intel VM, a physical server with and without its microcode package (Debian without `non-free-firmware`), protections switched off, containers (also without `systemd-detect-virt`), fwupd with an update, old metadata and the refresh timer off, nothing to update, a failing fwupdmgr; snaps held, put off, failing and on an old base, snapd not asked without snaps, snapd not answering; phased updates: none on the recorded hosts, systemd deferred during a rollout (versions, share, the updates beside it), the setting on or set to never, a failing `apt-config dump` or `apt-cache policy`, a time-out of the simulation, names that are no package names; 0.6.0: nothing found on the recorded hosts, upkeep gone wrong (`fakesys.upkeep`); `dpkg` with packages unpacked, half configured or to reinstall and an interrupted run; `boot` full (the largest kernel counts), old kernels, the running one never old, no room measured, no kernel; `uu` failed, kept back and conffile, never run, old, the service failed, switched off, not installed; `keys` expired, expiring in 29 and in 90 days, a missing keyring, an unreadable one or sources file, the trusted keyrings for a source without `Signed-By`, a key in the sources file on stdin, without gpg, and gpg for real without root (when gpg and the Ubuntu keyring are there); `since` kept from scan to scan, new ones, renamed ones, odd previous documents, the previous file read by `gaps-scan.py` |
 | `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item; the selection with a superseded installed version (an Ubuntu build stays selected, an unmarked or third-party build is named as unverified), a failed OVAL download without a copy (an error, not "nothing found"), a good download without entries, an old copy after failed downloads and old Launchpad and GitHub answers (their own age, also in the status), a copy of unknown time, the radar keeping the time of its last good download; data of unknown age (a copy without its time and failed downloads, twice and six days apart: no time in the status, at least a warning, a danger kept, the summary in both languages; nothing found in them; known old and fresh times; a state without `data_at`) |
-| `test/status_test.py` | the status (schema 1) of every recorded host (`checked_at` and `stale_after` optional, but valid when there) in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status`; the items `cpu` (info in a VM, a warning for this server), `firmware` and `snaps` (only with a finding) |
-| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the network data after a failed fetch without a copy (under “Not checked”, not “No findings”), an old copy (its age on the card and at the top, partly checked without findings), packages of unclear origin, a state of 0.4.1 without `data_at`; data of unknown age (neither “0 hours old” nor the radar's run as their time, the reason under “No findings”, the menu's warning and tooltip); the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages; phased updates (the card first, PackageKit's message with the package and version, the other updates it blocks, the share of the rollout, the commands to copy and no button, the setting said instead of offered, odd names kept out of the command, escaped, nothing deferred and the setting under “No findings”, both languages) |
+| `test/status_test.py` | the status (schema 1) of every recorded host (`checked_at` and `stale_after` optional, but valid when there) in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status` (the second scan gets the first one's file); the items `cpu` (info in a VM, a warning for this server), `firmware` and `snaps` (only with a finding); `dpkg`, `boot`, `keys`, `uu` only with a finding, their states and texts in both languages (old kernels, a key that expires and a conffile as info, under 14 days a warning) |
+| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the network data after a failed fetch without a copy (under “Not checked”, not “No findings”), an old copy (its age on the card and at the top, partly checked without findings), packages of unclear origin, a state of 0.4.1 without `data_at`; data of unknown age (neither “0 hours old” nor the radar's run as their time, the reason under “No findings”, the menu's warning and tooltip); the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages; phased updates (the card first, PackageKit's message with the package and version, the other updates it blocks, the share of the rollout, the commands to copy and no button, the setting said instead of offered, odd names kept out of the command, escaped, nothing deferred and the setting under “No findings”, both languages); upkeep gone wrong (the cards `dpkg`, `boot`, `keys`, `uu` in their place, the commands, both languages), “seen since” only for findings an earlier scan saw, the four under “No findings”, a keyring not read named there |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |
-| `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local`; `cpu` and `firmware` skipped in the container, no snaps |
+| `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist, a package whose postinst fails (half configured); the scan as root, twice (`since` kept), and as a user; the status read by a user; never `apt-get` from `/usr/local`; `cpu` and `firmware` skipped in the container, no snaps, no kernel in `/boot`; the keyrings of the image read by gpg as root and as a user; unattended-upgrades never ran |
 | `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card; since 0.2.0 the page loaded hidden after the login without checking, the menu icon as `gaps-status.py status` says (English, and German before the page is opened), `cockpit.jump` into the loaded page (another card while it is shown, a card while it is hidden, no reload); since 0.4.0 `cpu`, `firmware` and `snaps` in the real service (the runner is a VM); no JavaScript or resource errors beyond Cockpit's own |
 | `tools/check-units.sh` | `systemd-analyze verify`, and `systemd-analyze security` exposure at most 5.0 |
 | `tools/check-version.sh`, `tools/check-design-files.sh` | version, changelog, shared design files |
@@ -503,5 +593,13 @@ Fixtures: `test/fixtures/capture.sh` records the commands' output on a host (rea
 for files outside apt; `test/fixtures/make_scans.py` writes the `scan-*.json` the page tests and the
 preview read. `scan-resolute-nodesource-phased.json` is the recorded host during a phased rollout
 (`fakesys.phased_results`: systemd 259.9 at 10 % beside three regular updates, as on the recorded
-Ubuntu 26.04 hosts on 2026-10-20). `capture.sh` keeps the keys of `apt-config dump` that the scan
-reads (unattended-upgrades, `APT::Periodic`, the phasing keys), nothing else of it.
+Ubuntu 26.04 hosts on 2026-10-20). `scan-noble-held-upkeep.json` is the recorded host after
+upkeep went wrong (`fakesys.upkeep`: `/boot` of its own nearly full when the kernel update came,
+the kernel half configured, unattended-upgrades failed in dpkg, two old kernels, and the keyring of
+GitHub CLI with only the key that expired on 2026-09-06). `capture.sh` keeps the keys of `apt-config
+dump` that the scan reads (unattended-upgrades, `APT::Periodic`, the phasing keys), nothing else of
+it; since 0.6.0 also the sizes in `/boot` and its room, `/var/lib/dpkg/updates`, the end of the log
+of unattended-upgrades, the sources files (credentials removed) and gpg's view of their keyrings
+(public keys). A key inside a sources file is not recorded: give such a scenario
+`commands/gpg-stdin.txt` by hand. The data of 0.6.0 in the three recorded scenarios were read on the
+same hosts on 2026-10-21, their log dates moved to the scenarios' clock.

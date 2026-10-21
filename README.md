@@ -11,6 +11,8 @@ releases) come from a separate unprivileged service, only once set up. The only 
 can make are to switch the add-on's own regular check and its network data on or off, after
 showing what that does.
 
+![Update Gaps on a server with held packages, fixes only with Ubuntu Pro and a pending restart](docs/img/overview.png)
+
 **Contents**
 
 - [What it checks](#what-it-checks)
@@ -32,6 +34,8 @@ showing what that does.
 | Area | Source on the server | Why “Software Updates” does not show it |
 |---|---|---|
 | **Phased updates Software Updates cannot install** (Ubuntu) | `apt-get -s dist-upgrade` (“deferred due to phasing”), `apt-cache policy`, `apt-config dump` | it lists them, but its install fails on them, and on every other update with them ([LP #1466587](https://bugs.launchpad.net/ubuntu/+source/packagekit/+bug/1466587)); the card gives the commands that work around it |
+| **Packages dpkg left half done**, an interrupted dpkg | the status letters of `dpkg-query -W`, `/var/lib/dpkg/updates` | until dpkg is finished, its install fails on every update, and it only says that it failed |
+| **Room for the next kernel in `/boot`**, old kernels | the kernels and their initramfs in `/boot`, the free room (`statvfs`) | a kernel update that runs out of room stops halfway and leaves dpkg half done; it only reports that it failed |
 | **Held packages** and what they miss | `apt-mark showhold`, `apt-cache policy` | a package on hold is never upgraded, and PackageKit does not list it |
 | **Fixes only with Ubuntu Pro** | `pro security-status --format json` | without Ubuntu Pro apt has no source for `esm-apps` and `esm-infra` |
 | **Restart pending** | `needrestart -b -r l`, `/var/run/reboot-required` | on Debian and Ubuntu Cockpit does not tell when a restart is pending |
@@ -39,8 +43,10 @@ showing what that does.
 | **Firmware updates** (with fwupd) | `fwupdmgr get-updates` from fwupd's local metadata | Cockpit has no page for firmware |
 | **Snaps that are not refreshed**: held, put off, failing, on an old base | snapd's API, asked only when snaps are installed | Software Updates shows no snaps |
 | **Package lists** missing, left over, old, expired, apt-daily errors | `apt-get indextargets`, `/var/lib/apt/lists`, apt's success stamp, the journal of `apt-daily.service` | the page compares with the lists on the server; without them the update is missing too |
+| **Signing keys of the sources**: expired, expiring within 60 days, missing | the keyrings of `Signed-By` (else apt's trusted ones), read with `gpg --show-keys` without root | once the last key of a source has expired, apt reads that source no more and its updates drop out of every list; only `apt update` warns |
 | **Packages without a source** | `apt-cache policy` | without a source there is no newer version |
 | **Left out of automatic updates** | `apt-config dump` (`Allowed-Origins`, `Origins-Pattern`, `Package-Blacklist`), the origins of the sources | for apt, Cockpit shows nothing about automatic updates |
+| **What the last run of the automatic updates did**: failed, missing, old, packages kept back or left for an upgrade by hand | `/var/log/unattended-upgrades/unattended-upgrades.log`, `systemctl show apt-daily-upgrade.service` | Cockpit shows nothing of the runs of unattended-upgrades |
 | **Backports not installed** | `apt-cache policy` | a newer backport is offered only for a package from backports already |
 | **Software outside the package manager** | `/usr/local/bin`, `/usr/local/sbin`, `/opt/*/bin`, checked with `dpkg -S` | apt does not know these files |
 | **End of support** | `/usr/share/distro-info/*.csv` | Cockpit does not show when a release stops getting updates |
@@ -70,7 +76,8 @@ VMs and home directories, and whether a security issue applies to the configurat
   state of the system, then what the automatic updates cover, then the inventory. Each card has
   “Why Software Updates does not show it” (for phased updates: “Why Software Updates fails”),
   “What you can do” and the source of the data. Where a card gives commands, they are to copy
-  into a terminal: the page installs nothing.
+  into a terminal: the page installs nothing. A finding an earlier check saw as well says since
+  when (“seen since”); the time is kept in the state file, nowhere else.
 - **No findings:** the areas checked without a finding, and what was only partly checked.
 - **Not checked:** what the page cannot see, plus every area that was skipped, failed or ran out
   of time on this server, with the reason.
@@ -97,7 +104,7 @@ flowchart LR
     end
     ST[("scan.json, status.json<br/>/var/lib/update-gaps")]
     RJ[("radar.json<br/>/var/lib/update-gaps-radar")]
-    SYS["apt, dpkg, needrestart, pro, apt's lists,<br/>the journal, /sys, fwupd, snapd"]
+    SYS["apt, dpkg, needrestart, pro, apt's lists,<br/>the journal, /sys, fwupd, snapd, gpg"]
     NET["Canonical CVE OVAL, Launchpad,<br/>GitHub releases"]
     SB["Status Board and other tools"]
     STV["gaps-status.py status"]
@@ -128,8 +135,9 @@ flowchart LR
 After every check the service also writes `status.json`: a short summary in the status format
 all Azentrius add-ons share (unfixed security issues with the network data, held packages with
 newer versions, a pending restart, CPU vulnerabilities, fixes only with Ubuntu Pro, package lists,
-the end of support, firmware and snaps when there is a finding, regular updates, each with its
-state). The Status
+the end of support, regular updates, and, only when there is a finding, packages dpkg left half
+done, room in `/boot`, signing keys, the runs of the automatic updates, firmware and snaps, each
+with its state). The Status
 Board finds the command in the page's `manifest.json` (`azentrius.status`) and runs
 `gaps-status.py status --lang en|de`, which needs no administrative access; a link of an item
 (`#/held`) opens this page at its card.
@@ -151,7 +159,9 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
   `PrivateNetwork=yes`, `IPAddressDeny=any`, `ProtectSystem=strict` and more
   (`systemd-analyze security` exposure 4.9, checked in CI). “Refresh” starts the same service, so
   every scan runs in the same sandbox. It may write only its own folder, `/var/lib/update-gaps`;
-  `pro security-status` runs as `nobody`, since as root it writes its own log and lock. fwupd is
+  `pro security-status` runs as `nobody`, since as root it writes its own log and lock; `gpg`,
+  which shows the keyrings of the sources, runs as `nobody` too, in a fresh home it imports
+  nothing into. fwupd is
   asked over D-Bus for the metadata it already has, snapd over its socket and only when snaps are
   installed (a request would start snapd, which then goes to the Store on its own).
 - **Fixed commands.** The helpers run fixed argument lists with a PATH that leaves `/usr/local`
@@ -161,7 +171,8 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
   (root-owned); Python runs isolated (`-I`) and imports only from there.
 - **No secrets in the state.** The state file is readable by every local user. Credentials in
   source URIs are removed; no file content is copied except the first line of a script in the
-  “outside” folders, to name its interpreter.
+  “outside” folders, to name its interpreter, and the error lines of the last run of
+  unattended-upgrades.
 - **The settings file** counts only when root owns it and nobody else can write it.
 - **No network from the browser.** No CDNs or external fonts (the fonts ship with the add-on);
   Cockpit's strict CSP stays unchanged.
@@ -172,8 +183,8 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
 - **Python 3.8** or newer (standard library only)
 - Optional, used when present (the page says what is missing): `needrestart` (services on old
   libraries), `ubuntu-pro-client` (Ubuntu Pro), `distro-info-data` (end of support, snap bases),
-  `unattended-upgrades`, `fwupd` (firmware), `systemd-detect-virt` (from systemd: tells a VM
-  from a physical server)
+  `unattended-upgrades`, `gpg` (signing keys of the sources), `fwupd` (firmware),
+  `systemd-detect-virt` (from systemd: tells a VM from a physical server)
 
 Fedora, RHEL and openSUSE are not checked yet: the package installs there, and the page says so.
 
@@ -260,6 +271,11 @@ Cockpit session. More in [CONTRIBUTING.md](CONTRIBUTING.md).
   the newest installed one and reads the reboot flag.
 - The time of the last `apt update` comes from apt's success stamp (Ubuntu) or the mtime of apt's
   download folder; the list files' own times are the server's `Last-Modified`.
+- The log of unattended-upgrades has the server's local time; the page reads it as UTC. apt-daily's
+  download run (`--download-only`) writes no end to the log and is left out.
+- A keyring counts as long as one of its signing keys is valid: which key a source signs with is
+  not checked. A source without `Signed-By` may use any of apt's trusted keyrings, so each of them
+  is shown.
 
 ## License
 

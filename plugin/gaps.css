@@ -55,6 +55,9 @@ html { background: var(--bg-page); }
 .ug-chips { display: flex; flex-wrap: wrap; gap: var(--space-sm); margin-block-start: var(--space-xs); }
 .ug-chips a { text-decoration: none; }
 .ug-chips a:hover .az-label { box-shadow: inset 0 0 0 1px var(--primary); }
+/* A long title (German) wraps in its chip instead of widening the page on a phone. */
+.ug-chip { max-inline-size: 100%; white-space: normal; text-align: start; }
+.ug-chip .az-label { white-space: normal; }
 .ug-timer { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); }
 .ug-timer .az-icon { color: var(--text-subtle); }
 .ug-line { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm) var(--space-md); }

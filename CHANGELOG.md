@@ -28,6 +28,9 @@ been there.
   scan first saw it (`since`, kept in `scan.json` only); the page shows “seen since <date>” once an
   earlier scan saw it.
 - **Status Board:** the items `dpkg`, `boot`, `keys` and `uu`, only with a finding.
+- **On a phone:** a long title in the overview's chips (the German one of the phased updates)
+  wraps instead of widening the page. The preview's phone check now covers the phased-updates and
+  upkeep scenarios as well.
 - **AppStream:** screenshots of the page.
 - **Formats:** `scan.json` has the checks `dpkg` and `boot` after `phased`, `keys` after `lists`
   and `uu` after `auto`, and `since` on their findings and those of most other checks;

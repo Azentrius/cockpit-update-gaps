@@ -59,7 +59,7 @@
     <screenshot>
       <caption>A kernel update that ran out of room in /boot, with the commands that finish it</caption>
       <caption xml:lang="de">Ein Kernel-Update, dem der Platz in /boot ausging, mit den Befehlen, die es abschließen</caption>
-      <image type="source">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/upkeep.png</image>
+      <image type="source" width="1392" height="1139">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/upkeep.png</image>
     </screenshot>
     <screenshot>
       <caption>The same page in the dark theme</caption>

@@ -33,15 +33,24 @@ SCANS = {
     # With the network data of stage 2 (radar-<scenario>.json, written by make_radar.py).
     "scan-noble-held-radar.json": ("noble-held", {"radar": True}),
     "scan-resolute-nodesource-radar.json": ("resolute-nodesource", {"radar": True}),
+    # The OVAL copy is there, its time is not (radar.json's oval_file lost), and today's download failed:
+    # the radar writes data_fetched null, the age of the data is unknown.
+    "scan-noble-held-radar-unknown.json": ("noble-held", {"radar": "unknown"}),
 }
 STATUS_VERSION = "0.1.0"
 
 
 def scan(scenario, kw):
     kw = dict(kw)
-    if kw.pop("radar", False):
+    radar = kw.pop("radar", False)
+    if radar:
         with open(os.path.join(HERE, f"radar-{scenario}.json"), encoding="utf-8") as f:
-            kw["files"] = {gapscheck.RADAR: f.read()}
+            text = f.read()
+        if radar == "unknown":
+            doc = json.loads(text)
+            doc["services"]["oval"].update(state="partial", errors=["HTTP 503"], data_fetched=None)
+            text = json.dumps(doc)
+        kw["files"] = {gapscheck.RADAR: text}
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     doc["took_ms"] = 3300
     for c in doc["checks"]:

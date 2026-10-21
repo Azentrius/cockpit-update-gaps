@@ -205,11 +205,22 @@ class Contract(unittest.TestCase):
                        lambda d: d["items"][0].update(id="Held Packages"),
                        lambda d: d["items"][0].update(link="https://example.invalid/"),
                        lambda d: d["items"][0].update(value=6),
-                       lambda d: d["items"][0].pop("stale_after"),
+                       lambda d: d["items"][0].update(stale_after=0),        # optional, but 1 or more
+                       lambda d: d["items"][0].update(stale_after="1d"),
+                       lambda d: d["items"][0].update(checked_at="yesterday"),
                        lambda d: d.update(items={})):
             d = json.loads(json.dumps(good))
             change(d)
             self.assertNotEqual(gapsstatus.problems(d), [], d)
+
+    def test_times_are_optional(self):
+        """The contract makes checked_at and stale_after optional: an item of data without a known time
+        has neither, and is still a good item."""
+        good = gapsstatus.status_file(fixture("scan-noble-held.json"), "0.1.0")
+        d = json.loads(json.dumps(good))
+        d["items"][0].pop("checked_at")
+        d["items"][0].pop("stale_after")
+        self.assertEqual(gapsstatus.problems(d), [])
 
     def test_fixtures_are_what_the_service_writes(self):
         for s in SCENARIOS:

@@ -320,5 +320,104 @@ class FirmwareSnapTest(unittest.TestCase):
             self.assertIsNone(L.parse_rfc3339(bad), bad)
 
 
+# `gpg --show-keys --with-colons` of real keyrings (pub/sub/uid lines; 2026-10-21).
+DOCKER = """pub:-:4096:1:8D81803C0EBFCD88:1487788586:::-:::escaESCA::::::23::0:
+uid:-::::1487792064::B50C6A3598EE2C27B34302761B93B277BF674C93::Docker Release (CE deb) <docker@docker.com>::::::::::0:
+sub:-:4096:1:7EA0A9C3F273FCD8:1487788586::::::s::::::23:
+"""
+GITHUB_OLD = """pub:e:4096:1:23F3D4EA75716059:1662463626:1788612228::-:::sc::::::23::0:
+uid:e::::1725540228::8112F49127753770F34E73A49614E0AFC050A705::GitHub CLI <opensource+cli@github.com>::::::::::0:
+sub:e:4096:1:E5FAF19590714157:1662463626:1788612228:::::e::::::23:
+"""
+GITHUB_NEW = """pub:-:4096:1:5612B36462313325:1775559160:::-:::scESC::::::23::0:
+uid:-::::1775559160::8112F49127753770F34E73A49614E0AFC050A705::GitHub CLI <opensource+cli@github.com>::::::::::0:
+sub:-:4096:1:F4CAB2C46C97E579:1775559160::::::e::::::23:
+"""
+
+
+class KeysTest(unittest.TestCase):
+    def test_keyring_expiry(self):
+        self.assertEqual(L.keyring_expiry(DOCKER), "never")
+        self.assertEqual(L.iso(L.keyring_expiry(GITHUB_OLD)), "2026-09-05T12:43:48Z", "expired: its date")
+        self.assertEqual(L.keyring_expiry(GITHUB_OLD + GITHUB_NEW), "never", "the new key signs on")
+        # A signing subkey that outlives its primary key ends with it; the latest signing key counts.
+        rings = ("pub:-:4096:1:A:1700000000:1800000000::-:::cC:\nsub:-:4096:1:B:1700000000:1900000000:::::s:\n"
+                 "pub:-:4096:1:C:1700000000:1790000000::-:::scSC:\n")
+        self.assertEqual(L.keyring_expiry(rings).timestamp(), 1800000000)
+        self.assertIsNone(L.keyring_expiry("pub:r:4096:1:A:1700000000:::-:::sc:\nsub:-:4096:1:B:1700000000::::::s:\n"),
+                          "a revoked key and its subkeys do not count")
+        self.assertIsNone(L.keyring_expiry("pub:-:4096:1:A:1700000000:::-:::eE:\n"), "no signing key")
+        self.assertIsNone(L.keyring_expiry(""))
+
+    def test_sources_keyrings(self):
+        text = ("# comment\nTypes: deb\nURIs: https://download.docker.com/linux/ubuntu/\nSuites: resolute\n"
+                "Signed-By: /etc/apt/keyrings/docker.asc\n\nTypes: deb\nURIs: https://a.example/ https://b.example/\n"
+                "Enabled: no\nSigned-By: /x.gpg\n\nTypes: deb deb-src\nURIs: http://archive.ubuntu.com/ubuntu/\n"
+                "Signed-By: /usr/share/keyrings/a.gpg, 0123456789ABCDEF /usr/share/keyrings/b.gpg\n\n"
+                "Types: deb\nURIs: https://repo.example/apt\nSigned-By:\n -----BEGIN PGP PUBLIC KEY BLOCK-----\n .\n"
+                " mQINBGZ\n -----END PGP PUBLIC KEY BLOCK-----\n\nTypes: deb\nURIs: https://plain.example/\n")
+        self.assertEqual(L.sources_keyrings(text, True), [
+            {"uris": ["https://download.docker.com/linux/ubuntu/"], "inline": None, "keyrings": ["/etc/apt/keyrings/docker.asc"]},
+            {"uris": ["http://archive.ubuntu.com/ubuntu/"], "inline": None,
+             "keyrings": ["/usr/share/keyrings/a.gpg", "/usr/share/keyrings/b.gpg"]},
+            {"uris": ["https://repo.example/apt"], "keyrings": [],
+             "inline": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGZ\n-----END PGP PUBLIC KEY BLOCK-----\n"},
+            {"uris": ["https://plain.example/"], "inline": None, "keyrings": []}])
+        text = ("deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu   noble stable\n"
+                "# deb [signed-by=/old.gpg] https://old.example/ x main\ndeb-src https://src.example/ x main\n"
+                "deb [ arch=amd64 ] http://archive.ubuntu.com/ubuntu noble main\n")
+        self.assertEqual(L.sources_keyrings(text, False), [
+            {"uris": ["https://download.docker.com/linux/ubuntu"], "inline": None, "keyrings": ["/etc/apt/keyrings/docker.gpg"]},
+            {"uris": ["https://src.example/"], "inline": None, "keyrings": []},
+            {"uris": ["http://archive.ubuntu.com/ubuntu"], "inline": None, "keyrings": []}])
+        self.assertEqual(L.sources_keyrings(None, True), [])
+
+
+# unattended-upgrades.log as 2.9 and 2.12 write it (Ubuntu 24.04 and 26.04).
+UU_LOG = """2026-10-20 06:20:58,117 INFO Starting unattended upgrades script
+2026-10-20 06:20:58,118 INFO Allowed origins are: o=Ubuntu,a=noble, o=Ubuntu,a=noble-security
+2026-10-20 06:20:58,118 INFO Initial blacklist:
+2026-10-20 06:20:58,118 INFO Initial whitelist (not strict):
+2026-10-20 06:21:01,872 INFO Packages that will be upgraded: nginx-common openssl
+2026-10-20 06:21:01,873 INFO Package nginx-common has conffile prompt and needs to be upgraded manually
+2026-10-20 06:21:01,873 INFO Writing dpkg log to /var/log/unattended-upgrades/unattended-upgrades-dpkg.log
+2026-10-20 06:21:40,391 INFO All upgrades installed
+2026-10-20 10:57:47,301 WARNING Could not figure out development release: Distribution data outdated. Please check for an update for distro-info-data. See /usr/share/doc/distro-info-data/README.Debian
+2026-10-20 10:57:47,301 INFO Starting unattended upgrades script
+2026-10-20 10:57:47,302 INFO Allowed origins are: o=Ubuntu,a=noble, o=Ubuntu,a=noble-security
+2026-10-20 10:57:47,302 INFO Initial blacklist:
+2026-10-20 10:57:47,302 INFO Initial whitelist (not strict):
+"""
+
+
+class UnattendedLogTest(unittest.TestCase):
+    def test_last_finished_run(self):
+        run = L.parse_uu_log(UU_LOG)
+        self.assertEqual(run["started"].isoformat(), "2026-10-20T06:20:58", "apt-daily's download run has no end")
+        self.assertEqual((run["outcome"], run["packages"], run["conffile"], run["errors"]),
+                         ("installed", ["nginx-common", "openssl"], ["nginx-common"], []))
+
+    def test_outcomes(self):
+        head = "2026-10-21 06:06:11,803 INFO Starting unattended upgrades script\n"
+        run = L.parse_uu_log(head + "2026-10-21 06:06:12,636 INFO No packages found that can be upgraded unattended "
+                             "and no pending auto-removals\n")
+        self.assertEqual(run["outcome"], "nothing")
+        run = L.parse_uu_log(head + "2026-10-21 06:06:12,001 INFO Packages that are kept back: libfoo1 bar\n"
+                             "2026-10-21 06:06:20,002 ERROR Installing the upgrades failed!\n"
+                             "2026-10-21 06:06:20,003 ERROR dpkg returned an error! See the log for details\n")
+        self.assertEqual((run["outcome"], run["kept_back"], len(run["errors"])), ("failed", ["bar", "libfoo1"], 2))
+        run = L.parse_uu_log(head + "2026-10-21 06:06:12,001 INFO Lock could not be acquired (another package manager running?)\n")
+        self.assertEqual(run["outcome"], "failed")
+        self.assertIsNone(L.parse_uu_log(head), "a run without an end is no finished run")
+        self.assertIsNone(L.parse_uu_log(""))
+        self.assertIsNone(L.parse_uu_log("garbage\n"))
+
+    def test_dpkg_problem(self):
+        for abbrev, want in (("ii", None), ("ii ", None), ("rc", None), ("hi", None), ("iU", "unpacked"),
+                             ("iF", "half-configured"), ("iH", "half-installed"), ("iW", "triggers-awaited"),
+                             ("it", "triggers-pending"), ("iiR", "reinst-required"), ("", None), (None, None)):
+            self.assertEqual(L.dpkg_problem(abbrev), want, abbrev)
+
+
 if __name__ == "__main__":
     unittest.main()

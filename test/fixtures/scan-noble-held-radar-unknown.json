@@ -42,6 +42,34 @@
    "took_ms": 0
   },
   {
+   "check": "dpkg",
+   "state": "none",
+   "findings": [],
+   "source": [
+    "dpkg-query -W",
+    "/var/lib/dpkg/updates"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "boot",
+   "state": "none",
+   "findings": [],
+   "kernels": [
+    "6.8.0-146-generic",
+    "6.8.0-147-generic"
+   ],
+   "running": "6.8.0-146-generic",
+   "free": 57070604288,
+   "size": 160970244096,
+   "need": 137471689,
+   "source": [
+    "/boot",
+    "statvfs /boot"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "held",
    "state": "found",
    "findings": [
@@ -60,7 +88,8 @@
       "l": "Docker CE",
       "c": "stable"
      },
-     "installed_at": "2026-09-08T13:48:09"
+     "installed_at": "2026-09-08T13:48:09",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "docker-buildx-plugin",
@@ -77,7 +106,8 @@
       "l": "Docker CE",
       "c": "stable"
      },
-     "installed_at": "2026-09-08T13:48:13"
+     "installed_at": "2026-09-08T13:48:13",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "docker-ce",
@@ -94,7 +124,8 @@
       "l": "Docker CE",
       "c": "stable"
      },
-     "installed_at": "2026-09-08T13:48:10"
+     "installed_at": "2026-09-08T13:48:10",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "docker-ce-cli",
@@ -111,7 +142,8 @@
       "l": "Docker CE",
       "c": "stable"
      },
-     "installed_at": "2026-09-08T13:48:09"
+     "installed_at": "2026-09-08T13:48:09",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "docker-ce-rootless-extras",
@@ -128,7 +160,8 @@
       "l": "Docker CE",
       "c": "stable"
      },
-     "installed_at": "2026-09-08T13:48:13"
+     "installed_at": "2026-09-08T13:48:13",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "docker-compose-plugin",
@@ -145,7 +178,8 @@
       "l": "Docker CE",
       "c": "stable"
      },
-     "installed_at": "2026-09-08T13:48:14"
+     "installed_at": "2026-09-08T13:48:14",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "source": [
@@ -163,28 +197,32 @@
      "version": "24.0+dfsg-1ubuntu1.3+esm3",
      "service": "esm-apps",
      "status": "pending_attach",
-     "installed": "24.0+dfsg-1ubuntu1.3"
+     "installed": "24.0+dfsg-1ubuntu1.3",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "python3-wheel",
      "version": "0.42.0-2ubuntu0.1~esm1",
      "service": "esm-apps",
      "status": "pending_attach",
-     "installed": "0.42.0-2"
+     "installed": "0.42.0-2",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "restic",
      "version": "0.16.4-2ubuntu0.24.04.3+esm2",
      "service": "esm-apps",
      "status": "pending_attach",
-     "installed": "0.16.4-2ubuntu0.24.04.3"
+     "installed": "0.16.4-2ubuntu0.24.04.3",
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "package": "skopeo",
      "version": "1.13.3+ds1-2ubuntu0.24.04.3+esm2",
      "service": "esm-apps",
      "status": "pending_attach",
-     "installed": "1.13.3+ds1-2ubuntu0.24.04.3"
+     "installed": "1.13.3+ds1-2ubuntu0.24.04.3",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "attached": false,
@@ -256,7 +294,8 @@
      "text": "Vulnerable: Clear CPU buffers attempted, no microcode",
      "kind": "vulnerable",
      "microcode": true,
-     "fix": "provider"
+     "fix": "provider",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "mitigated": 4,
@@ -349,6 +388,49 @@
    "took_ms": 0
   },
   {
+   "check": "keys",
+   "state": "none",
+   "findings": [],
+   "keyrings": [
+    {
+     "file": "/etc/apt/keyrings/docker.gpg",
+     "sources": [
+      "https://download.docker.com/linux/ubuntu"
+     ],
+     "expires": "never"
+    },
+    {
+     "file": "/usr/share/keyrings/azentrius.asc",
+     "sources": [
+      "https://packages.azentrius.com/apt"
+     ],
+     "expires": "never"
+    },
+    {
+     "file": "/usr/share/keyrings/githubcli-archive-keyring.gpg",
+     "sources": [
+      "https://cli.github.com/packages"
+     ],
+     "expires": "never"
+    },
+    {
+     "file": "/usr/share/keyrings/ubuntu-archive-keyring.gpg",
+     "sources": [
+      "https://mirror.hetzner.com/ubuntu/packages",
+      "https://mirror.hetzner.com/ubuntu/security"
+     ],
+     "expires": "never"
+    }
+   ],
+   "soon_days": 60,
+   "source": [
+    "apt-get indextargets",
+    "Signed-By",
+    "gpg --show-keys"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "local",
    "state": "found",
    "findings": [
@@ -356,7 +438,8 @@
      "package": "hc-utils",
      "version": "0.0.6-1",
      "arch": "all",
-     "cause": "no-source"
+     "cause": "no-source",
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "source": [
@@ -380,7 +463,8 @@
      "c": "main",
      "packages": [
       "gh"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "kind": "source",
@@ -398,7 +482,8 @@
       "docker-ce-cli",
       "docker-ce-rootless-extras",
       "docker-compose-plugin"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "kind": "source",
@@ -418,7 +503,8 @@
       "cockpit-storaged",
       "cockpit-system",
       "cockpit-ws"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "kind": "source",
@@ -433,7 +519,8 @@
       "azentrius-repository",
       "cockpit-cronjobs",
       "cockpit-image-update-monitor"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     },
     {
      "kind": "held",
@@ -444,7 +531,8 @@
       "docker-ce-cli",
       "docker-ce-rootless-extras",
       "docker-compose-plugin"
-     ]
+     ],
+     "since": "2026-10-19T20:55:00Z"
     }
    ],
    "installed": true,
@@ -465,6 +553,21 @@
    "source": [
     "apt-config dump",
     "apt-cache policy"
+   ],
+   "took_ms": 0
+  },
+  {
+   "check": "uu",
+   "state": "none",
+   "findings": [],
+   "off": false,
+   "last_run": "2026-10-19T06:20:58Z",
+   "outcome": "nothing",
+   "upgraded": [],
+   "service": "success",
+   "source": [
+    "/var/log/unattended-upgrades/unattended-upgrades.log",
+    "systemctl show apt-daily-upgrade.service"
    ],
    "took_ms": 0
   },

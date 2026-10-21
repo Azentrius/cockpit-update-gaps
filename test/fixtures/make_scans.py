@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "lib"))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import gapscheck  # noqa: E402
 import gapsstatus  # noqa: E402
-from fakesys import FakeSystem, phased_results  # noqa: E402
+from fakesys import FakeSystem, phased_results, upkeep  # noqa: E402
 
 SCANS = {
     "scan-noble-held.json": ("noble-held", {}),
@@ -38,6 +38,9 @@ SCANS = {
     "scan-noble-held-radar-unknown.json": ("noble-held", {"radar": "unknown"}),
     # Ubuntu rolls systemd out in phases and apt defers it here (see fakesys.PHASED_SIMULATION).
     "scan-resolute-nodesource-phased.json": ("resolute-nodesource", {"phased": True}),
+    # Upkeep gone wrong: /boot full, a kernel half configured, unattended-upgrades failed, a key
+    # expired (see fakesys.upkeep).
+    "scan-noble-held-upkeep.json": ("noble-held", {"upkeep": True}),
 }
 STATUS_VERSION = "0.1.0"
 
@@ -55,6 +58,8 @@ def scan(scenario, kw):
         kw["files"] = {gapscheck.RADAR: text}
     if kw.pop("phased", False):
         kw["results"] = phased_results(scenario)
+    if kw.pop("upkeep", False):
+        kw.update(upkeep(scenario))
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     doc["took_ms"] = 3300
     for c in doc["checks"]:

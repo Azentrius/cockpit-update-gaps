@@ -11,13 +11,15 @@
   <description>
     <p>
       The page shows where updates are missing although Cockpit's Software Updates lists none:
-      held packages, fixes that only come with Ubuntu Pro, pending restarts, CPU vulnerabilities
-      the kernel reports, firmware updates (with fwupd), snaps that are not refreshed, missing or
-      old package lists, packages without a source, sources the automatic updates leave out,
-      backports not installed, software outside the package manager and the end of support.
-      For every finding it says why Software Updates does not show it and what you can do. When
-      Ubuntu rolls updates out in phases and Software Updates fails on them, it says why and gives
-      the commands that get around it. It only reads.
+      held packages, fixes that only come with Ubuntu Pro, pending restarts, packages dpkg left
+      half done, too little room in /boot for the next kernel, CPU vulnerabilities the kernel
+      reports, firmware updates (with fwupd), snaps that are not refreshed, missing or old package
+      lists, expired signing keys of the sources, packages without a source, sources the automatic
+      updates leave out and runs of them that failed, backports not installed, software outside
+      the package manager and the end of support. For every finding it says why Software Updates
+      does not show it, what you can do and since when it has been there. When Ubuntu rolls
+      updates out in phases and Software Updates fails on them, it says why and gives the commands
+      that get around it. It only reads.
     </p>
     <p>
       Once set up, network data add security issues Ubuntu has not fixed yet, fixes released
@@ -26,13 +28,16 @@
     </p>
     <p xml:lang="de">
       Die Seite zeigt, wo Updates fehlen, obwohl Software-Updates in Cockpit nichts meldet:
-      gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, CPU-Schwachstellen laut
+      gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, Pakete, die dpkg halb
+      fertig liegen ließ, zu wenig Platz in /boot für den nächsten Kernel, CPU-Schwachstellen laut
       Kernel, Firmware-Updates (mit fwupd), Snaps, die nicht aktualisiert werden, fehlende oder
-      alte Paketlisten, Pakete ohne Paketquelle, Quellen außerhalb der automatischen Updates,
-      nicht installierte Backports, Software außerhalb des Paketmanagers und das Ende der
-      Unterstützung. Zu jedem Befund steht, warum Software-Updates ihn nicht zeigt und was Sie
-      tun können. Verteilt Ubuntu Updates schrittweise und scheitert Software-Updates daran,
-      erklärt sie, warum, und nennt die Befehle, die daran vorbeiführen. Sie liest nur.
+      alte Paketlisten, abgelaufene Signaturschlüssel der Paketquellen, Pakete ohne Paketquelle,
+      Quellen außerhalb der automatischen Updates und Läufe davon, die scheiterten, nicht
+      installierte Backports, Software außerhalb des Paketmanagers und das Ende der
+      Unterstützung. Zu jedem Befund steht, warum Software-Updates ihn nicht zeigt, was Sie tun
+      können und seit wann er besteht. Verteilt Ubuntu Updates schrittweise und scheitert
+      Software-Updates daran, erklärt sie, warum, und nennt die Befehle, die daran vorbeiführen.
+      Sie liest nur.
     </p>
     <p xml:lang="de">
       Einmal eingerichtet, kommen Netzdaten hinzu: Sicherheitslücken, die Ubuntu noch nicht
@@ -44,6 +49,24 @@
   <launchable type="cockpit-manifest">update-gaps</launchable>
   <url type="homepage">https://github.com/Azentrius/cockpit-update-gaps</url>
   <url type="bugtracker">https://github.com/Azentrius/cockpit-update-gaps/issues</url>
+  <!-- The pictures come from tools/preview/shoot.py (CI artifact "screenshots"), kept in docs/img/. -->
+  <screenshots>
+    <screenshot type="default">
+      <caption>Findings of a server: held packages, fixes only with Ubuntu Pro, a pending restart</caption>
+      <caption xml:lang="de">Befunde eines Servers: gehaltene Pakete, Fixes nur mit Ubuntu Pro, ein ausstehender Neustart</caption>
+      <image type="source" width="1440" height="1000">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/overview.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>A kernel update that ran out of room in /boot, with the commands that finish it</caption>
+      <caption xml:lang="de">Ein Kernel-Update, dem der Platz in /boot ausging, mit den Befehlen, die es abschließen</caption>
+      <image type="source">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/upkeep.png</image>
+    </screenshot>
+    <screenshot>
+      <caption>The same page in the dark theme</caption>
+      <caption xml:lang="de">Dieselbe Seite im dunklen Design</caption>
+      <image type="source" width="1440" height="1000">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/overview-dark.png</image>
+    </screenshot>
+  </screenshots>
   <developer id="de.azentrius">
     <name>Azentrius</name>
   </developer>

@@ -38,6 +38,7 @@ KEEP = {"unattended-upgrades", "needrestart", "openssh-server", "sudo", "restic"
 VULN = "/sys/devices/system/cpu/vulnerabilities"
 SNAPD = ("snapd-snaps.json", "snapd-system-info.json", "snapd-changes.json")    # answers of snapd's API
 KEEP_PREFIX = ("cockpit", "linux-image-", "docker-", "containerd")
+UU_LOG = "/var/log/unattended-upgrades/unattended-upgrades.log"
 TARGET_FIELDS = ("Site", "Release", "Filename", "Sourcesentry", "Identifier", "Component", "Architecture",
                  "Origin", "Label", "Suite", "Codename", "Target-Of", "Optional")
 
@@ -70,9 +71,9 @@ def main(argv):
     meta = {"now": args.now, "uid": 0, "kernel": (read(cap, "uname-r.txt") or "").strip(),
             "files": {}, "dirs": {}, "stat": {}, "heads": {}}
 
-    def put(path, kind="file", mtime=1792400000, mode="644", uid=0, target=None):
+    def put(path, kind="file", mtime=1792400000, mode="644", uid=0, target=None, size=None):
         meta["stat"][path] = {"type": kind, "mtime": int(mtime), "mode": mode, "uid": uid,
-                              **({"target": target} if target else {})}
+                              **({"target": target} if target else {}), **({"size": int(size)} if size else {})}
 
     meta["files"]["/etc/os-release"] = read(cap, "os-release")
     put("/etc/os-release")
@@ -214,6 +215,37 @@ def main(argv):
         command("fwupdmgr-get-updates.txt", read(cap, "fwupd-updates.json"), (read(cap, "fwupd-updates.rc") or "0").strip())
         command("fwupdmgr-get-remotes.txt", read(cap, "fwupd-remotes.json") or "")
         command("systemctl-is-enabled-fwupd-refresh.txt", read(cap, "fwupd-refresh.txt") or "")
+
+    # /boot, dpkg's journal, the log of unattended-upgrades, the sources and their keyrings.
+    boot = [line.split("\t") for line in (read(cap, "boot-files.txt") or "").splitlines() if line.count("\t") == 2]
+    if boot:
+        meta["dirs"]["/boot"] = sorted(set(meta["dirs"]["/boot"]) | {b[0] for b in boot})
+        for name, size, mtime in boot:
+            put(f"/boot/{name}", mtime=mtime, size=size)
+    vfs = (read(cap, "boot-statvfs.txt") or "").split()
+    if len(vfs) == 3:
+        meta["statvfs"] = {"/boot": [int(vfs[0]) * int(vfs[1]), int(vfs[2]) * int(vfs[1])]}
+    if read(cap, "dpkg-updates.txt") is not None:
+        meta["dirs"]["/var/lib/dpkg/updates"] = (read(cap, "dpkg-updates.txt") or "").split()
+    if read(cap, "uu.log") is not None:
+        meta["files"][UU_LOG] = anon(read(cap, "uu.log"))
+        put(UU_LOG)
+    blocks = (read(cap, "systemctl-show.txt") or "").split("\n\n")
+    if len(blocks) > 1:
+        command("systemctl-show-apt-daily-upgrade.txt",
+                "".join(line + "\n" for line in blocks[1].splitlines() if line.startswith("Result=")))
+    if os.path.isdir(os.path.join(cap, "sources")):
+        for n in sorted(os.listdir(os.path.join(cap, "sources"))):
+            path = "/etc/apt/" + n if n == "sources.list" else "/etc/apt/sources.list.d/" + n
+            meta["files"][path] = anon(read(cap, "sources/" + n))
+            put(path)
+    for line in (read(cap, "keyrings.txt") or "").splitlines():
+        path, _, size = line.partition("\t")
+        base = os.path.basename(path)
+        put(path, size=size or None)
+        command(f"gpg-{base}.txt", read(cap, f"keyrings/{base}.txt") or "")
+        if path.startswith("/etc/apt/trusted.gpg.d/"):
+            meta["dirs"].setdefault("/etc/apt/trusted.gpg.d", []).append(base)
 
     # Software outside the package manager, with neutral names.
     names, opt_dirs = {}, []

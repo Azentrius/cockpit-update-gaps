@@ -527,6 +527,130 @@ def parse_dpkg_query(text):
     return out
 
 
+FOREVER = datetime.max.replace(tzinfo=timezone.utc)
+
+
+def keyring_expiry(colons):
+    """`gpg --show-keys --with-colons` of a keyring -> until when it can
+    verify signatures: "never" (a signing key without expiry), the latest
+    expiry of its signing keys (aware datetime, in the past when all have
+    expired) or None (no signing key). A subkey lives no longer than its
+    primary key; revoked keys do not count."""
+    best, primary = None, None      # primary: the expiry of the current primary key, None when revoked
+    for line in (colons or "").splitlines():
+        f = line.split(":")
+        if len(f) < 12 or f[0] not in ("pub", "sub"):
+            continue
+        until = datetime.fromtimestamp(int(f[6]), timezone.utc) if f[6].isdigit() else FOREVER
+        if f[0] == "pub":
+            primary = None if f[1] == "r" else until
+        elif primary is not None:
+            until = min(until, primary)
+        if f[1] == "r" or primary is None or "s" not in f[11]:
+            continue
+        best = until if best is None or until > best else best
+    if best is None:
+        return None
+    return "never" if best == FOREVER else best
+
+
+def _option_values(value):
+    return [v for v in re.split(r"[\s,]+", value or "") if v]
+
+
+def sources_keyrings(text, deb822):
+    """A sources file -> [{"uris", "keyrings" (files of Signed-By),
+    "inline" (an armored key in Signed-By, deb822 only)}] of its enabled
+    entries. Entries without either use apt's trusted keyrings. Fingerprints
+    in Signed-By only pick keys from those files and are left out."""
+    out = []
+    if deb822:
+        for rec in parse_deb822("\n".join(ln for ln in (text or "").splitlines() if not ln.startswith("#"))):
+            if "URIs" not in rec or not apt_bool(rec.get("Enabled"), True):
+                continue
+            sb = rec.get("Signed-By", "")
+            inline = None
+            if "BEGIN PGP PUBLIC KEY BLOCK" in sb:
+                inline = "\n".join("" if ln == "." else ln for ln in sb.split("\n")).strip() + "\n"
+                sb = ""
+            out.append({"uris": _option_values(rec["URIs"]), "inline": inline,
+                        "keyrings": [v for v in _option_values(sb) if v.startswith("/")]})
+        return out
+    for line in (text or "").splitlines():
+        m = re.match(r"^\s*deb(?:-src)?\s+(?:\[([^\]]*)\]\s+)?(\S+)", line)
+        if not m:
+            continue
+        opts = dict(o.split("=", 1) for o in (m.group(1) or "").split() if "=" in o)
+        out.append({"uris": [m.group(2)], "inline": None,
+                    "keyrings": [v for v in _option_values(opts.get("signed-by")) if v.startswith("/")]})
+    return out
+
+
+UU_TIME_RE = re.compile(r"^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)(?:,\d+)? (\w+) (.*)$")
+UU_ERROR_RE = re.compile(r"\b(ERROR|CRITICAL)\b|Installing the upgrades failed|Lock could not be acquired|"
+                         r"dpkg returned an error")
+
+
+def parse_uu_log(text):
+    """The last finished run in unattended-upgrades.log -> {"started"
+    (naive datetime, the log's local time), "outcome": installed | nothing |
+    failed, "packages" (to upgrade), "kept_back", "conffile" (packages it
+    leaves for a manual upgrade), "errors" (lines)} or None when the log has
+    none. Runs without an end are left out: apt-daily's download run
+    (`unattended-upgrade --download-only`) ends without a word, like a run
+    that is still going."""
+    runs, cur = [], None
+    for line in (text or "").splitlines():
+        m = UU_TIME_RE.match(line)
+        if not m:
+            continue
+        when, level, msg = m.groups()
+        if msg.startswith("Starting unattended upgrades script"):
+            cur = {"started": datetime.strptime(when, "%Y-%m-%d %H:%M:%S"), "outcome": "unfinished", "packages": [],
+                   "kept_back": [], "conffile": [], "errors": []}
+            runs.append(cur)
+            continue
+        if cur is None:
+            continue
+        if msg.startswith("Packages that will be upgraded:"):
+            cur["packages"] = msg.split(":", 1)[1].split()
+        elif msg.startswith("Packages that are kept back:"):
+            cur["kept_back"] = msg.split(":", 1)[1].split()
+        elif "is kept back" in msg:
+            cur["kept_back"].append(msg.split()[1] if msg.startswith("Package ") else msg[:80])
+        elif "has conffile prompt" in msg:
+            cur["conffile"].append(msg.split()[1] if msg.startswith("Package ") else msg[:80])
+        elif msg.startswith("All upgrades installed"):
+            cur["outcome"] = "installed"
+        elif msg.startswith("No packages found that can be upgraded unattended"):
+            cur["outcome"] = "nothing"
+        if level in ("ERROR", "CRITICAL") or UU_ERROR_RE.search(msg):
+            cur["errors"].append(clean_text(line, 300))
+            cur["outcome"] = "failed"
+    runs = [r for r in runs if r["outcome"] != "unfinished"]
+    if not runs:
+        return None
+    last = runs[-1]
+    last["errors"] = last["errors"][:10]
+    last["kept_back"] = sorted(set(last["kept_back"]))[:50]
+    last["conffile"] = sorted(set(last["conffile"]))[:50]
+    return last
+
+
+# The second letter of ${db:Status-Abbrev} for a package dpkg left half done; "R" in the third: reinstall required.
+DPKG_STATES = {"H": "half-installed", "U": "unpacked", "F": "half-configured", "W": "triggers-awaited",
+               "t": "triggers-pending"}
+
+
+def dpkg_problem(abbrev):
+    """dpkg's status letters (want, status, error) -> the state of a package
+    dpkg left half done, or None when it is in order."""
+    s = (abbrev or "").ljust(3)
+    if s[2] == "R":
+        return "reinst-required"
+    return DPKG_STATES.get(s[1])
+
+
 DPKG_LOG_RE = re.compile(r"^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2}) (install|upgrade) (\S+?)(?::\S+)? (\S+) (\S+)\s*$")
 
 

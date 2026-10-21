@@ -13,11 +13,14 @@
 
 and the cases those hosts do not have: no root, missing tools, time limits,
 broken settings, another distribution, a phased rollout (resolute-nodesource
-while Ubuntu rolls systemd out in phases, fakesys.phased_results)."""
+while Ubuntu rolls systemd out in phases, fakesys.phased_results), upkeep gone
+wrong (noble-held with /boot full, a kernel half configured, a failed run of
+unattended-upgrades and an expired key, fakesys.upkeep)."""
 
 import importlib.util
 import json
 import os
+import shutil
 import sys
 import tempfile
 import unittest
@@ -27,16 +30,25 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 sys.path.insert(0, HERE)
 import gapscheck  # noqa: E402
+import gapslib as L  # noqa: E402
 import gapsproc  # noqa: E402
-from fakesys import FakeSystem, phased_results  # noqa: E402
+from fakesys import FakeSystem, command_text, phased_results, upkeep  # noqa: E402
 
 STATES = {"found", "none", "partial", "skipped", "timeout", "error"}
+UBUNTU_KEYRING = "/usr/share/keyrings/ubuntu-archive-keyring.gpg"
 CHECKS = [name for name, _ in gapscheck.CHECKS]
 
 
 def scan(scenario, **kw):
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     return doc, {c["check"]: c for c in doc["checks"]}
+
+
+def bare(findings):
+    """Findings without the time a scan first saw them (class Since tests that)."""
+    if isinstance(findings, dict):
+        return {k: v for k, v in findings.items() if k != "since"}
+    return [bare(f) for f in findings]
 
 
 class Shape(unittest.TestCase):
@@ -270,10 +282,10 @@ class Phased(unittest.TestCase):
 
     def test_deferred_with_versions_and_share(self):
         doc, c = scan("resolute-nodesource", results=phased_results())
-        self.assertEqual([x["check"] for x in doc["checks"]][:3], ["updates", "phased", "held"])
+        self.assertEqual([x["check"] for x in doc["checks"]][:3], ["updates", "phased", "dpkg"])
         p = c["phased"]
         self.assertEqual(p["state"], "found")
-        self.assertEqual(p["packages"], [{"package": "systemd", "installed": "259.5-0ubuntu3.4",
+        self.assertEqual(bare(p["packages"]), [{"package": "systemd", "installed": "259.5-0ubuntu3.4",
                                           "version": "259.9-0ubuntu0.1", "percent": 10}])
         self.assertEqual((p["include"], p["setting"]), ("default", None))
         self.assertEqual(p["source"], ["apt-get -s dist-upgrade", "apt-config dump", "apt-cache policy"])
@@ -298,7 +310,7 @@ class Phased(unittest.TestCase):
         doc, c = scan("resolute-nodesource", results=dict(phased_results(), **{"apt-cache-policy-installed": broken}))
         p = c["phased"]
         self.assertEqual(p["state"], "found")
-        self.assertEqual(p["packages"], [{"package": "systemd", "installed": None, "version": None, "percent": None}],
+        self.assertEqual(bare(p["packages"]), [{"package": "systemd", "installed": None, "version": None, "percent": None}],
                          "the name is enough to say what fails")
         self.assertNotIn("apt-cache policy", p["source"])
 
@@ -310,7 +322,7 @@ class Phased(unittest.TestCase):
             "  systemd\n", "  systemd $(reboot) libfoo:i386\n"), "")
         p = scan("resolute-nodesource", results=odd)[1]["phased"]
         self.assertEqual([x["package"] for x in p["packages"]], ["systemd", "libfoo:i386"], "only what looks like a package name")
-        self.assertEqual(p["packages"][1], {"package": "libfoo:i386", "installed": None, "version": None, "percent": None})
+        self.assertEqual(bare(p["packages"][1]), {"package": "libfoo:i386", "installed": None, "version": None, "percent": None})
 
 
 VULN = gapscheck.CPU_VULN
@@ -343,7 +355,7 @@ class Cpu(unittest.TestCase):
     def test_vm_with_tsa_is_the_providers(self):
         c = scan("noble-held")[1]["cpu"]
         self.assertEqual((c["state"], c["machine"], c["virt"]), ("found", "vm", "kvm"))
-        self.assertEqual(c["findings"], [{"name": "tsa", "text": "Vulnerable: Clear CPU buffers attempted, no microcode",
+        self.assertEqual(bare(c["findings"]), [{"name": "tsa", "text": "Vulnerable: Clear CPU buffers attempted, no microcode",
                                           "kind": "vulnerable", "microcode": True, "fix": "provider"}])
         self.assertEqual((c["mitigated"], c["not_affected"]), (4, 10))
         self.assertEqual(c["cpu"], {"vendor": "AuthenticAMD", "model": "AMD EPYC-Genoa Processor", "threads": 8,
@@ -440,7 +452,7 @@ class Firmware(unittest.TestCase):
         old = 1792400000 - 40 * 86400
         c = scan("resolute-stale-lists", results=fwupd(mtime=old, timer="disabled"))[1]["firmware"]
         self.assertEqual(c["state"], "found")
-        self.assertEqual(c["findings"][0], {"kind": "update", "device": "UEFI dbx", "vendor": "Linux Foundation",
+        self.assertEqual(bare(c["findings"][0]), {"kind": "update", "device": "UEFI dbx", "vendor": "Linux Foundation",
                                             "version": "371", "new": "377", "urgency": "high",
                                             "issues": ["CVE-2026-12345"]})
         kinds = [f["kind"] for f in c["findings"]]
@@ -506,7 +518,7 @@ class Snaps(unittest.TestCase):
         fs = snapfs()
         c = {x["check"]: x for x in gapscheck.scan(fs, only={"snaps"})["checks"]}["snaps"]
         self.assertEqual((c["state"], c["installed"]), ("found", 3))
-        self.assertEqual(c["findings"], [
+        self.assertEqual(bare(c["findings"]), [
             {"kind": "held", "snap": "lxd", "until": None},
             {"kind": "old-base", "snap": "lxd", "base": "core20", "release": "20.04 LTS", "ended": "2025-05-29",
              "esm_until": "2030-04-23"},
@@ -520,6 +532,229 @@ class Snaps(unittest.TestCase):
         c = {x["check"]: x for x in gapscheck.scan(snapfs(snapd={}), only={"snaps"})["checks"]}["snaps"]
         self.assertEqual(c["state"], "error")
         self.assertIn("snapd", c["error"])
+
+
+RECORDED = ("noble-held", "resolute-stale-lists", "resolute-nodesource")
+UU_LOG = gapscheck.UU_LOG
+
+
+def dpkg_with(scenario, states):
+    """dpkg-query -W of the scenario with the status letters of some packages
+    changed (None: the package is not there)."""
+    lines = []
+    for line in command_text(scenario, "dpkg-query-W").splitlines():
+        f = line.split("\t")
+        if f[0] in states:
+            if states[f[0]] is None:
+                continue
+            f[3] = states[f[0]]
+        lines.append("\t".join(f))
+    return gapsproc.Result(0, "\n".join(lines) + "\n", "")
+
+
+class Dpkg(unittest.TestCase):
+    def test_none_on_the_recorded_hosts(self):
+        for sc in RECORDED:
+            self.assertEqual(scan(sc)[1]["dpkg"]["state"], "none", sc)
+
+    def test_half_done_and_interrupted(self):
+        _, c = scan("noble-held", results={"dpkg-query-W": dpkg_with("noble-held", {"openssl": "iU ", "sudo": "iF ",
+                                                                                     "systemd": "iiR"})},
+                    meta={"dirs": {gapscheck.DPKG_UPDATES: ["0001", "tmp.i"]}})
+        d = c["dpkg"]
+        self.assertEqual(d["state"], "found")
+        self.assertEqual([(f["kind"], f.get("package"), f.get("state")) for f in d["findings"]],
+                         [("interrupted", None, None), ("package", "openssl", "unpacked"),
+                          ("package", "sudo", "half-configured"), ("package", "systemd", "reinst-required")])
+
+    def test_a_journal_of_dpkg_without_entries(self):
+        _, c = scan("noble-held", meta={"dirs": {gapscheck.DPKG_UPDATES: ["tmp.i"]}})
+        self.assertEqual(c["dpkg"]["state"], "none", "tmp.i is dpkg's scratch file, no unfinished run")
+
+
+class Boot(unittest.TestCase):
+    def test_recorded_hosts(self):
+        c = {sc: scan(sc)[1]["boot"] for sc in RECORDED}
+        for sc, b in c.items():
+            self.assertEqual((b["state"], len(b["kernels"])), ("none", 2), sc)
+        # build-host keeps /boot on a RAID partition of 1 GB; its initramfs is 121 MB (a physical server).
+        b = c["resolute-stale-lists"]
+        self.assertEqual((b["free"], b["size"], b["need"]), (670838784, 1036726272, int((17320328 + 121217463) * 1.5)))
+
+    def test_full_with_old_kernels(self):
+        b = scan("noble-held", **upkeep())[1]["boot"]
+        self.assertEqual(b["state"], "found")
+        self.assertEqual(b["findings"][0]["kind"], "space")
+        # The newest kernel has no initramfs (its update ran out of room): the largest pair counts.
+        self.assertEqual(b["findings"][0]["need"], int((15067528 + 76568571) * 1.5))
+        self.assertEqual(bare(b["findings"][1]), {"kind": "old-kernels", "kernels": ["6.8.0-136-generic", "6.8.0-142-generic"]})
+
+    def test_the_running_kernel_is_never_old(self):
+        names = [f"vmlinuz-6.8.0-{n}-generic" for n in (136, 142, 146, 147)]
+        _, c = scan("noble-held", meta={"dirs": {"/boot": names}})
+        fs = FakeSystem("noble-held")
+        fs.meta["dirs"]["/boot"] = names
+        fs.meta["kernel"] = "6.8.0-136-generic"
+        b = {x["check"]: x for x in gapscheck.scan(fs, only={"boot"})["checks"]}["boot"]
+        self.assertEqual(bare(b["findings"]), [{"kind": "old-kernels", "kernels": ["6.8.0-142-generic"]}])
+        self.assertEqual(c["boot"]["findings"][0]["kernels"], ["6.8.0-136-generic", "6.8.0-142-generic"])
+
+    def test_room_not_measured_or_no_kernel(self):
+        b = scan("noble-held", meta={"statvfs": {"/boot": None}})[1]["boot"]
+        self.assertEqual((b["state"], b["missing"], b["free"]), ("partial", ["boot-room"], None))
+        b = scan("noble-held", meta={"dirs": {"/boot": []}})[1]["boot"]
+        self.assertEqual((b["state"], b["reason"]), ("skipped", "not-applicable"))
+
+
+class Unattended(unittest.TestCase):
+    def test_recorded_hosts(self):
+        want = {"noble-held": "2026-10-19T06:20:58Z", "resolute-stale-lists": "2026-10-19T06:08:41Z",
+                "resolute-nodesource": "2026-10-19T06:56:57Z"}
+        for sc, when in want.items():
+            u = scan(sc)[1]["uu"]
+            # Their latest runs are apt-daily's download runs (no end in the log): the run before counts.
+            self.assertEqual((u["state"], u["last_run"], u["outcome"], u["service"]), ("none", when, "nothing", "success"), sc)
+
+    def test_failed(self):
+        u = scan("noble-held", **upkeep())[1]["uu"]
+        self.assertEqual((u["state"], [f["kind"] for f in u["findings"]], u["outcome"]), ("found", ["failed"], "failed"))
+        self.assertEqual(len(u["findings"][0]["lines"]), 3)
+        self.assertIn("linux-image-6.8.0-147-generic", u["upgraded"])
+
+    def test_kept_back_and_conffile(self):
+        log = ("2026-10-19 06:20:58,105 INFO Starting unattended upgrades script\n"
+               "2026-10-19 06:21:02,410 INFO Packages that will be upgraded: nginx-common openssl\n"
+               "2026-10-19 06:21:02,411 INFO Package nginx-common has conffile prompt and needs to be upgraded manually\n"
+               "2026-10-19 06:21:02,412 INFO Packages that are kept back: libfoo1\n"
+               "2026-10-19 06:22:40,118 INFO All upgrades installed\n")
+        u = scan("noble-held", files={UU_LOG: log})[1]["uu"]
+        self.assertEqual([(f["kind"], f["packages"]) for f in u["findings"]],
+                         [("kept-back", ["libfoo1"]), ("conffile", ["nginx-common"])])
+
+    def test_never_old_and_stopped(self):
+        u = scan("noble-held", files={UU_LOG: None})[1]["uu"]
+        self.assertEqual(bare(u["findings"]), [{"kind": "never", "log": False}])
+        u = scan("noble-held", now="2026-10-25T08:00:00Z")[1]["uu"]
+        self.assertEqual([(f["kind"], f.get("hours")) for f in u["findings"]], [("old", 145)])
+        u = scan("noble-held", results={"systemctl-show-apt-daily-upgrade": gapsproc.Result(0, "Result=timeout\n", "")})[1]["uu"]
+        self.assertEqual([(f["kind"], f.get("result")) for f in u["findings"]], [("service", "timeout")])
+
+    def test_switched_off_or_not_installed(self):
+        conf = command_text("noble-held", "apt-config-dump").replace('APT::Periodic::Unattended-Upgrade "1";',
+                                                                     'APT::Periodic::Unattended-Upgrade "0";')
+        _, c = scan("noble-held", files={UU_LOG: None}, now="2026-10-25T08:00:00Z",
+                    results={"apt-config-dump": gapsproc.Result(0, conf, "")})
+        self.assertEqual((c["uu"]["state"], c["uu"]["off"]), ("none", True), "off: the card auto says so")
+        _, c = scan("noble-held", results={"dpkg-query-W": dpkg_with("noble-held", {"unattended-upgrades": None})})
+        self.assertEqual((c["uu"]["state"], c["uu"]["tool"]), ("skipped", "unattended-upgrades"))
+
+
+AZ_KEY = "pub:-:4096:1:607685C42A3FC9E7:1792102664:{}::-:::scSC::::::23::0:\n"
+
+
+class Keys(unittest.TestCase):
+    def test_recorded_hosts(self):
+        for sc in RECORDED:
+            fs = FakeSystem(sc)
+            k = {x["check"]: x for x in gapscheck.scan(fs)["checks"]}["keys"]
+            self.assertEqual(k["state"], "none", sc)
+            self.assertEqual({r["expires"] for r in k["keyrings"]}, {"never"}, sc)
+            self.assertNotIn("unchecked", k, sc)
+            self.assertIn("gpg", fs.unprivileged, "gpg runs without root")
+        k = scan("noble-held")[1]["keys"]
+        self.assertEqual([r["file"] for r in k["keyrings"]],
+                         ["/etc/apt/keyrings/docker.gpg", "/usr/share/keyrings/azentrius.asc",
+                          "/usr/share/keyrings/githubcli-archive-keyring.gpg", "/usr/share/keyrings/ubuntu-archive-keyring.gpg"])
+        self.assertEqual(k["keyrings"][3]["sources"], ["https://mirror.hetzner.com/ubuntu/packages",
+                                                       "https://mirror.hetzner.com/ubuntu/security"])
+
+    def test_expired(self):
+        """GitHub CLI's key expired on 2026-09-06; a keyring without the new one (April 2026) is out."""
+        k = scan("noble-held", **upkeep())[1]["keys"]
+        self.assertEqual(k["state"], "found")
+        self.assertEqual([(f["kind"], f["file"], f["sources"], f["expires"]) for f in k["findings"]],
+                         [("expired", "/usr/share/keyrings/githubcli-archive-keyring.gpg", ["https://cli.github.com/packages"],
+                           "2026-09-05T12:43:48Z")])
+
+    def test_expires_soon(self):
+        ts = int(datetime(2026, 11, 18, tzinfo=timezone.utc).timestamp())
+        k = scan("noble-held", results={"gpg-azentrius.asc": gapsproc.Result(0, AZ_KEY.format(ts), "")})[1]["keys"]
+        self.assertEqual([(f["kind"], f["days"]) for f in k["findings"]], [("expires", 29)])
+        ts = int(datetime(2027, 1, 18, tzinfo=timezone.utc).timestamp())
+        k = scan("noble-held", results={"gpg-azentrius.asc": gapsproc.Result(0, AZ_KEY.format(ts), "")})[1]["keys"]
+        self.assertEqual(k["state"], "none", "more than 60 days")
+
+    def test_missing_and_unreadable(self):
+        k = scan("noble-held", meta={"stat": {"/etc/apt/keyrings/docker.gpg": None}})[1]["keys"]
+        self.assertEqual([(f["kind"], f["file"]) for f in k["findings"]], [("missing", "/etc/apt/keyrings/docker.gpg")])
+        k = scan("resolute-nodesource", results={"gpg-nodesource.gpg": gapsproc.Result(2, "", "gpg: no valid OpenPGP data found.")})[1]["keys"]
+        self.assertEqual((k["state"], k["missing"], k["unchecked"]),
+                         ("partial", ["keyrings"], [{"file": "/usr/share/keyrings/nodesource.gpg", "reason": "unreadable"}]))
+        k = scan("noble-held", files={"/etc/apt/sources.list.d/docker.list": None})[1]["keys"]
+        self.assertEqual(k["unchecked"], [{"file": "/etc/apt/sources.list.d/docker.list", "reason": "unreadable"}])
+
+    def test_sources_without_signed_by_use_the_trusted_keyrings(self):
+        k = scan("noble-held", files={"/etc/apt/sources.list.d/docker.list":
+                                      "deb [arch=amd64] https://download.docker.com/linux/ubuntu noble stable\n"})[1]["keys"]
+        trusted = [r for r in k["keyrings"] if r.get("default")]
+        self.assertEqual([r["file"] for r in trusted], ["/etc/apt/trusted.gpg.d/ubuntu-keyring-2012-cdimage.gpg",
+                                                        "/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg"])
+        self.assertEqual(trusted[0]["sources"], ["https://download.docker.com/linux/ubuntu"])
+
+    def test_inline_key_goes_to_gpg_on_stdin(self):
+        src = ("Types: deb\nURIs: https://packages.azentrius.com/apt\nSuites: stable\nComponents: main\nSigned-By:\n"
+               " -----BEGIN PGP PUBLIC KEY BLOCK-----\n .\n mQINBGZ\n -----END PGP PUBLIC KEY BLOCK-----\n")
+        fs = FakeSystem("noble-held", files={"/etc/apt/sources.list.d/azentrius.sources": src},
+                        results={"gpg-stdin": gapsproc.Result(0, AZ_KEY.format(""), "")})
+        k = {x["check"]: x for x in gapscheck.scan(fs, only={"keys"})["checks"]}["keys"]
+        ring = next(r for r in k["keyrings"] if r.get("inline"))
+        self.assertEqual((ring["file"], ring["expires"]), ("/etc/apt/sources.list.d/azentrius.sources", "never"))
+        self.assertEqual(fs.stdin, [b"-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGZ\n-----END PGP PUBLIC KEY BLOCK-----\n"])
+
+    def test_without_gpg(self):
+        k = scan("noble-held", missing={"gpg"})[1]["keys"]
+        self.assertEqual((k["state"], k["tool"]), ("skipped", "gpg"))
+
+
+class Since(unittest.TestCase):
+    def test_kept_from_scan_to_scan(self):
+        first = gapscheck.scan(FakeSystem("noble-held"))
+        later = gapscheck.scan(FakeSystem("noble-held", now="2026-10-25T08:00:00Z"), previous=first)
+        c = {x["check"]: x for x in later["checks"]}
+        self.assertEqual({f["since"] for f in c["held"]["findings"]}, {"2026-10-19T20:55:00Z"})
+        self.assertEqual({f["since"] for f in c["auto"]["findings"]}, {"2026-10-19T20:55:00Z"})
+        # New since the first scan: the lists and the last run of unattended-upgrades are old now.
+        self.assertEqual([f["since"] for f in c["lists"]["findings"] if f["kind"] == "old"], ["2026-10-25T08:00:00Z"])
+        self.assertEqual([f["since"] for f in c["uu"]["findings"]], ["2026-10-25T08:00:00Z"])
+        self.assertNotIn("since", json.dumps([x for x in later["checks"] if x["check"] in ("cve", "upstream", "newer")]))
+
+    def test_a_finding_that_changed_its_name(self):
+        first = gapscheck.scan(FakeSystem("noble-held"))
+        for f in {x["check"]: x for x in first["checks"]}["held"]["findings"]:
+            if f["package"] == "docker-ce":
+                f["package"] = "docker-ce-old"
+        later = gapscheck.scan(FakeSystem("noble-held", now="2026-10-25T08:00:00Z"), previous=first)
+        held = {f["package"]: f["since"] for f in {x["check"]: x for x in later["checks"]}["held"]["findings"]}
+        self.assertEqual((held["docker-ce"], held["containerd.io"]), ("2026-10-25T08:00:00Z", "2026-10-19T20:55:00Z"))
+
+    def test_odd_previous_documents(self):
+        for prev in (None, {}, {"checks": "x"}, {"checks": [None, {"check": "held", "findings": "x"}]},
+                     {"checks": [{"check": "held", "findings": [{"package": "docker-ce", "since": "yesterday"}]}]},
+                     {"checks": [{"check": "held", "findings": [{"package": "docker-ce", "since": "2099-01-01T00:00:00Z"}]}]}):
+            doc = gapscheck.scan(FakeSystem("noble-held"), only={"held"}, previous=prev)
+            self.assertEqual({f["since"] for f in doc["checks"][0]["findings"]}, {"2026-10-19T20:55:00Z"}, prev)
+
+    def test_scan_reads_its_previous_file(self):
+        spec = importlib.util.spec_from_file_location("gaps_scan", os.path.join(HERE, "..", "lib", "gaps-scan.py"))
+        mod = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(mod)
+        with tempfile.TemporaryDirectory() as d:
+            path = os.path.join(d, "scan.json")
+            self.assertIsNone(mod.previous(path))
+            for text, want in (('{"format": 1}', {"format": 1}), ("[1]", None), ("{", None)):
+                with open(path, "w") as f:
+                    f.write(text)
+                self.assertEqual(mod.previous(path), want, text)
 
 
 class Settings(unittest.TestCase):
@@ -605,6 +840,19 @@ class Proc(unittest.TestCase):
         home, cache = homes.split("|")
         self.assertEqual(home, cache)
         self.assertFalse(os.path.exists(home))
+        r = gapsproc.run_unprivileged(["cat"], 10, b"key")
+        self.assertEqual(r.out, "key")
+
+    @unittest.skipUnless(shutil.which("gpg") and os.path.exists(UBUNTU_KEYRING), "no gpg or no Ubuntu keyring")
+    def test_gpg_shows_a_keyring_without_root(self):
+        """The command check_keys runs, for real: gpg must be able to set up
+        its fresh home (--no-options would keep it from that)."""
+        with open(UBUNTU_KEYRING, "rb") as f:
+            ring = f.read()
+        for argv, stdin in ((gapscheck.GPG_SHOW + [UBUNTU_KEYRING], None), (gapscheck.GPG_SHOW, ring)):
+            r = gapsproc.run_unprivileged(argv, 30, stdin)
+            self.assertEqual(r.rc, 0, r.err)
+            self.assertEqual(L.keyring_expiry(r.out), "never")
 
 
 if __name__ == "__main__":

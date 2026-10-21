@@ -1,0 +1,162 @@
+{
+ "schema": 1,
+ "addon": "update-gaps",
+ "label": "Update Gaps",
+ "version": "0.1.0",
+ "checked_at": "2026-10-19T20:55:00Z",
+ "state": "warning",
+ "summary": "Findings in 8 areas: Packages left half done, Held packages, Restart, Room in /boot, CPU vulnerabilities, Fixes only with Ubuntu Pro, Signing keys of the sources, Runs of the automatic updates.",
+ "items": [
+  {
+   "id": "dpkg",
+   "state": "warning",
+   "title": "Packages left half done",
+   "value": "1",
+   "detail": "1 package left half done: linux-image-6.8.0-147-generic",
+   "link": "#/dpkg",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "held",
+   "state": "warning",
+   "title": "Held packages",
+   "value": "6",
+   "detail": "newer versions for containerd.io, docker-buildx-plugin, docker-ce, docker-ce-cli, docker-ce-rootless-extras, docker-compose-plugin",
+   "link": "#/held",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "restart",
+   "state": "warning",
+   "title": "Restart",
+   "detail": "kernel 6.8.0-147 installed, 6.8.0-146 running; requested by linux-base, linux-image-6.8.0-147-generic; 5 services on old libraries: dbus.service, NetworkManager.service (+3)",
+   "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "boot",
+   "state": "warning",
+   "title": "Room in /boot",
+   "detail": "122 MB free, the next kernel update needs about 137 MB; 2 old kernels",
+   "link": "#/boot",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "cpu",
+   "state": "info",
+   "title": "CPU vulnerabilities",
+   "value": "1",
+   "detail": "tsa; only the provider can fix it (virtual machine)",
+   "link": "#/cpu",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "pro",
+   "state": "info",
+   "title": "Fixes only with Ubuntu Pro",
+   "value": "4",
+   "detail": "python3-pip, python3-wheel, restic, skopeo",
+   "link": "#/pro",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "lists",
+   "state": "ok",
+   "title": "Package lists",
+   "link": "#/lists",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "keys",
+   "state": "warning",
+   "title": "Signing keys of the sources",
+   "value": "1",
+   "detail": "expired: githubcli-archive-keyring.gpg",
+   "link": "#/keys",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "uu",
+   "state": "warning",
+   "title": "Runs of the automatic updates",
+   "detail": "the last run failed",
+   "link": "#/uu",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "eol",
+   "state": "ok",
+   "title": "Support of the release",
+   "detail": "standard support until 2029-05-31",
+   "link": "#/eol",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "updates",
+   "state": "ok",
+   "title": "Regular updates",
+   "value": "0",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  }
+ ],
+ "i18n": {
+  "de": {
+   "summary": "Befunde in 8 Bereichen: Halb fertige Pakete, Gehaltene Pakete, Neustart, Platz in /boot, CPU-Schwachstellen, Fixes nur mit Ubuntu Pro, Signaturschlüssel der Quellen, Läufe der automatischen Updates.",
+   "items": {
+    "dpkg": {
+     "title": "Halb fertige Pakete",
+     "detail": "1 Paket halb fertig: linux-image-6.8.0-147-generic"
+    },
+    "held": {
+     "title": "Gehaltene Pakete",
+     "detail": "neuere Versionen für containerd.io, docker-buildx-plugin, docker-ce, docker-ce-cli, docker-ce-rootless-extras, docker-compose-plugin"
+    },
+    "restart": {
+     "title": "Neustart",
+     "detail": "Kernel 6.8.0-147 installiert, 6.8.0-146 läuft; angefordert von linux-base, linux-image-6.8.0-147-generic; 5 Dienste mit alten Bibliotheken: dbus.service, NetworkManager.service (+3)"
+    },
+    "boot": {
+     "title": "Platz in /boot",
+     "detail": "122 MB frei, das nächste Kernel-Update braucht etwa 137 MB; 2 alte Kernel"
+    },
+    "cpu": {
+     "title": "CPU-Schwachstellen",
+     "detail": "tsa; beheben kann es nur der Anbieter (virtuelle Maschine)"
+    },
+    "pro": {
+     "title": "Fixes nur mit Ubuntu Pro",
+     "detail": "python3-pip, python3-wheel, restic, skopeo"
+    },
+    "lists": {
+     "title": "Paketlisten"
+    },
+    "keys": {
+     "title": "Signaturschlüssel der Quellen",
+     "detail": "abgelaufen: githubcli-archive-keyring.gpg"
+    },
+    "uu": {
+     "title": "Läufe der automatischen Updates",
+     "detail": "der letzte Lauf schlug fehl"
+    },
+    "eol": {
+     "title": "Unterstützung der Version",
+     "detail": "Standard-Unterstützung bis 2029-05-31"
+    },
+    "updates": {
+     "title": "Reguläre Updates"
+    }
+   }
+  }
+ }
+}

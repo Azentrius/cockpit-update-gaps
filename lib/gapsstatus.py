@@ -9,8 +9,8 @@ no side effects on import, nothing here runs a command.
 The scan writes status.json next to scan.json: the English document plus the
 German texts under "i18n" (a field readers of schema 1 ignore), so one file
 serves both languages and the status verb needs neither root nor the scan.
-Only numbers, states, package, service and kernel names: no addresses, no
-user names, no paths.
+Only numbers, states, package, service, kernel and keyring file names: no
+addresses, no user names, no paths.
 
 States follow the status language of the design system: none, ok, info,
 warning, danger. The add-on's state is the worst of danger, warning and info;
@@ -26,6 +26,9 @@ ADDON = "update-gaps"
 LABEL = "Update Gaps"
 STALE_AFTER = 86400     # seconds; the page, too, calls a state older than 24 hours old
 RADAR_STALE_AFTER = 72 * 3600   # the network data (daily): old after 72 hours, as gapscheck.RADAR_STALE_H
+KEYS_WARN_DAYS = 14     # a key that expires sooner is a warning, later (up to gapscheck.KEYS_SOON_DAYS) info
+# Checks that have an item only with a finding: nothing to say when all is well.
+QUIET = ("firmware", "snaps", "dpkg", "boot", "keys", "uu")
 ORDER = {"none": 0, "ok": 1, "info": 2, "warning": 3, "danger": 4}
 ID_RE = re.compile(r"^[a-z0-9-]{1,40}$")
 LINK_RE = re.compile(r"^#/[A-Za-z0-9/_-]{0,80}$")
@@ -95,6 +98,23 @@ T = {
         "snaps.inhibited": "refresh put off: {names}",
         "snaps.failed": {"one": "{n} failed refresh", "other": "{n} failed refreshes"},
         "snaps.base": "base out of support: {names}",
+        "dpkg.title": "Packages left half done",
+        "dpkg.interrupted": "a run of dpkg was interrupted",
+        "dpkg.packages": {"one": "{n} package left half done: {names}", "other": "{n} packages left half done: {names}"},
+        "boot.title": "Room in /boot",
+        "boot.space": "{free} free, the next kernel update needs about {need}",
+        "boot.old": {"one": "{n} old kernel", "other": "{n} old kernels"},
+        "keys.title": "Signing keys of the sources",
+        "keys.expired": "expired: {names}",
+        "keys.expires": "expires on {date}: {names}",
+        "keys.missing": "keyring missing: {names}",
+        "uu.title": "Runs of the automatic updates",
+        "uu.never": "no finished run in its log",
+        "uu.old": "last finished run {days} days ago",
+        "uu.failed": "the last run failed",
+        "uu.service": "apt-daily-upgrade.service ended with {result}",
+        "uu.kept": "kept back: {names}",
+        "uu.conffile": "left for an upgrade by hand: {names}",
         "partly": "partly checked",
         "failed": "check failed",
         "skipped": "not checked",
@@ -158,6 +178,23 @@ T = {
         "snaps.inhibited": "Aktualisierung aufgeschoben: {names}",
         "snaps.failed": {"one": "{n} fehlgeschlagene Aktualisierung", "other": "{n} fehlgeschlagene Aktualisierungen"},
         "snaps.base": "Basis ohne Unterstützung: {names}",
+        "dpkg.title": "Halb fertige Pakete",
+        "dpkg.interrupted": "ein Lauf von dpkg wurde unterbrochen",
+        "dpkg.packages": {"one": "{n} Paket halb fertig: {names}", "other": "{n} Pakete halb fertig: {names}"},
+        "boot.title": "Platz in /boot",
+        "boot.space": "{free} frei, das nächste Kernel-Update braucht etwa {need}",
+        "boot.old": {"one": "{n} alter Kernel", "other": "{n} alte Kernel"},
+        "keys.title": "Signaturschlüssel der Quellen",
+        "keys.expired": "abgelaufen: {names}",
+        "keys.expires": "läuft am {date} ab: {names}",
+        "keys.missing": "Schlüsselbund fehlt: {names}",
+        "uu.title": "Läufe der automatischen Updates",
+        "uu.never": "kein abgeschlossener Lauf in seinem Log",
+        "uu.old": "letzter abgeschlossener Lauf vor {days} Tagen",
+        "uu.failed": "der letzte Lauf schlug fehl",
+        "uu.service": "apt-daily-upgrade.service endete mit {result}",
+        "uu.kept": "zurückgehalten: {names}",
+        "uu.conffile": "für ein Update von Hand liegen gelassen: {names}",
         "partly": "teilweise geprüft",
         "failed": "Prüfung fehlgeschlagen",
         "skipped": "nicht geprüft",
@@ -223,13 +260,24 @@ def _kernel(k):
     return re.sub(r"-generic$", "", str(k or "?"))
 
 
+def _size(n, lang):
+    """Bytes as MB or GB, with the decimal comma in German."""
+    if not isinstance(n, int):
+        return "?"
+    text = f"{n / 1e9:.1f} GB" if n >= 1e9 else f"{round(n / 1e6)} MB"
+    return text.replace(".", ",") if lang == "de" else text
+
+
+
 def items_of(doc, lang):
     """The items of a scan, most important first: unfixed security issues,
-    held packages, restart, CPU vulnerabilities, Pro, package lists, support
-    of the release, firmware, snaps, regular updates. A check that does not
-    apply here (not Ubuntu, no apt, a container) has no item, nor do firmware
-    and snaps without a finding; one that did not run is `none`. A CPU
-    vulnerability only the provider of a VM can fix is info, not a warning."""
+    packages dpkg left half done, held packages, restart, room in /boot, CPU
+    vulnerabilities, Pro, package lists, signing keys, runs of the automatic
+    updates, support of the release, firmware, snaps, regular updates. A
+    check that does not apply here (not Ubuntu, no apt, a container) has no
+    item, nor do the QUIET ones without a finding; one that did not run is
+    `none`. A CPU vulnerability only the provider of a VM can fix is info,
+    not a warning."""
     checks = {c.get("check"): c for c in doc.get("checks") or [] if isinstance(c, dict)}
     at = doc.get("generated")
     out = []
@@ -381,15 +429,73 @@ def items_of(doc, lang):
             parts.append(t(lang, "snaps.base", names=_names([f"{x.get('snap')} ({x.get('base')})" for x in by["old-base"]])))
         return item("snaps", "warning" if by.get("refresh-failed") else "info", len(f), "; ".join(parts))
 
-    for cid, fn in (("cve", cve), ("held", held), ("restart", restart), ("cpu", cpu), ("pro", pro), ("lists", lists),
-                    ("eol", eol), ("firmware", firmware), ("snaps", snaps), ("updates", updates)):
+    def dpkg(c):
+        f = c.get("findings") or []
+        pk = [x.get("package") for x in f if x.get("kind") == "package"]
+        n = len(pk) + int(c.get("more") or 0)
+        parts = [t(lang, "dpkg.interrupted")] if any(x.get("kind") == "interrupted" for x in f) else []
+        if pk:
+            parts.append(t(lang, "dpkg.packages", n=n, names=_names(pk)))
+        return item("dpkg", "warning", n, "; ".join(parts))
+
+    def boot(c):
+        f = {x.get("kind"): x for x in c.get("findings") or []}
+        parts = []
+        if "space" in f:
+            parts.append(t(lang, "boot.space", free=_size(f["space"].get("free"), lang),
+                           need=_size(f["space"].get("need"), lang)))
+        old = (f.get("old-kernels") or {}).get("kernels") or []
+        if old:
+            parts.append(t(lang, "boot.old", n=len(old)))
+        return item("boot", "warning" if "space" in f else "info", detail="; ".join(parts))
+
+    def keys(c):
+        by = {}
+        for x in c.get("findings") or []:
+            by.setdefault(x.get("kind"), []).append(x)
+
+        def rings(xs):          # the keyrings' file names (no paths)
+            return _names(sorted({os.path.basename(str(x.get("file") or "?")) for x in xs}))
+        parts = []
+        if by.get("missing"):
+            parts.append(t(lang, "keys.missing", names=rings(by["missing"])))
+        if by.get("expired"):
+            parts.append(t(lang, "keys.expired", names=rings(by["expired"])))
+        for x in sorted(by.get("expires") or [], key=lambda x: str(x.get("expires"))):
+            parts.append(t(lang, "keys.expires", date=str(x.get("expires") or "?")[:10], names=rings([x])))
+        soon = any(int(x.get("days") or 0) < KEYS_WARN_DAYS for x in by.get("expires") or [])
+        severe = by.get("missing") or by.get("expired") or soon
+        return item("keys", "warning" if severe else "info", sum(len(v) for v in by.values()), "; ".join(parts))
+
+    def uu(c):
+        f = {x.get("kind"): x for x in c.get("findings") or []}
+        parts = []
+        if "never" in f:
+            parts.append(t(lang, "uu.never"))
+        if "old" in f:
+            parts.append(t(lang, "uu.old", days=int(f["old"].get("hours") or 0) // 24))
+        if "failed" in f:
+            parts.append(t(lang, "uu.failed"))
+        if "service" in f:
+            parts.append(t(lang, "uu.service", result=f["service"].get("result")))
+        if "kept-back" in f:
+            parts.append(t(lang, "uu.kept", names=_names(f["kept-back"].get("packages") or [])))
+        if "conffile" in f:
+            parts.append(t(lang, "uu.conffile", names=_names(f["conffile"].get("packages") or [])))
+        severe = any(k in f for k in ("never", "old", "failed", "service"))
+        return item("uu", "warning" if severe else "info", detail="; ".join(parts))
+
+    for cid, fn in (("cve", cve), ("dpkg", dpkg), ("held", held), ("restart", restart), ("boot", boot), ("cpu", cpu),
+                    ("pro", pro), ("lists", lists), ("keys", keys), ("uu", uu), ("eol", eol), ("firmware", firmware),
+                    ("snaps", snaps), ("updates", updates)):
         c = checks.get(cid)
         if not c:
             continue
         st = c.get("state")
         if st == "skipped" and c.get("reason") in ("not-applicable", "unsupported-os", "radar-off", "container"):
             continue
-        if cid in ("firmware", "snaps") and st in ("none", "skipped"):
+        if cid in QUIET and (st in ("none", "skipped") or (st == "partial" and not c.get("findings")
+                                                              and cid not in ("firmware", "snaps"))):
             continue          # an item only when there is something to see
         if st in ("error", "timeout", "skipped"):
             if cid == "cve" and c.get("reason") == "radar-fetch":

@@ -74,8 +74,8 @@ class System:
     def run(self, argv, limit=LIMIT):
         return gapsproc.run(argv, limit)
 
-    def run_unprivileged(self, argv, limit=LIMIT):
-        return gapsproc.run_unprivileged(argv, limit)
+    def run_unprivileged(self, argv, limit=LIMIT, stdin=None):
+        return gapsproc.run_unprivileged(argv, limit, stdin)
 
     def read_bytes(self, path, limit=4 << 20):
         try:
@@ -130,6 +130,14 @@ class System:
 
     def kernel(self):
         return os.uname().release
+
+    def statvfs(self, path):
+        """(free bytes for users, size in bytes) of the file system of path, or None."""
+        try:
+            s = os.statvfs(path)
+        except OSError:
+            return None
+        return s.f_bavail * s.f_frsize, s.f_blocks * s.f_frsize
 
     def snapd(self, path, limit=20):
         """GET of snapd's REST API over its socket -> the "result" of the
@@ -322,6 +330,108 @@ def _phased_version(pkg):
     phased = [v for v in pkg["versions"] if "phased" in v and (not inst or L.vercmp(v["version"], inst) > 0)]
     cand = next((v for v in phased if v["version"] == pkg.get("candidate")), None)
     return cand or (max(phased, key=lambda v: L.Version(v["version"])) if phased else None)
+
+
+UU_LOG = "/var/log/unattended-upgrades/unattended-upgrades.log"
+UU_OLD_H = 72           # the last run of unattended-upgrades older than this is a finding
+
+
+def check_uu(ctx):
+    """Whether the automatic updates really run: the last finished run in
+    unattended-upgrades' log (and the one rotated before it), how it ended,
+    what it kept back or left for a manual upgrade (a conffile prompt), and
+    how apt-daily-upgrade.service last ended (a run that was killed writes
+    no end). The configuration is `auto`'s; this is what came of it. The
+    log has the host's local time, read as UTC (the servers run in UTC)."""
+    p = ctx.installed().get("unattended-upgrades")
+    if not (p and p["installed"]):
+        return {"state": "skipped", "reason": "tool-missing", "tool": "unattended-upgrades"}
+    texts = [ctx.sys.read(UU_LOG + ".1"), ctx.sys.read(UU_LOG)]
+    run = L.parse_uu_log("\n".join(t for t in texts if t))
+    off = any(f.get("kind") == "disabled" for f in (ctx.results.get("auto") or {}).get("findings") or [])
+    findings = []
+    if run is None:
+        if not off:
+            findings.append({"kind": "never", "log": any(t is not None for t in texts)})
+    else:
+        age_h = round((ctx.now.replace(tzinfo=None) - run["started"]).total_seconds() / 3600, 1)
+        if age_h > UU_OLD_H and not off:
+            findings.append({"kind": "old", "hours": int(age_h)})
+        if run["outcome"] == "failed":
+            findings.append({"kind": "failed", "lines": run["errors"]})
+        if run["kept_back"]:
+            findings.append({"kind": "kept-back", "packages": run["kept_back"]})
+        if run["conffile"]:
+            findings.append({"kind": "conffile", "packages": run["conffile"]})
+    r = ctx.sys.run(["systemctl", "show", "apt-daily-upgrade.service", "-p", "Result"], 30)
+    result = (r.out.strip().partition("=")[2] or None) if r.ok else None
+    if result not in (None, "success"):
+        findings.append({"kind": "service", "result": result[:40]})
+    return {"state": "found" if findings else "none", "findings": findings, "off": off,
+            "last_run": run["started"].strftime("%Y-%m-%dT%H:%M:%SZ") if run else None,
+            "outcome": run["outcome"] if run else None, "upgraded": (run["packages"] if run else [])[:MAX_ITEMS],
+            "service": result, "source": [UU_LOG, "systemctl show apt-daily-upgrade.service"]}
+
+
+BOOT = "/boot"
+BOOT_ROOM = 1.5         # free space /boot needs: this many times the largest kernel with its initrd
+BOOT_KEEP = 2           # apt autoremove keeps the running kernel and the two newest
+
+
+def check_boot(ctx):
+    """Room in /boot for the next kernel, and old kernels there. When /boot
+    is full, a kernel update stops halfway (its initrd cannot be written) and
+    leaves dpkg with half-configured packages; Software Updates only reports
+    that it failed."""
+    kernels = sorted((n[len("vmlinuz-"):] for n in ctx.sys.listdir(BOOT) or [] if n.startswith("vmlinuz-")),
+                     key=L.Version)
+    if not kernels:
+        return {"state": "skipped", "reason": "not-applicable"}     # no kernel of its own (a container)
+    # The largest kernel with its initramfs, not the newest: when an update ran out of room, the
+    # newest has none.
+    size = 0
+    for k in kernels:
+        sts = [ctx.sys.lstat(f"{BOOT}/{f}") for f in (f"vmlinuz-{k}", f"initrd.img-{k}")]
+        size = max(size, sum(st.st_size for st in sts if st is not None and stat.S_ISREG(st.st_mode)))
+    need = int(size * BOOT_ROOM) or None
+    fs = ctx.sys.statvfs(BOOT)
+    findings = []
+    if fs and need and fs[0] < need:
+        findings.append({"kind": "space", "free": fs[0], "need": need})
+    running = ctx.sys.kernel()
+    old = [k for k in kernels[:-BOOT_KEEP] if k != running] if len(kernels) > BOOT_KEEP else []
+    if old:
+        findings.append({"kind": "old-kernels", "kernels": old})
+    out = {"state": "found" if findings else "none", "findings": findings, "kernels": kernels, "running": running,
+           "free": fs[0] if fs else None, "size": fs[1] if fs else None, "need": need,
+           "source": [BOOT, "statvfs " + BOOT]}
+    if not fs or not need:
+        out["missing"] = ["boot-room"]          # the room could not be measured (no statvfs, no kernel there)
+        if out["state"] == "none":
+            out["state"] = "partial"
+    return out
+
+
+DPKG_UPDATES = "/var/lib/dpkg/updates"
+
+
+def check_dpkg(ctx):
+    """Packages dpkg left half done (unpacked, half-configured, triggers
+    pending, reinstall required), and a dpkg run that was interrupted (its
+    journal in /var/lib/dpkg/updates). Every later update fails on them,
+    Software Updates included, with a message that does not say why."""
+    findings = []
+    if any(n.isdigit() for n in ctx.sys.listdir(DPKG_UPDATES) or []):
+        findings.append({"kind": "interrupted"})
+    for name, p in sorted(ctx.installed().items()):
+        state = L.dpkg_problem(p["status"])
+        if state:
+            findings.append({"kind": "package", "package": ctx.display(name), "version": p["version"], "state": state})
+    items, more = _cap(findings)
+    out = {"state": "found" if findings else "none", "findings": items, "source": ["dpkg-query -W", DPKG_UPDATES]}
+    if more:
+        out["more"] = more
+    return out
 
 
 def check_phased(ctx):
@@ -555,6 +665,74 @@ def check_lists(ctx):
            "source": ["apt-get indextargets", "/var/lib/apt/lists", "/var/lib/apt/periodic"]}
     if not ctx.root:
         out["missing"] = ["journal"]
+        if out["state"] == "none":
+            out["state"] = "partial"
+    return out
+
+
+KEYS_SOON_DAYS = 60     # a keyring whose last signing key expires within this many days is a finding
+TRUSTED = "/etc/apt/trusted.gpg"
+TRUSTED_D = "/etc/apt/trusted.gpg.d"
+# Without --no-options: it would keep gpg from creating its home (a fresh one, see gapsproc.run_unprivileged).
+GPG_SHOW = ["gpg", "--batch", "--no-autostart", "--with-colons", "--show-keys"]
+
+
+def check_keys(ctx):
+    """The keys apt checks the signatures of the enabled sources with, and
+    when they expire. Once the last signing key of a source's keyring has
+    expired, apt stops reading that source: its updates drop out of every
+    list, Software Updates included, and only `apt update` warns. The
+    keyrings are those of Signed-By, else apt's trusted ones; gpg reads them
+    without root and imports nothing."""
+    files = sorted({r.get("Sourcesentry", "").rpartition(":")[0] for r in ctx.indextargets(True)} - {""})
+    rings, default_sites, todo, unchecked, findings = {}, [], [], [], []
+    for path in files:
+        text = ctx.sys.read(path)
+        if text is None:
+            unchecked.append({"file": path, "reason": "unreadable"})
+            continue
+        for e in L.sources_keyrings(text, path.endswith(".sources")):
+            sites = [L.strip_credentials(u) for u in e["uris"]]
+            for k in e["keyrings"]:
+                rings.setdefault(k, []).extend(sites)
+            if e["inline"]:
+                todo.append(({"file": path, "inline": True, "sources": sites}, e["inline"]))
+            elif not e["keyrings"]:
+                default_sites.extend(sites)
+    todo[:0] = [({"file": k, "sources": sorted(set(s))}, None) for k, s in sorted(rings.items())]
+    if default_sites:           # entries without Signed-By: apt trusts every key of these
+        trusted = [TRUSTED] if ctx.sys.lstat(TRUSTED) is not None else []
+        trusted += [f"{TRUSTED_D}/{n}" for n in ctx.sys.listdir(TRUSTED_D) or [] if n.endswith((".gpg", ".asc"))]
+        todo += [({"file": k, "default": True, "sources": sorted(set(default_sites))}, None)
+                 for k in trusted if k not in rings]
+    keyrings = []
+    for ring, key in todo:
+        ring["sources"] = ring["sources"][:20]
+        if key is None and ctx.sys.lstat(ring["file"]) is None:
+            findings.append(dict(ring, kind="missing"))     # apt cannot check the source and leaves it out
+            continue
+        r = ctx.sys.run_unprivileged(GPG_SHOW + ([] if key else [ring["file"]]), 30,
+                                     key.encode("utf-8") if key else None)
+        if r.missing:
+            return {"state": "skipped", "reason": "tool-missing", "tool": "gpg"}
+        until = None if r.timeout else L.keyring_expiry(r.out)
+        if until is None:
+            unchecked.append({"file": ring["file"], "reason": "no-key" if r.out.strip() else "unreadable"})
+            continue
+        ring["expires"] = "never" if until == "never" else L.iso(until)
+        keyrings.append(ring)
+        if until == "never":
+            continue
+        days = (until - ctx.now).total_seconds() / 86400
+        if days < 0:
+            findings.append(dict(ring, kind="expired"))
+        elif days <= KEYS_SOON_DAYS:
+            findings.append(dict(ring, kind="expires", days=int(days)))
+    out = {"state": "found" if findings else "none", "findings": findings, "keyrings": keyrings,
+           "soon_days": KEYS_SOON_DAYS, "source": ["apt-get indextargets", "Signed-By", "gpg --show-keys"]}
+    if unchecked:
+        out["unchecked"] = unchecked
+        out["missing"] = ["keyrings"]
         if out["state"] == "none":
             out["state"] = "partial"
     return out
@@ -1292,6 +1470,8 @@ def check_upstream(ctx):
 CHECKS = (
     ("updates", check_updates),
     ("phased", check_phased),
+    ("dpkg", check_dpkg),
+    ("boot", check_boot),
     ("held", check_held),
     ("pro", check_pro),
     ("restart", check_restart),
@@ -1299,8 +1479,10 @@ CHECKS = (
     ("firmware", check_firmware),
     ("snaps", check_snaps),
     ("lists", check_lists),
+    ("keys", check_keys),
     ("local", check_local),
     ("auto", check_auto),
+    ("uu", check_uu),
     ("backports", check_backports),
     ("outside", check_outside),
     ("eol", check_eol),
@@ -1334,8 +1516,41 @@ def run_check(ctx, name, fn):
     return res
 
 
-def scan(system=None, only=None):
-    """Every check (or those named in `only`) -> the document of scan.json."""
+# Checks whose findings stay the same from one scan to the next: the list they are in and the fields that
+# name a finding (the others may change: versions, counts, ages). Findings from the network data change
+# with every download and are left out.
+SINCE = {"phased": ("packages", ("package",)), "dpkg": ("findings", ("kind", "package")),
+         "boot": ("findings", ("kind",)), "held": ("findings", ("package",)), "pro": ("findings", ("package",)),
+         "cpu": ("findings", ("name",)), "firmware": ("findings", ("kind", "remote")),
+         "snaps": ("findings", ("kind", "snap")), "lists": ("findings", ("kind", "site", "release", "file")),
+         "keys": ("findings", ("kind", "file", "inline")), "local": ("findings", ("package",)),
+         "auto": ("findings", ("kind", "what", "site", "o", "a", "pattern")), "uu": ("findings", ("kind",)),
+         "backports": ("findings", ("source",))}
+SINCE_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
+
+
+def _since_entries(doc):
+    for c in (doc or {}).get("checks") or []:
+        if isinstance(c, dict) and c.get("check") in SINCE:
+            field, keys = SINCE[c["check"]]
+            for f in c.get(field) or []:
+                if isinstance(f, dict):
+                    yield f, (c["check"], json.dumps([f.get(k) for k in keys]))
+
+
+def mark_since(doc, previous):
+    """Every finding of the checks in SINCE gets `since`, when a scan saw it
+    first: carried over from `previous` (the last scan.json, read as data),
+    else the time of this scan."""
+    before = {key: f["since"] for f, key in _since_entries(previous)
+              if isinstance(f.get("since"), str) and SINCE_RE.match(f["since"])}
+    for f, key in _since_entries(doc):
+        f["since"] = min(before.get(key, doc["generated"]), doc["generated"])
+
+
+def scan(system=None, only=None, previous=None):
+    """Every check (or those named in `only`) -> the document of scan.json.
+    `previous` is the last one, for the time each finding was first seen."""
     system = system or System()
     t = time.monotonic()
     ctx = Context(system)
@@ -1354,5 +1569,6 @@ def scan(system=None, only=None):
             continue
         doc["checks"].append(run_check(ctx, name, fn))
     doc["generated"] = L.iso(system.now())
+    mark_since(doc, previous)
     doc["took_ms"] = int((time.monotonic() - t) * 1000)
     return doc

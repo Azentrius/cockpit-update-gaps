@@ -11,7 +11,8 @@
 Only reads: no `apt update`, no install, no restart, no network. The checks
 are in gapscheck.py, the format in docs/INTERNALS.md. As root a lock in /run
 keeps two scans apart (exit 75 while one runs). A scan that fails as a whole
-leaves the previous file as it was (exit 1).
+leaves the previous file as it was (exit 1). With --output the previous file
+gives every finding the time it was first seen.
 """
 
 import argparse
@@ -30,6 +31,20 @@ import gapscheck  # noqa: E402
 import gapsstatus  # noqa: E402
 
 LOCK = "/run/update-gaps-scan.lock"
+PREVIOUS_MAX = 64 << 20
+
+
+def previous(path):
+    """The last document at path (this script wrote it), or None: missing,
+    too large or not JSON. Only the times findings were first seen are taken
+    from it."""
+    try:
+        with open(path, "rb") as f:
+            data = f.read(PREVIOUS_MAX + 1)
+        doc = json.loads(data.decode("utf-8")) if len(data) <= PREVIOUS_MAX else None
+    except (OSError, ValueError):
+        return None
+    return doc if isinstance(doc, dict) else None
 
 
 def write_atomic(path, doc):
@@ -74,7 +89,7 @@ def main(argv):
         ap.error("--status needs --output")
     held = lock()
     try:
-        doc = gapscheck.scan()
+        doc = gapscheck.scan(previous=previous(args.output) if args.output else None)
     except Exception as e:  # noqa: BLE001 - the previous state file stays as it is
         print(f"scan failed: {type(e).__name__}: {e}", file=sys.stderr)
         return 1

@@ -21,7 +21,8 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(os.path.dirname(HERE))
 PAGE = os.path.join(HERE, "out", "update-gaps", "index.html")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, "docs", "img")
-SCENARIOS = ("noble-held", "resolute-stale-lists", "resolute-nodesource", "resolute-nodesource-user", "none")
+SCENARIOS = ("noble-held", "resolute-stale-lists", "resolute-nodesource", "resolute-nodesource-user",
+             "resolute-nodesource-phased", "noble-held-upkeep", "none")
 
 
 def main():
@@ -49,6 +50,11 @@ def main():
         pg.screenshot(path=os.path.join(OUT, "overview-dark.png"))
         pg = page(1440, 1000, "scenario=resolute-stale-lists&lang=en")
         pg.locator("#ug-card-lists").screenshot(path=os.path.join(OUT, "lists.png"))
+        # Upkeep gone wrong: the first two cards (dpkg left a kernel half configured, /boot is full).
+        pg = page(1440, 1000, "scenario=noble-held-upkeep&lang=en")
+        a, b = (pg.locator(f"#ug-card-{k}").bounding_box() for k in ("dpkg", "boot"))
+        pg.screenshot(path=os.path.join(OUT, "upkeep.png"), full_page=True,
+                      clip={"x": a["x"], "y": a["y"], "width": a["width"], "height": b["y"] + b["height"] - a["y"]})
         pg = page(1440, 900, "scenario=noble-held&lang=en")
         pg.click("#ug-timer-setup")
         pg.wait_for_timeout(300)

@@ -298,6 +298,10 @@ window.UpdateGapsI18n = {
         "missing.radar-origin": "Some packages were not checked: their installed version is in no package list any more, and nothing shows it is the distribution's.",
         "reason.radar-fetch": "Canonical's list of security issues could not be fetched, and there is no earlier copy: {msg}",
         "radar.lastFailed": "The last fetch failed ({msg}); these are the data of {when}.",
+        "radar.lastFailedUnknown": "The last fetch failed ({msg}); the copy in use has no known time.",
+        "radar.ageUnknown": "The age of these network data is unknown: the copy in use has no time of its last good fetch. They count as out of date.",
+        "status.radarUnknownTitle": "The age of the network data is unknown",
+        "missing.radar-unknown": "The age of the network data is unknown: what came since may be missing. Fetch them again.",
         "radar.unverified": "Not checked, because the installed version is in no package list any more and its origin is unclear: {list}. Update these packages, or check them by hand.",
         "unchecked.networkOn": "Unfixed security issues and upstream versions: only for the selected packages, not for every installed one. The others: Software Updates and Ubuntu's security notices.",
 
@@ -671,6 +675,10 @@ window.UpdateGapsI18n = {
         "missing.radar-origin": "Einige Pakete wurden nicht geprüft: Ihre installierte Version steht in keiner Paketliste mehr, und nichts zeigt, dass sie von der Distribution stammt.",
         "reason.radar-fetch": "Canonicals Liste der Sicherheitslücken ließ sich nicht holen, und eine frühere Kopie gibt es nicht: {msg}",
         "radar.lastFailed": "Der letzte Abruf ist fehlgeschlagen ({msg}); das sind die Daten vom {when}.",
+        "radar.lastFailedUnknown": "Der letzte Abruf ist fehlgeschlagen ({msg}); die verwendete Kopie hat keine bekannte Zeit.",
+        "radar.ageUnknown": "Das Alter dieser Netzdaten ist unbekannt: Die verwendete Kopie hat keine Zeit ihres letzten erfolgreichen Abrufs. Sie gelten als veraltet.",
+        "status.radarUnknownTitle": "Das Alter der Netzdaten ist unbekannt",
+        "missing.radar-unknown": "Das Alter der Netzdaten ist unbekannt: Was seither dazukam, fehlt vielleicht. Holen Sie sie neu.",
         "radar.unverified": "Nicht geprüft, weil die installierte Version in keiner Paketliste mehr steht und ihre Herkunft unklar ist: {list}. Aktualisieren Sie diese Pakete, oder prüfen Sie sie von Hand.",
         "unchecked.networkOn": "Offene Sicherheitslücken und Upstream-Versionen: nur für die ausgewählten Pakete, nicht für jedes installierte. Für die übrigen: Software-Updates und Ubuntus Sicherheitsmeldungen.",
 

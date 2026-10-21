@@ -55,6 +55,8 @@ T = {
         "cve.open": {"one": "{n} open: {names}", "other": "{n} open: {names}"},
         "cve.missing": {"one": "{n} fix not offered here", "other": "{n} fixes not offered here"},
         "cve.fetch": "Canonical's list of security issues could not be fetched",
+        "cve.unknown": "the age of the network data is unknown",
+        "summary.radarUnknown": "The age of the network data is unknown.",
         "updates.sec": {"one": "{n} from a security source", "other": "{n} from a security source"},
         "held.title": "Held packages",
         "held.newer": "newer versions for {names}",
@@ -116,6 +118,8 @@ T = {
         "cve.open": {"one": "{n} offen: {names}", "other": "{n} offen: {names}"},
         "cve.missing": {"one": "{n} Fix hier nicht angeboten", "other": "{n} Fixes hier nicht angeboten"},
         "cve.fetch": "Canonicals Liste der Sicherheitslücken ließ sich nicht holen",
+        "cve.unknown": "das Alter der Netzdaten ist unbekannt",
+        "summary.radarUnknown": "Das Alter der Netzdaten ist unbekannt.",
         "updates.sec": {"one": "{n} aus einer Sicherheitsquelle", "other": "{n} aus einer Sicherheitsquelle"},
         "held.title": "Gehaltene Pakete",
         "held.newer": "neuere Versionen für {names}",
@@ -181,6 +185,18 @@ def version():
     return "unknown"
 
 
+def radar_age_unknown(check):
+    """Whether the network data a stage-2 check used have no known time. A
+    scan.json of 0.4.2 and later then has `radar.data_at: null` (a copy
+    without its time, after a failed download). One of 0.4.1 and older has no
+    `data_at` at all: its radar's run stands in, as it did then."""
+    radar = check.get("radar") if isinstance(check, dict) else None
+    if not isinstance(radar, dict) or "data_at" not in radar:
+        return False
+    when = radar.get("data_at")
+    return not (isinstance(when, str) and TIME_RE.match(when))
+
+
 def overall(items):
     """The add-on's state from its items (contract 2.3)."""
     worst = max((ORDER.get(i.get("state"), 0) for i in items), default=0)
@@ -232,10 +248,14 @@ def items_of(doc, lang):
         if cid == "cve" and isinstance(radar, dict):
             # Network data: as old as their last good fetch, not as the local scan that read them, so a new
             # scan never makes old data look new to the Status Board.
-            for when in (radar.get("data_at"), radar.get("generated")):
-                if isinstance(when, str) and TIME_RE.match(when):
-                    i["checked_at"] = when
-                    break
+            if radar_age_unknown(checks.get(cid)):
+                # No time of the data is known, and none is made up: the contract makes both fields
+                # optional; the item counts as out of date through its state (cve()) and its texts.
+                del i["checked_at"], i["stale_after"]
+                return i
+            when = radar.get("data_at") if "data_at" in radar else radar.get("generated")   # 0.4.1: generated
+            if isinstance(when, str) and TIME_RE.match(when):
+                i["checked_at"] = when
             i["stale_after"] = RADAR_STALE_AFTER
         return i
 
@@ -307,6 +327,12 @@ def items_of(doc, lang):
                for e in sorted(f, key=lambda e: -len(e.get("open") or [])) if e.get("open")]
         parts = ([t(lang, "cve.open", n=len(opened), names=_names(per))] if opened else []) + \
                 ([t(lang, "cve.missing", n=len(missing))] if missing else [])
+        if radar_age_unknown(c):
+            # Data of unknown age count as out of date, which the contract makes at least a warning; a
+            # danger stays a danger.
+            parts.insert(0, t(lang, "cve.unknown"))
+            if ORDER[state] < ORDER["warning"]:
+                state = "warning"
         return item("cve", state, len(opened), "; ".join(parts))
 
     def cpu(c):
@@ -390,6 +416,10 @@ def document(doc, lang, ver):
         summary = t(lang, "summary.found", n=len(found), list=", ".join(i["title"] for i in found))
     else:
         summary = t(lang, "summary.ok" if state == "ok" else "summary.failed")
+    cve = next((c for c in doc.get("checks") or [] if isinstance(c, dict) and c.get("check") == "cve"), None)
+    if cve and cve.get("state") in ("found", "none", "partial") and radar_age_unknown(cve):
+        # First, so the 200 characters the board and the menu keep never cut it off.
+        summary = t(lang, "summary.radarUnknown") + " " + summary
     return {"schema": SCHEMA, "addon": ADDON, "label": LABEL, "version": ver,
             "checked_at": doc.get("generated"), "state": state, "summary": summary, "items": items}
 
@@ -455,7 +485,9 @@ def problems(status):
             out.append("state of " + repr(i.get("id")))
         if "link" in i and not LINK_RE.match(str(i["link"])):
             out.append("link " + repr(i["link"]))
-        if not isinstance(i.get("stale_after"), int) or not isinstance(i.get("checked_at"), str):
+        # Both optional (contract): an item of data without a known time has neither.
+        if ("checked_at" in i and not (isinstance(i["checked_at"], str) and TIME_RE.match(i["checked_at"]))) or \
+                ("stale_after" in i and not (isinstance(i["stale_after"], int) and i["stale_after"] >= 1)):
             out.append("time of " + repr(i.get("id")))
         for k in ("title", "value", "detail"):
             if k in i and not isinstance(i[k], str):

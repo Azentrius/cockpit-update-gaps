@@ -485,5 +485,98 @@ class Freshness(unittest.TestCase):
             self.assertIn("cockpit", second["oval"])
 
 
+class UnknownAge(unittest.TestCase):
+    """A copy of the OVAL whose time is lost (radar.json's oval_file missing or broken) and a failed
+    download: the radar writes data_fetched null. The age is unknown, and stays unknown up to the
+    status and the page: the radar's run time is never passed off as the time of the data."""
+    NOW = "2026-10-19T20:55:00Z"
+    LATER = "2026-10-25T20:55:00Z"      # six days on
+
+    def radar_runs(self):
+        """Two failed runs six days apart over a copy without its time -> both documents."""
+        with tempfile.TemporaryDirectory() as d:
+            run = lambda answers, old: radar_mod.radar(system=FakeSystem("resolute-nodesource"), old=old, state_dir=d,  # noqa: E731
+                                                       opener=opener_for(answers), sleep=lambda s: None)
+            good = run({"https://security-metadata.canonical.com/": bz2.compress(OVAL.encode())}, None)
+            for broken in ({}, {"oval_file": {"fetched": "yesterday"}}):
+                old = {k: v for k, v in good.items() if k != "oval_file"}
+                old.update(broken)
+                first = run({}, old)
+                second = run({}, first)
+                for doc in (first, second):
+                    self.assertEqual(doc["services"]["oval"]["state"], "partial")
+                    self.assertIsNone(doc["services"]["oval"]["data_fetched"] if not broken else
+                                      gapscheck._utc(doc["services"]["oval"]["data_fetched"]))
+                    self.assertIn("cockpit", doc["oval"], "the copy is still used")
+            return first, second
+
+    def scan_with(self, radar_doc, now=NOW):
+        return gapscheck.scan(FakeSystem("resolute-nodesource", files={gapscheck.RADAR: json.dumps(radar_doc)}, now=now))
+
+    def cve_item(self, scan, lang="en"):
+        st = gapsstatus.document(scan, lang, "0.4.1")
+        self.assertEqual(gapsstatus.problems(st), [])
+        return st, next(i for i in st["items"] if i["id"] == "cve")
+
+    def test_unknown_up_to_the_status(self):
+        first, second = self.radar_runs()
+        for doc, now in ((first, self.NOW), (second, self.LATER)):
+            scan = self.scan_with(doc, now)
+            cve = {c["check"]: c for c in scan["checks"]}["cve"]
+            self.assertEqual((cve["radar"]["data_at"], cve["radar"]["age_h"], cve["radar"]["stale"]), (None, None, True))
+            self.assertEqual(cve["state"], "found")
+            st, item = self.cve_item(scan)
+            self.assertNotIn("checked_at", item, "no time is made up for data of unknown age")
+            self.assertNotIn("stale_after", item)
+            self.assertEqual(item["state"], "warning", "unknown age counts as out of date: at least a warning")
+            self.assertIn("age of the network data is unknown", item["detail"])
+            self.assertIn("The age of the network data is unknown.", st["summary"])
+            self.assertIn("Das Alter der Netzdaten ist unbekannt.", self.cve_item(scan, "de")[0]["summary"])
+
+    def test_empty_result_of_unknown_age(self):
+        doc = json.loads(radar_text("resolute-nodesource"))
+        doc["oval"] = {}
+        doc["services"]["oval"].update(state="partial", errors=["HTTP 503"], data_fetched=None)
+        for now in (self.NOW, self.LATER):
+            scan = self.scan_with(doc, now)
+            cve = {c["check"]: c for c in scan["checks"]}["cve"]
+            self.assertEqual((cve["state"], cve["missing"]), ("partial", ["radar-unknown"]))
+            _, item = self.cve_item(scan)
+            self.assertEqual(item["state"], "warning", "never ok")
+            self.assertNotIn("checked_at", item)
+
+    def test_known_severity_is_kept(self):
+        doc = json.loads(radar_text("resolute-nodesource"))
+        doc["services"]["oval"].update(state="partial", errors=["HTTP 503"], data_fetched=None)
+        doc["oval"]["cockpit"]["open"].append({"id": "CVE-2026-9999", "priority": "critical", "status": "needs-fixing"})
+        _, item = self.cve_item(self.scan_with(doc))
+        self.assertEqual(item["state"], "danger", "a critical issue stays critical")
+
+    def test_known_times_and_older_documents(self):
+        # a known old time: as before, the data's time and 72 hours
+        doc = json.loads(radar_text("resolute-nodesource"))
+        doc["services"]["oval"].update(state="partial", data_fetched="2026-09-07T20:55:00Z")
+        _, item = self.cve_item(self.scan_with(doc))
+        self.assertEqual((item["checked_at"], item["stale_after"]), ("2026-09-07T20:55:00Z", gapscheck.RADAR_STALE_H * 3600))
+        # a known fresh time: as before
+        doc["services"]["oval"].update(state="ok", data_fetched=self.NOW)
+        _, item = self.cve_item(self.scan_with(doc))
+        self.assertEqual((item["state"], item["checked_at"]), ("info", self.NOW))
+        # a scan.json of 0.4.1 has no data_at: its radar's run stands in, as then
+        scan = self.scan_with(json.loads(radar_text("resolute-nodesource")))
+        cve = {c["check"]: c for c in scan["checks"]}["cve"]
+        del cve["radar"]["data_at"]
+        _, item = self.cve_item(scan)
+        self.assertEqual((item["state"], item["checked_at"]), ("info", cve["radar"]["generated"]))
+
+    def test_the_fixture_of_the_page(self):
+        """test/fixtures/status-noble-held-radar-unknown.json, which the page and menu tests read."""
+        with open(os.path.join(FIX, "status-noble-held-radar-unknown.json"), encoding="utf-8") as f:
+            st = json.load(f)
+        item = next(i for i in st["items"] if i["id"] == "cve")
+        self.assertNotIn("checked_at", item)
+        self.assertEqual(item["state"], "warning")
+
+
 if __name__ == "__main__":
     unittest.main()

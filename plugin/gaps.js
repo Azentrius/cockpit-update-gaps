@@ -161,8 +161,12 @@
                 out.push(alertHtml("info", t("status.changedTitle"), tr("status.changed", { when: fmtDate(doc.generated) })));
             }
             const c = checksOf(doc);
-            const old = RADAR_CHECKS.map((k) => c[k]).find((x) => x && x.radar && x.radar.stale && radarTime(x.radar));
-            if (old && status && status.radar === "active") {
+            const used = RADAR_CHECKS.map((k) => c[k]).filter((x) => x && x.radar && x.state !== "skipped");
+            const unknown = used.find((x) => radarAgeUnknown(x.radar));
+            const old = used.find((x) => x.radar.stale && radarTime(x.radar));
+            if (unknown && status && status.radar === "active") {
+                out.push(alertHtml("warning", t("status.radarUnknownTitle"), rich(t("status.radarOld"))));
+            } else if (old && status && status.radar === "active") {
                 out.push(alertHtml("warning", t("status.radarOldTitle", { age: age(radarTime(old.radar)) }), rich(t("status.radarOld"))));
             }
         }
@@ -319,16 +323,24 @@
         return esc(host) + (what ? ` <span class="az-cell-sub">${esc(what)}</span>` : "");
     }
     // The time of the network data a stage-2 check used: their last good fetch (data_at), which the
-    // radar's own runs do not renew; a state of 0.4.1 and older only has the run (generated).
-    function radarTime(r) { return (r && (r.data_at || r.generated)) || null; }
-    // When the network data of a stage-2 card are old, or their last fetch failed, the card says so.
+    // radar's own runs do not renew. data_at null: a copy without a known time, and the radar's run
+    // is no stand-in for it. A state of 0.4.1 and older has no data_at; its run (generated) stands in.
+    function radarTime(r) {
+        if (!r) return null;
+        return Object.prototype.hasOwnProperty.call(r, "data_at") ? r.data_at || null : r.generated || null;
+    }
+    function radarAgeUnknown(r) { return !!r && Object.prototype.hasOwnProperty.call(r, "data_at") && !r.data_at; }
+    // When the network data of a stage-2 card are old or of unknown age, or their last fetch failed,
+    // the card says so.
     function radarNote(c) {
         const r = c.radar || {};
         const when = radarTime(r);
         const out = [];
-        if (r.stale && when) out.push(esc(t("status.radarOldTitle", { age: age(when) })));
+        if (radarAgeUnknown(r)) out.push(esc(t("radar.ageUnknown")));
+        else if (r.stale && when) out.push(esc(t("status.radarOldTitle", { age: age(when) })));
         if (r.service === "error" || r.service === "partial") {
-            out.push(tr("radar.lastFailed", { when: when ? fmtDate(when) : "?", msg: (r.errors || [])[0] || "?" }));
+            out.push(when ? tr("radar.lastFailed", { when: fmtDate(when), msg: (r.errors || [])[0] || "?" })
+                          : tr("radar.lastFailedUnknown", { msg: (r.errors || [])[0] || "?" }));
         }
         const un = c.unverified || [];
         if (un.length) out.push(tr("radar.unverified", { list: un.join(", ") }));

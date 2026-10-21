@@ -1030,10 +1030,11 @@ def _radar(ctx, service):
 
 
 def _partial_if_old(out):
-    """Nothing found in old network data is not "nothing found"."""
+    """Nothing found in old network data, or in data of unknown age, is not
+    "nothing found"."""
     if out["radar"]["stale"] and out["state"] == "none":
         out["state"] = "partial"
-        out["missing"] = out.get("missing", []) + ["radar-old"]
+        out["missing"] = out.get("missing", []) + ["radar-old" if out["radar"]["age_h"] is not None else "radar-unknown"]
     return out
 
 

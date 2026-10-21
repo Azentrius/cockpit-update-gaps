@@ -291,6 +291,8 @@ test("a link of the status (#/held) scrolls to its card; anything else is ignore
 // --- The status icon in Cockpit's menu (menu-status.js) and the hidden start ---
 const statusFixture = (name) => JSON.parse(fs.readFileSync(path.join(FIX, "status-" + name + ".json"), "utf8"));
 const lastNote = (calls) => (calls.notes.length ? calls.notes[calls.notes.length - 1][1].page_status : "unset");
+// A time as the English page writes it (fmtDate in gaps.js).
+const fmtRun = (iso) => new Date(iso).toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" });
 const TYPES = { danger: "error", warning: "warning", info: "info" };
 
 test("menu icon: the state of status.json, the summary in the page's language", async () => {
@@ -472,6 +474,47 @@ test("network data: a failed fetch without a copy, old data, packages of unclear
     assert.match(text(d.getElementById("ug-card-cve")),
         /Not checked, because the installed version is in no package list any more and its origin is unclear: sudo\./);
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+});
+
+test("network data of unknown age: neither 0 hours nor the radar's run as their time, also in the menu", async () => {
+    const radarOn = { ...STATUS, radar: "active", radar_file: NOW };
+    const s = scan("noble-held-radar-unknown");
+    const cve = s.checks.find((x) => x.check === "cve");
+    assert.strictEqual(cve.radar.data_at, null);
+    const run = fmtRun(cve.radar.generated);
+    let { d } = boot({ state: s, status: radarOn });
+    await settle();
+    const card = text(d.getElementById("ug-card-cve"));
+    const top = text(d.getElementById("ug-status"));
+    assert.doesNotMatch(card + top, /0 hours old/);
+    assert.ok(!card.includes(run), "the radar's run is not given as the time of the data: " + run);
+    assert.match(card, /The age of these network data is unknown: the copy in use has no time of its last good fetch\./);
+    assert.match(card, /The last fetch failed \(HTTP 503\); the copy in use has no known time\./);
+    assert.match(card, /CVE-2026-4631/, "the findings stay");
+    assert.match(top, /The age of the network data is unknown/);
+    // nothing found in such data: partly checked, with this reason
+    Object.assign(cve, { state: "partial", findings: [], counts: {}, missing: ["radar-unknown"] });
+    ({ d } = boot({ state: s, status: radarOn }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")),
+        /Unfixed security issues: partly: The age of the network data is unknown: what came since may be missing\./);
+    ({ d } = boot({ state: s, status: radarOn, language: "de" }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")), /Das Alter der Netzdaten ist unbekannt/);
+    assert.doesNotMatch(text(d.getElementById("ug-status")), /0 Stunden alt/);
+    // the menu: a warning, and its tooltip says why
+    const st = statusFixture("noble-held-radar-unknown");
+    const menu = boot({ statusFile: JSON.stringify(st), hidden: true });
+    await settle();
+    const sent = lastNote(menu.calls);
+    assert.strictEqual(sent.type, "warning");
+    assert.match(sent.title, /The age of the network data is unknown\./);
+    // a state of 0.4.1 without data_at still reads, its radar's run standing in
+    const legacy = scan("noble-held-radar");
+    legacy.checks.forEach((c) => { if (c.radar) { delete c.radar.data_at; c.radar.stale = true; } });
+    ({ d } = boot({ state: legacy, status: radarOn }));
+    await settle();
+    assert.match(text(d.getElementById("ug-card-cve")), /The network data are 0 hours old/);
 });
 
 test("network data: set up through the dialog, fetch now, switched off, old data told", async () => {

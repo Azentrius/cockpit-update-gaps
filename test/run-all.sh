@@ -33,7 +33,7 @@ run "python: status for the Status Board, its verb"    python3 status_test.py
 run "python: network data (radar), stage-2 checks"    python3 radar_test.py
 run "python: syntax lib/*.py"                          python3 -c 'import ast, glob; [ast.parse(open(f).read(), f) for f in glob.glob("../lib/*.py")]'
 run "shell:  syntax of the shell scripts"              bash -c 'for f in ../lib/*.sh ../tools/*.sh ../packaging/scripts/* *.sh fixtures/*.sh; do sh -n "$f" || exit 1; done'
-run "shell:  gaps-ctl.sh status (JSON), wrong calls"   bash -c 'sh ../lib/gaps-ctl.sh status | python3 -c "import json, sys; d = json.load(sys.stdin); assert set(d) >= {\"root\", \"timer\", \"running\", \"dpkg_status_mtime\"}" && ! sh ../lib/gaps-ctl.sh nonsense 2>/dev/null && ! sh ../lib/gaps-ctl.sh scan now please 2>/dev/null'
+run "shell:  gaps-ctl.sh status (JSON), wrong calls"   bash -c 'sh ../lib/gaps-ctl.sh status | python3 -c "import json, sys; d = json.load(sys.stdin); assert set(d) >= {\"root\", \"timer\", \"running\", \"dpkg_status_mtime\"}" && ! sh ../lib/gaps-ctl.sh nonsense 2>/dev/null && ! sh ../lib/gaps-ctl.sh scan now please 2>/dev/null && { sh ../lib/gaps-ctl.sh accept nope 2026-01-01 2>/dev/null; [ $? = 64 ]; } && { sh ../lib/gaps-ctl.sh unaccept 2>/dev/null; [ $? = 64 ]; }'
 run "page:   cards, messages, refresh, timer, texts"   node page_test.js
 run "design: contrast (light + dark)"                  python3 contrast_test.py
 run "design: fonts ship with the add-on"               python3 fonts_test.py

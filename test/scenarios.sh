@@ -67,6 +67,19 @@ su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-status.py' status --lang de"
 # The radar of stage 2: never as root; as a user it works out what it would ask about (no network).
 if python3 -I "$src/lib/gaps-radar.py" --dry-run > /dev/null 2>&1; then echo "the radar ran as root"; exit 1; fi
 su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-radar.py' --dry-run" > /tmp/selection.json
+cp /var/lib/update-gaps/scan.json /tmp/scan-again.json
+# Acknowledge the held package as the page does (gaps-accept.py as root, the reason on stdin); a
+# user may not. Then a scan marks it, and the status leaves it out.
+ref=$(python3 -c 'import json; d = json.load(open("/var/lib/update-gaps/scan.json")); print(next(f["ref"] for c in d["checks"] if c["check"] == "held" for f in c["findings"] if f["package"] == "tzdata"))')
+until=$(date -u -d '+30 days' +%Y-%m-%d)
+echo "tzdata stays as it is" | python3 -I "$src/lib/gaps-accept.py" accept "$ref" "$until"
+rc=0
+su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-accept.py' unaccept '$ref'" > /dev/null 2>&1 || rc=$?
+[ "$rc" = 77 ] || { echo "a user could change the acknowledgements ($rc)"; exit 1; }
+stat -c '%a %U' /var/lib/update-gaps/accepted.json > /tmp/accepted-mode.txt
+python3 -I "$src/lib/gaps-scan.py" --output /var/lib/update-gaps/scan.json --status /var/lib/update-gaps/status.json
+cp /var/lib/update-gaps/scan.json /tmp/scan-acked.json
+su ugplain -s /bin/sh -c "python3 -I '$src/lib/gaps-status.py' status --lang de" > /tmp/board-acked.json
 
 python3 - "$ID" <<'EOF'
 import json, sys
@@ -133,10 +146,17 @@ assert k["state"] == "none" and k["keyrings"] and all(r["expires"] for r in k["k
 assert u["keys"]["state"] == "none" and u["keys"]["keyrings"] == k["keyrings"], u["keys"]
 uu = c["uu"]
 assert [f["kind"] for f in uu["findings"]] == ([] if uu["off"] else ["never"]), uu   # it never ran here
-again = json.load(open("/var/lib/update-gaps/scan.json"))
+again = json.load(open("/tmp/scan-again.json"))
 def held_since(d):
     return [f["since"] for x in d["checks"] if x["check"] == "held" for f in x["findings"] if f["package"] == "tzdata"]
 assert again["generated"] > doc["generated"] and held_since(again) == held_since(doc) == [doc["generated"]], (held_since(again), doc["generated"])
+# Acknowledged as root: the file root's and readable (0644), the finding marked, the status quiet about it.
+acked = {c["check"]: c for c in json.load(open("/tmp/scan-acked.json"))["checks"]}
+tz = next(f for f in acked["held"]["findings"] if f["package"] == "tzdata")
+assert tz["accepted"]["reason"] == "tzdata stays as it is" and "expired" not in tz["accepted"] and acked["held"]["accepted"] == 1, acked["held"]
+assert open("/tmp/accepted-mode.txt").read().split() == ["644", "root"]
+quiet = {i["id"]: i for i in json.load(open("/tmp/board-acked.json"))["items"]}
+assert quiet["held"]["state"] == "ok" and "1 quittiert" in quiet["held"]["detail"], quiet["held"]
 print("SCENARIO OK")
 EOF
 test ! -e /tmp/ug-fake-apt-ran || { echo "the helper ran apt-get from /usr/local/bin"; exit 1; }

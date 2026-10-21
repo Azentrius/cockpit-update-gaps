@@ -1,10 +1,11 @@
 # shellcheck shell=sh
 # After cockpit-update-gaps was removed (as root; also `make uninstall`): forget its units and
-# its state. The state is only a cache of what the scan and the radar saw; /etc/update-gaps.conf
-# stays. The radar's directory is a DynamicUser StateDirectory: the data in /var/lib/private and
-# the link /var/lib/update-gaps-radar.
+# its state. The state is a cache of what the scan and the radar saw, plus the acknowledgements
+# given on the page; /etc/update-gaps.conf stays. The radar's directory is a DynamicUser
+# StateDirectory: the data in /var/lib/private and the link /var/lib/update-gaps-radar.
 # SPDX-License-Identifier: Apache-2.0
-rm -f /var/lib/update-gaps/scan.json /var/lib/update-gaps/status.json /run/update-gaps-scan.lock
+rm -f /var/lib/update-gaps/scan.json /var/lib/update-gaps/status.json /var/lib/update-gaps/accepted.json \
+      /run/update-gaps-scan.lock /run/update-gaps-accept.lock
 rmdir /var/lib/update-gaps 2> /dev/null || true
 rm -f /var/lib/private/update-gaps-radar/radar.json /var/lib/private/update-gaps-radar/cve.oval.xml.bz2
 rmdir /var/lib/private/update-gaps-radar 2> /dev/null || true

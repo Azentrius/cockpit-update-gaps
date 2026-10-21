@@ -89,7 +89,8 @@
       "c": "stable"
      },
      "installed_at": "2026-09-08T13:48:09",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "held-0894b59b5e14"
     },
     {
      "package": "docker-buildx-plugin",
@@ -107,7 +108,8 @@
       "c": "stable"
      },
      "installed_at": "2026-09-08T13:48:13",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "held-94375f831e55"
     },
     {
      "package": "docker-ce",
@@ -125,7 +127,8 @@
       "c": "stable"
      },
      "installed_at": "2026-09-08T13:48:10",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "held-4b95c50d995c"
     },
     {
      "package": "docker-ce-cli",
@@ -143,7 +146,8 @@
       "c": "stable"
      },
      "installed_at": "2026-09-08T13:48:09",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "held-a7ed73f066fc"
     },
     {
      "package": "docker-ce-rootless-extras",
@@ -161,7 +165,8 @@
       "c": "stable"
      },
      "installed_at": "2026-09-08T13:48:13",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "held-c9b7062218d1"
     },
     {
      "package": "docker-compose-plugin",
@@ -179,7 +184,8 @@
       "c": "stable"
      },
      "installed_at": "2026-09-08T13:48:14",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "held-bee3d6c96c8b"
     }
    ],
    "source": [
@@ -198,7 +204,8 @@
      "service": "esm-apps",
      "status": "pending_attach",
      "installed": "24.0+dfsg-1ubuntu1.3",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "pro-ab564c051e95"
     },
     {
      "package": "python3-wheel",
@@ -206,7 +213,8 @@
      "service": "esm-apps",
      "status": "pending_attach",
      "installed": "0.42.0-2",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "pro-3d2b6701cb40"
     },
     {
      "package": "restic",
@@ -214,7 +222,8 @@
      "service": "esm-apps",
      "status": "pending_attach",
      "installed": "0.16.4-2ubuntu0.24.04.3",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "pro-ce3717ae4bac"
     },
     {
      "package": "skopeo",
@@ -222,7 +231,8 @@
      "service": "esm-apps",
      "status": "pending_attach",
      "installed": "1.13.3+ds1-2ubuntu0.24.04.3",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "pro-211fd24cb674"
     }
    ],
    "attached": false,
@@ -295,7 +305,8 @@
      "kind": "vulnerable",
      "microcode": true,
      "fix": "provider",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "cpu-8f0524f78923"
     }
    ],
    "mitigated": 4,
@@ -439,7 +450,8 @@
      "version": "0.0.6-1",
      "arch": "all",
      "cause": "no-source",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "local-36105e8b4d73"
     }
    ],
    "source": [
@@ -464,7 +476,8 @@
      "packages": [
       "gh"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-ef859f841524"
     },
     {
      "kind": "source",
@@ -483,7 +496,8 @@
       "docker-ce-rootless-extras",
       "docker-compose-plugin"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-e6f07ae3c979"
     },
     {
      "kind": "source",
@@ -504,7 +518,8 @@
       "cockpit-system",
       "cockpit-ws"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-4f4caa4b069a"
     },
     {
      "kind": "source",
@@ -520,7 +535,8 @@
       "cockpit-cronjobs",
       "cockpit-image-update-monitor"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-cd38315f8bb1"
     },
     {
      "kind": "held",
@@ -532,7 +548,8 @@
       "docker-ce-rootless-extras",
       "docker-compose-plugin"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-6d16bb7dfede"
     }
    ],
    "installed": true,

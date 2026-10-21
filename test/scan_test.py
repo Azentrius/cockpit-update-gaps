@@ -18,12 +18,14 @@ wrong (noble-held with /boot full, a kernel half configured, a failed run of
 unattended-upgrades and an expired key, fakesys.upkeep)."""
 
 import importlib.util
+import io
 import json
 import os
 import shutil
 import sys
 import tempfile
 import unittest
+from contextlib import redirect_stderr, redirect_stdout
 from datetime import datetime, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -32,7 +34,7 @@ sys.path.insert(0, HERE)
 import gapscheck  # noqa: E402
 import gapslib as L  # noqa: E402
 import gapsproc  # noqa: E402
-from fakesys import FakeSystem, command_text, phased_results, upkeep  # noqa: E402
+from fakesys import NOBLE_ACCEPTED, FakeSystem, accepted_files, command_text, phased_results, upkeep  # noqa: E402
 
 STATES = {"found", "none", "partial", "skipped", "timeout", "error"}
 UBUNTU_KEYRING = "/usr/share/keyrings/ubuntu-archive-keyring.gpg"
@@ -45,9 +47,10 @@ def scan(scenario, **kw):
 
 
 def bare(findings):
-    """Findings without the time a scan first saw them (class Since tests that)."""
+    """Findings without the time a scan first saw them and their ref (classes
+    Since and Acknowledged test those)."""
     if isinstance(findings, dict):
-        return {k: v for k, v in findings.items() if k != "since"}
+        return {k: v for k, v in findings.items() if k not in ("since", "ref", "accepted")}
     return [bare(f) for f in findings]
 
 
@@ -755,6 +758,162 @@ class Since(unittest.TestCase):
                 with open(path, "w") as f:
                     f.write(text)
                 self.assertEqual(mod.previous(path), want, text)
+
+
+def ack_scan(entries=NOBLE_ACCEPTED, now=None, edit=None, **kw):
+    """noble-held with acknowledgements (fakesys.accepted_files); `edit` changes the file's entries."""
+    files = accepted_files("noble-held", entries)
+    if edit:
+        doc = json.loads(files[gapscheck.ACCEPTED])
+        edit(doc["accepted"])
+        files = {gapscheck.ACCEPTED: json.dumps(doc)}
+    return scan("noble-held", files=files, now=now, **kw)
+
+
+class Acknowledged(unittest.TestCase):
+    def test_marked_and_counted(self):
+        doc, c = ack_scan()
+        self.assertEqual((c["held"]["accepted"], c["cpu"]["accepted"]), (6, 1))
+        for f in c["held"]["findings"]:
+            self.assertEqual(f["accepted"], {"until": "2026-11-01", "at": "2026-10-19T08:00:00Z",
+                                             "reason": "Docker is updated in the maintenance window on 2026-11-01"})
+        self.assertNotIn("accepted", c["pro"])
+        # Every finding of the checks with stable findings has its ref; the network data have none.
+        for x in doc["checks"]:
+            for f in x.get(gapscheck.SINCE[x["check"]][0] if x["check"] in gapscheck.SINCE else "-") or []:
+                self.assertRegex(f["ref"], r"^" + x["check"] + r"-[0-9a-f]{12}$")
+        self.assertNotIn('"ref"', json.dumps([x for x in doc["checks"] if x["check"] not in gapscheck.SINCE]))
+
+    def test_ended_or_changed_counts_again(self):
+        doc, c = ack_scan(now="2026-11-02T06:00:00Z")
+        self.assertTrue(all(f["accepted"].get("expired") for f in c["held"]["findings"]))
+        self.assertNotIn("accepted", c["held"])
+        self.assertEqual(c["cpu"]["accepted"], 1, "tsa until 2027-01-15")
+
+        def changed(items):
+            items[0]["pin"] = "0123456789ab"        # acknowledged when it was something else
+        _, c = ack_scan(edit=changed)
+        held = {f["package"]: f for f in c["held"]["findings"]}
+        self.assertTrue(held["containerd.io"]["accepted"].get("changed"))
+        self.assertEqual(c["held"]["accepted"], 5)
+
+    def test_a_held_package_with_a_security_fix_counts_again(self):
+        """The pin of a held package is whether a newer version comes from a security source."""
+        today = L.parse_day("2026-10-19")
+        accepted = L.parse_accepted(accepted_files("noble-held", NOBLE_ACCEPTED)[gapscheck.ACCEPTED], today)
+        doc, c = scan("noble-held")
+        held = {f["package"]: f for f in c["held"]["findings"]}
+        held["docker-ce"]["security"] = True
+        held["docker-ce"]["candidate"] = "5:29.9.2-1~ubuntu.24.04~noble"       # a new version alone changes nothing
+        held["containerd.io"]["candidate"] = "2.4.3-1~ubuntu.24.04~noble"
+        gapscheck.mark_accepted(doc, accepted, today)
+        self.assertEqual(held["docker-ce"]["accepted"].get("changed"), True)
+        self.assertNotIn("changed", held["containerd.io"]["accepted"])
+        self.assertEqual(c["held"]["accepted"], 5)
+
+    def test_a_broken_file_is_no_acknowledgement(self):
+        for text in ("{", "[]", '{"format": 1, "accepted": "x"}', "x" * (gapscheck.ACCEPTED_MAX + 1)):
+            doc, c = scan("noble-held", files={gapscheck.ACCEPTED: text})
+            self.assertNotIn("accepted", json.dumps(doc), text[:20])
+            self.assertEqual(c["held"]["state"], "found")
+
+
+def accept_helper():
+    spec = importlib.util.spec_from_file_location("gaps_accept", os.path.join(HERE, "..", "lib", "gaps-accept.py"))
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+class Stream(io.StringIO):
+    def __init__(self, text="", tty=False):
+        super().__init__(text)
+        self.tty = tty
+
+    def isatty(self):
+        return self.tty
+
+
+class AcceptHelper(unittest.TestCase):
+    """gaps-accept.py, which gaps-ctl.sh runs as root for the page."""
+    NOW = datetime(2026, 10, 19, 21, 0, tzinfo=timezone.utc)
+
+    def setUp(self):
+        self.mod = accept_helper()
+        self.dir = tempfile.TemporaryDirectory()
+        self.state = os.path.join(self.dir.name, "scan.json")
+        self.accepted = os.path.join(self.dir.name, "accepted.json")
+        with open(os.path.join(HERE, "fixtures", "scan-noble-held.json"), encoding="utf-8") as f:
+            self.doc = json.load(f)
+        with open(self.state, "w", encoding="utf-8") as f:
+            json.dump(self.doc, f)
+        held = {x["check"]: x for x in self.doc["checks"]}["held"]
+        self.ref = next(f["ref"] for f in held["findings"] if f["package"] == "docker-ce")
+
+    def tearDown(self):
+        self.dir.cleanup()
+
+    def call(self, *argv, reason="", tty=False, euid=0, now=None):
+        out, err = io.StringIO(), io.StringIO()
+        with redirect_stdout(out), redirect_stderr(err):
+            rc = self.mod.main(list(argv), state=self.state, accepted=self.accepted,
+                               lock=os.path.join(self.dir.name, "lock"), stdin=Stream(reason, tty), now=now or self.NOW,
+                               euid=euid)
+        return rc, out.getvalue() + err.getvalue()
+
+    def entries(self):
+        with open(self.accepted, encoding="utf-8") as f:
+            return json.load(f)["accepted"]
+
+    def test_accept_and_take_back(self):
+        rc, out = self.call("accept", self.ref, "2026-11-01", reason="Docker waits for\nthe window")
+        self.assertEqual((rc, out.strip()), (0, "Acknowledged until 2026-11-01: docker-ce"))
+        self.assertEqual(oct(os.stat(self.accepted).st_mode & 0o777), "0o644")
+        e = self.entries()
+        self.assertEqual(len(e), 1)
+        self.assertEqual({k: e[0][k] for k in ("ref", "check", "label", "until", "reason", "at")},
+                         {"ref": self.ref, "check": "held", "label": "docker-ce", "until": "2026-11-01",
+                          "reason": "Docker waits for the window", "at": "2026-10-19T21:00:00Z"})
+        held = {f["package"]: f for f in {x["check"]: x for x in self.doc["checks"]}["held"]["findings"]}
+        self.assertEqual(e[0]["pin"], L.finding_pin("held", held["docker-ce"]))
+        # Again: replaced, not added. From a terminal no reason is read.
+        self.assertEqual(self.call("accept", self.ref, "2026-12-01", reason="ignored", tty=True)[0], 0)
+        self.assertEqual([(x["until"], x["reason"]) for x in self.entries()], [("2026-12-01", "")])
+        rc, out = self.call("unaccept", self.ref)
+        self.assertEqual((rc, out.strip(), self.entries()), (0, "Acknowledgement taken back: docker-ce", []))
+        rc, out = self.call("unaccept", self.ref)
+        self.assertEqual((rc, out.strip()), (0, "There was no acknowledgement for this finding."))
+
+    def test_the_scan_marks_what_the_helper_wrote(self):
+        self.call("accept", self.ref, "2026-11-01")
+        with open(self.accepted, encoding="utf-8") as f:
+            _, c = scan("noble-held", files={gapscheck.ACCEPTED: f.read()})
+        self.assertEqual([f["package"] for f in c["held"]["findings"] if f.get("accepted")], ["docker-ce"])
+
+    def test_refused(self):
+        for argv in (["accept", "nope", "2026-11-01"], ["accept", self.ref], ["accept", self.ref, "2026-13-40"],
+                     ["accept", self.ref, "1.11.2026"], ["unaccept"], ["unaccept", self.ref, "x"], ["remove", self.ref], []):
+            self.assertEqual(self.call(*argv)[0], 64, argv)
+        self.assertEqual(self.call("accept", self.ref, "2026-11-01", euid=1000)[0], 77)
+        for day in ("2026-10-18", "2027-01-18"):
+            rc, out = self.call("accept", self.ref, day)
+            self.assertEqual(rc, 65, day)
+            self.assertIn("90 days", out)
+        self.assertEqual(self.call("accept", self.ref, "2027-01-17")[0], 0, "90 days ahead is the last day")
+        rc, out = self.call("accept", "held-0123456789ab", "2026-11-01")
+        self.assertEqual(rc, 65)
+        self.assertIn("not in the last state", out)
+        self.assertNotEqual(self.call("accept", "cve-0123456789ab", "2026-11-01")[0], 0)
+
+    def test_old_acknowledgements_are_dropped(self):
+        self.call("accept", self.ref, "2026-10-20")
+        # 40 days later: ended more than 30 days ago, so the next write leaves it out.
+        later = datetime(2026, 11, 28, 12, 0, tzinfo=timezone.utc)
+        self.doc["generated"] = "2026-11-28T12:00:00Z"
+        cli = next(f["ref"] for f in {x["check"]: x for x in self.doc["checks"]}["held"]["findings"]
+                   if f["package"] == "docker-ce-cli")
+        self.assertEqual(self.call("accept", cli, "2026-12-01", now=later)[0], 0)
+        self.assertEqual([x["label"] for x in self.entries()], ["docker-ce-cli"])
 
 
 class Settings(unittest.TestCase):

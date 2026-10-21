@@ -19,7 +19,8 @@
       the package manager and the end of support. For every finding it says why Software Updates
       does not show it, what you can do and since when it has been there. When Ubuntu rolls
       updates out in phases and Software Updates fails on them, it says why and gives the commands
-      that get around it. It only reads.
+      that get around it. A finding that is meant to be there can be acknowledged until a day: the
+      page keeps showing it, the status stops counting it. Otherwise it only reads.
     </p>
     <p>
       Once set up, network data add security issues Ubuntu has not fixed yet, fixes released
@@ -37,7 +38,8 @@
       Unterstützung. Zu jedem Befund steht, warum Software-Updates ihn nicht zeigt, was Sie tun
       können und seit wann er besteht. Verteilt Ubuntu Updates schrittweise und scheitert
       Software-Updates daran, erklärt sie, warum, und nennt die Befehle, die daran vorbeiführen.
-      Sie liest nur.
+      Ein Befund, der so gewollt ist, lässt sich bis zu einem Tag quittieren: Die Seite zeigt ihn
+      weiter, der Status zählt ihn nicht mehr. Sonst liest sie nur.
     </p>
     <p xml:lang="de">
       Einmal eingerichtet, kommen Netzdaten hinzu: Sicherheitslücken, die Ubuntu noch nicht

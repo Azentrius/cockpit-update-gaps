@@ -76,6 +76,12 @@ html { background: var(--bg-page); }
 .ug-source code { font-size: 12px; }
 .ug-note { margin: 0; color: var(--text-subtle); font-size: 13px; }
 .ug-seen { color: var(--text-subtle); font-size: 12px; white-space: nowrap; }
+/* Acknowledged findings: the mark, a lapsed acknowledgement, the button beside them. */
+.ug-ack { color: var(--text-subtle); font-size: 12px; }
+.ug-ack-mark { display: inline-flex; align-items: center; gap: var(--space-xs); color: var(--status-success); }
+.ug-ack-lapsed { color: var(--text); }
+.ug-ack-btn { font-size: 12px; }
+.ug-dialog-form { display: flex; flex-direction: column; gap: var(--space-md); }
 .ug-kv { display: grid; grid-template-columns: max-content 1fr; gap: var(--space-xs) var(--space-lg); margin: 0; }
 .ug-kv dt { font-weight: 600; font-size: 13px; }
 .ug-kv dd { margin: 0; overflow-wrap: anywhere; }

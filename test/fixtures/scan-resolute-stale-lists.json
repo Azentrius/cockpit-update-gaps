@@ -82,7 +82,8 @@
      "service": "esm-apps",
      "status": "pending_attach",
      "installed": "0.18.1-3ubuntu1",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "pro-ce3717ae4bac"
     }
    ],
    "attached": false,
@@ -205,13 +206,15 @@
      "site": "https://packages.azentrius.com/apt",
      "release": "stable",
      "entry": "/etc/apt/sources.list.d/azentrius.sources:1",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "lists-17376ca716c3"
     },
     {
      "kind": "orphaned",
      "site": "packages.azentrius.de/apt",
      "files": 3,
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "lists-eb379b80f8b2"
     }
    ],
    "last_update": {
@@ -317,21 +320,24 @@
      "version": "1.2.0-1",
      "arch": "all",
      "cause": "lists-missing",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "local-aea993ac9e00"
     },
     {
      "package": "cockpit-cronjobs",
      "version": "2.7.4-1",
      "arch": "all",
      "cause": "lists-missing",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "local-3e472f2f87cb"
     },
     {
      "package": "cockpit-image-update-monitor",
      "version": "0.19.1-1",
      "arch": "all",
      "cause": "lists-missing",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "local-45def5f0d9bd"
     }
    ],
    "source": [
@@ -350,7 +356,8 @@
      "packages": [
       "docker.io"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-5847aa0e63f4"
     },
     {
      "kind": "blacklist",
@@ -359,7 +366,8 @@
       "docker-buildx",
       "docker-compose-v2"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-cbba09c2be1c"
     },
     {
      "kind": "blacklist",
@@ -367,7 +375,8 @@
      "packages": [
       "containerd"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-5ac923de12ed"
     },
     {
      "kind": "blacklist",
@@ -375,7 +384,8 @@
      "packages": [
       "runc"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-bb48692ade96"
     }
    ],
    "installed": true,

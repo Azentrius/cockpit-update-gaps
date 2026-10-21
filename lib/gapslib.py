@@ -13,6 +13,7 @@ more field must not break the page.
 
 import csv
 import fnmatch
+import hashlib
 import io
 import json
 import re
@@ -919,3 +920,100 @@ def parse_rfc3339(s):
         return dt.replace(tzinfo=timezone.utc)
     sign = 1 if tz[0] == "+" else -1
     return dt.replace(tzinfo=timezone(sign * timedelta(hours=int(tz[1:3]), minutes=int(tz[4:6]))))
+
+
+# --------------------------------------------- findings over time, acknowledged --
+
+# Checks whose findings stay the same from one scan to the next: the list they are in and the fields
+# that name a finding (the others may change: versions, counts, ages). Findings from the network data
+# change with every download and are left out.
+FINDING_KEYS = {
+    "phased": ("packages", ("package",)), "dpkg": ("findings", ("kind", "package")),
+    "boot": ("findings", ("kind",)), "held": ("findings", ("package",)), "pro": ("findings", ("package",)),
+    "cpu": ("findings", ("name",)), "firmware": ("findings", ("kind", "remote", "device")),
+    "snaps": ("findings", ("kind", "snap", "id")), "lists": ("findings", ("kind", "site", "release", "file")),
+    "keys": ("findings", ("kind", "file", "inline")), "local": ("findings", ("package",)),
+    "auto": ("findings", ("kind", "what", "site", "o", "a", "pattern")), "uu": ("findings", ("kind",)),
+    "backports": ("findings", ("source",)),
+}
+# The fields whose change makes an acknowledged finding count again: what it was acknowledged for
+# is no longer what it is (a held package now has a fix from a security source, a CPU vulnerability
+# moved from the provider to this server, firmware has a newer release).
+FINDING_PINS = {"held": ("security",), "cpu": ("kind", "fix"), "pro": ("status",), "firmware": ("new", "urgency"),
+                "dpkg": ("state",)}
+LABEL_FIELDS = ("package", "name", "snap", "device", "source", "file", "pattern", "site", "remote", "kind")
+REF_RE = re.compile(r"^[a-z]{2,12}-[0-9a-f]{12}$")
+DAY_RE = re.compile(r"^\d{4}-\d\d-\d\d$")
+ACK_MAX_DAYS = 90       # an acknowledgement ends at the latest this many days after it was given
+ACK_KEEP_DAYS = 30      # an ended acknowledgement is still shown (and kept in the file) this long
+ACK_REASON_MAX = 200
+ACK_MAX = 500           # acknowledgements in the file
+
+
+def finding_key(check, f):
+    """What names a finding of `check` from one scan to the next (JSON text)."""
+    return json.dumps([f.get(k) for k in FINDING_KEYS[check][1]])
+
+
+def finding_ref(check, f):
+    """A finding's short, stable name for the page and the acknowledgements
+    (`held-0123456789ab`); it changes when the fields that name it do."""
+    return check + "-" + hashlib.sha256((check + finding_key(check, f)).encode("utf-8")).hexdigest()[:12]
+
+
+def finding_pin(check, f):
+    """A digest of the fields whose change makes an acknowledgement lapse."""
+    vals = json.dumps([f.get(k) for k in FINDING_PINS.get(check, ())])
+    return hashlib.sha256(vals.encode("utf-8")).hexdigest()[:12]
+
+
+def finding_label(f):
+    """A short name for a finding, for the acknowledgements file."""
+    for k in LABEL_FIELDS:
+        v = f.get(k)
+        if isinstance(v, str) and v:
+            return clean_text(v, 120)
+    return ""
+
+
+def clean_reason(text):
+    """The reason of an acknowledgement as given on the page: one line,
+    control characters out, at most 200 characters."""
+    return clean_text(text if isinstance(text, str) else "", ACK_REASON_MAX)
+
+
+def parse_day(s):
+    if not (isinstance(s, str) and DAY_RE.match(s)):
+        return None
+    try:
+        return datetime.strptime(s, "%Y-%m-%d").date()
+    except ValueError:
+        return None
+
+
+def parse_accepted(text, today):
+    """accepted.json (written by gaps-accept.py) -> {ref: entry}. Entries
+    that do not hold up are left out, as are those that ended more than
+    ACK_KEEP_DAYS before `today`, or reach further than ACK_MAX_DAYS past
+    the day they were given."""
+    try:
+        doc = json.loads(text or "{}")
+    except ValueError:
+        return {}
+    items = doc.get("accepted") if isinstance(doc, dict) and doc.get("format") == 1 else None
+    out = {}
+    for e in (items if isinstance(items, list) else [])[:ACK_MAX]:
+        if not isinstance(e, dict) or not REF_RE.match(str(e.get("ref", ""))):
+            continue
+        check = e.get("check")
+        until, at = parse_day(e.get("until")), parse_day(str(e.get("at", ""))[:10])
+        if check not in FINDING_KEYS or not str(e["ref"]).startswith(check + "-") or not until or not at:
+            continue
+        if until < today - timedelta(days=ACK_KEEP_DAYS) or until > at + timedelta(days=ACK_MAX_DAYS):
+            continue
+        pin = e.get("pin")
+        out[e["ref"]] = {"ref": e["ref"], "check": check, "label": clean_text(str(e.get("label", "")), 120),
+                         "pin": pin if isinstance(pin, str) and re.match(r"^[0-9a-f]{12}$", pin) else "",
+                         "until": until.isoformat(), "reason": clean_reason(e.get("reason")),
+                         "at": str(e.get("at"))[:20]}
+    return out

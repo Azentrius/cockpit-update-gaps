@@ -39,6 +39,7 @@
             setTimeout(next, 40);
         });
         p.stream = (f) => { cb = f; return p; };
+        p.input = () => p;
         return p;
     }
 
@@ -83,6 +84,10 @@
                 return fakeProcess("", [], { problem: "access-denied" });
             }
             if (verb === "scan") return fakeProcess("", ["Checking this server …\n", "Done.\n"]);
+            if (argv[1] === "accept" || argv[1] === "unaccept") {
+                return fakeProcess("", [(argv[1] === "accept" ? "Acknowledged until " + argv[3] : "Acknowledgement taken back") + "\n",
+                                        "+ systemctl start update-gaps-scan.service\n"]);
+            }
             return fakeProcess("", ["+ systemctl " + (argv[1] === "install" ? "enable" : "disable") + " --now update-gaps-scan.timer\n", "Done.\n"]);
         },
         jump() {},

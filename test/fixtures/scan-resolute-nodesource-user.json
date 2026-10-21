@@ -82,7 +82,8 @@
      "service": "esm-apps",
      "status": "pending_attach",
      "installed": "0.18.1-3ubuntu1",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "pro-ce3717ae4bac"
     }
    ],
    "attached": false,
@@ -145,7 +146,8 @@
      "kind": "vulnerable",
      "microcode": true,
      "fix": "provider",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "cpu-8f0524f78923"
     }
    ],
    "mitigated": 4,
@@ -280,7 +282,8 @@
      "version": "0.0.8",
      "arch": "all",
      "cause": "no-source",
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "local-36105e8b4d73"
     }
    ],
    "source": [
@@ -305,7 +308,8 @@
      "packages": [
       "nodejs"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-20b40fc6ae7c"
     },
     {
      "kind": "source",
@@ -321,7 +325,8 @@
       "cockpit-cronjobs",
       "cockpit-image-update-monitor"
      ],
-     "since": "2026-10-19T20:55:00Z"
+     "since": "2026-10-19T20:55:00Z",
+     "ref": "auto-cd38315f8bb1"
     }
    ],
    "installed": true,

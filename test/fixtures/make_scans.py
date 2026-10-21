@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "lib"))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import gapscheck  # noqa: E402
 import gapsstatus  # noqa: E402
-from fakesys import FakeSystem  # noqa: E402
+from fakesys import FakeSystem, phased_results  # noqa: E402
 
 SCANS = {
     "scan-noble-held.json": ("noble-held", {}),
@@ -36,6 +36,8 @@ SCANS = {
     # The OVAL copy is there, its time is not (radar.json's oval_file lost), and today's download failed:
     # the radar writes data_fetched null, the age of the data is unknown.
     "scan-noble-held-radar-unknown.json": ("noble-held", {"radar": "unknown"}),
+    # Ubuntu rolls systemd out in phases and apt defers it here (see fakesys.PHASED_SIMULATION).
+    "scan-resolute-nodesource-phased.json": ("resolute-nodesource", {"phased": True}),
 }
 STATUS_VERSION = "0.1.0"
 
@@ -51,6 +53,8 @@ def scan(scenario, kw):
             doc["services"]["oval"].update(state="partial", errors=["HTTP 503"], data_fetched=None)
             text = json.dumps(doc)
         kw["files"] = {gapscheck.RADAR: text}
+    if kw.pop("phased", False):
+        kw["results"] = phased_results(scenario)
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     doc["took_ms"] = 3300
     for c in doc["checks"]:

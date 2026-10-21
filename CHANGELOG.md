@@ -1,5 +1,35 @@
 # Changelog
 
+## 0.5.0 – 2026-10-21
+
+Phased updates that make Software Updates fail, explained with the commands that get around them;
+network data that failed or got old no longer look fresh.
+
+- **New card “Phased updates Software Updates cannot install”:** when Ubuntu rolls an update out
+  in phases and apt defers it on this server (“deferred due to phasing”), Software Updates still
+  lists it, refuses it when it installs and fails on every other update with it, security updates
+  included (PackageKit ignores phasing, LP #1466587). The card quotes the message (“Package id
+  '<name>;<version>;…' is not available as an update candidate”), names the deferred packages with
+  the installed and the deferred version and the share of the rollout (`apt-cache policy`), counts
+  the updates they block, and gives commands to copy: `sudo apt-get upgrade` for the rest,
+  `sudo apt-get install --only-upgrade <packages>` for the phased ones ahead of the rollout, and
+  the host-wide `APT::Get::Always-Include-Phased-Updates` with its price (the server is among the
+  first of every rollout). The page installs nothing. Whether that setting, or its opposite
+  `Never-Include-Phased-Updates`, is on comes from `apt-config dump`, read locally; when it is,
+  the page says so instead of offering it. The card comes first: it keeps the other updates back.
+- **Failed and old network data:** when Canonical's CVE list could not be fetched and there is no
+  earlier copy, `cve` is listed under “Not checked”, no longer under “No findings”. The age of the
+  network data comes from their last good fetch, not from the radar's daily run, so old data show
+  their age on the cards, at the top of the page and in the status (`checked_at` of the data,
+  out of date after 72 hours); nothing found in old data is “partly checked”. A copy whose time
+  is lost counts as of unknown age: no time is made up, and the status item is at least a warning.
+- **Packages the archive has moved past stay checked:** a newer version from the distribution
+  stands in for the origin of a distribution build; a package whose origin stays unclear is named
+  on the cards instead of being left out.
+- **Firmware:** fwupd's metadata time is read from `Mtime`, so old metadata show.
+- **Formats:** `scan.json` has the check `phased` after `updates`; the network-data checks carry
+  `radar.data_at` and `radar.errors`. States and network data of 0.4.1 still read.
+
 ## 0.4.1 – 2026-10-21
 
 The descriptions catch up with what the add-on checks since 0.2.0 and 0.4.0.

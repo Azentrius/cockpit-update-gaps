@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.4.1");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.5.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -688,6 +688,65 @@ test("CPU, firmware, snaps: a VM, a physical server, and what the hosts do not h
     assert.match(text(d.getElementById("ug-card-snaps")), /lxd ist zurückgehalten \(snap refresh --hold\) bis auf Weiteres\./);
 });
 
+test("phased updates: the failure quoted, what is deferred, commands to copy, the setting", async () => {
+    let { d } = boot({ state: scan("resolute-nodesource-phased") });
+    await settle();
+    assert.strictEqual(ids(d, "#ug-cards > section")[0], "ug-card-phased", "first: it blocks the other updates");
+    assert.ok(d.querySelector('#ug-sum-found [data-go="phased"]'), "a chip in the overview");
+    assert.match(text(d.getElementById("ug-sum-updates")), /Regular updates: 3\. .* 1 update is rolled out in phases and comes later\./);
+    const card = d.getElementById("ug-card-phased");
+    const all = text(card);
+    assert.match(all, /Phased updates Software Updates cannot install\s*1 package/);
+    assert.match(all, /Why Software Updates fails\s*Ubuntu rolls some updates out in phases/);
+    assert.match(all, /PackageKit does not respect phased updates \(bugs\.launchpad\.net\/bugs\/1466587\)/);
+    assert.match(text(card.querySelector(".az-alert--warning")),
+        /It stops with “Package id 'systemd;259\.9-0ubuntu0\.1;…' is not available as an update candidate”\. The 3 other updates listed there are not installed either\. 1 of them comes from a security source\./);
+    assert.match(all, /systemd 259\.5-0ubuntu3\.4 259\.9-0ubuntu0\.1 10 % of servers so far/);
+    const cmds = [...card.querySelectorAll("pre.ug-cmd")].map((p) => p.textContent);
+    assert.deepStrictEqual(cmds, ["sudo apt-get upgrade", "sudo apt-get install --only-upgrade systemd",
+        `echo 'APT::Get::Always-Include-Phased-Updates "true";' | sudo tee /etc/apt/apt.conf.d/99-phased-updates`]);
+    assert.match(all, /The price: this server gets each update at the start of its rollout/);
+    assert.ok(!card.querySelector(".az-card__body button"), "no button on the card: it installs nothing");
+    assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+
+    // German
+    ({ d } = boot({ state: scan("resolute-nodesource-phased"), language: "de" }));
+    await settle();
+    const de = text(d.getElementById("ug-card-phased"));
+    assert.match(de, /Schrittweise verteilte Updates, an denen Software-Updates scheitert\s*1 Paket/);
+    assert.match(de, /Warum Software-Updates scheitert/);
+    assert.match(de, /Es bricht ab mit „Package id 'systemd;259\.9-0ubuntu0\.1;…' is not available as an update candidate“\. Die 3 anderen Updates dort werden dann auch nicht installiert\./);
+    assert.match(de, /bisher 10 % der Server/);
+    assert.match(de, /Nennen Sie nur die, die Sie wollen\./);
+
+    // The setting is on already (or set to never): said instead of offered; names and versions escaped.
+    const s = scan("resolute-nodesource-phased");
+    const p = s.checks.find((c) => c.check === "phased");
+    Object.assign(p, { include: "never", setting: "Update-Manager::Never-Include-Phased-Updates" });
+    p.packages.push({ package: "<b>x</b>;rm", installed: null, version: "<i>1</i>", percent: null });
+    ({ d } = boot({ state: s }));
+    await settle();
+    const c2 = d.getElementById("ug-card-phased");
+    assert.match(text(c2), /This server is set to wait until a rollout is complete: Update-Manager::Never-Include-Phased-Updates\./);
+    assert.deepStrictEqual([...c2.querySelectorAll("pre.ug-cmd")].map((x) => x.textContent),
+        ["sudo apt-get upgrade", "sudo apt-get install --only-upgrade systemd"], "an odd name stays out of the command");
+    assert.ok(!c2.querySelector("b, i"), "escaped");
+    assert.match(text(c2), /<b>x<\/b>;rm \? <i>1<\/i> \?/);
+
+    // Nothing deferred: under "No findings", with the setting when it is on.
+    const none = scan("resolute-nodesource");
+    ({ d } = boot({ state: none }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")), /Phased updates: none deferred/);
+    Object.assign(none.checks.find((c) => c.check === "phased"), { include: "always", setting: "APT::Get::Always-Include-Phased-Updates" });
+    ({ d } = boot({ state: none }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")), /Phased updates: this server takes them right away \(APT::Get::Always-Include-Phased-Updates\)/);
+    ({ d } = boot({ state: none, language: "de" }));
+    await settle();
+    assert.match(text(d.getElementById("ug-clean-list")), /Schrittweise verteilte Updates: dieser Server nimmt sie sofort/);
+});
+
 test("texts: every key in both languages, same plural shape, no em dash", () => {
     global.window = {};
     require(path.join(PLUGIN, "i18n.js"));
@@ -696,7 +755,7 @@ test("texts: every key in both languages, same plural shape, no em dash", () => 
     Object.keys(en).forEach((k) => assert.strictEqual(typeof en[k], typeof de[k], k));
     const all = JSON.stringify({ en, de });
     assert.ok(!all.includes(String.fromCharCode(0x2014)), "no em dash (U+2014)");
-    ["updates", "held", "pro", "restart", "lists", "local", "auto", "backports", "outside", "eol"].forEach((k) => {
+    ["updates", "phased", "held", "pro", "restart", "lists", "local", "auto", "backports", "outside", "eol"].forEach((k) => {
         assert.ok(en["name." + k] && en["chk." + k], k);
     });
     ["needs-root", "tool-missing", "not-applicable", "unsupported-os", "unknown-release", "timeout", "error", "settings"]

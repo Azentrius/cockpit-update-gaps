@@ -87,6 +87,11 @@ html { background: var(--bg-page); }
 .az-table td .az-label { margin-inline-start: var(--space-xs); }
 .ug-lines { margin: 0; padding: var(--space-sm) var(--space-md); border-radius: var(--radius-small); background: var(--bg-page);
     font-family: var(--az-font-code); font-size: 12px; white-space: pre-wrap; overflow-wrap: anywhere; }
+/* Commands to copy: one click selects the whole command. */
+.ug-cmds { margin: 0; padding: 0; list-style: none; display: flex; flex-direction: column; gap: var(--space-md); }
+.ug-cmds li { display: grid; gap: var(--space-xs); }
+.ug-cmds p { margin: 0; font-size: 13px; }
+.ug-cmd { user-select: all; }
 
 /* Folders of "outside the package manager": folded, one per line. */
 .ug-dir { border-block-start: 1px solid var(--line); }

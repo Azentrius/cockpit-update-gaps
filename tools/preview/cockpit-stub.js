@@ -4,7 +4,8 @@
 // build.py replaces __FIXTURES__ with test/fixtures/scan-*.json and __NOW__
 // with a fixed clock. URL parameters:
 //   ?scenario=noble-held | resolute-stale-lists | resolute-nodesource | resolute-nodesource-user | none,
-//             or noble-held-radar | resolute-nodesource-radar (with the network data of stage 2)
+//             or noble-held-radar | resolute-nodesource-radar (with the network data of stage 2),
+//             or resolute-nodesource-phased (Ubuntu rolls systemd out in phases)
 //   &admin=0     a user without administrative access
 //   &timer=on    the regular check set up
 //   &lang=de     German (po.js stand-in)

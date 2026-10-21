@@ -20,6 +20,57 @@ FIXTURES = os.path.join(HERE, "fixtures")
 
 MODES = {"file": stat.S_IFREG, "dir": stat.S_IFDIR, "link": stat.S_IFLNK, "other": stat.S_IFIFO}
 
+MIRROR = "https://mirror.hetzner.com/ubuntu/"
+# Ubuntu rolled systemd 259.9 out in phases (10 %) on 2026-10-20, while other updates waited beside
+# it; on the recorded Ubuntu 26.04 hosts Software Updates then failed with "Package id
+# 'libnss-systemd;259.9-0ubuntu0.1;…' is not available as an update candidate". The scenario
+# resolute-nodesource as it looks then: `apt-get -s` with systemd deferred and three updates
+# (openssl from the security pocket), `apt-cache policy` with the new versions.
+PHASED_SIMULATION = """Reading package lists...
+Building dependency tree...
+Reading state information...
+Calculating upgrade...
+The following upgrades have been deferred due to phasing:
+  systemd
+The following packages will be upgraded:
+  openssl sudo ubuntu-pro-client
+3 upgraded, 0 newly installed, 0 to remove and 1 not upgraded.
+Inst openssl [3.5.5-1ubuntu3.7] (3.5.5-1ubuntu3.8 Ubuntu:26.04/resolute-updates, Ubuntu:26.04/resolute-security [amd64])
+Inst sudo [1.9.17p2-1ubuntu3.2] (1.9.17p2-1ubuntu3.3 Ubuntu:26.04/resolute-updates [amd64])
+Inst ubuntu-pro-client [37.2ubuntu0.1] (37.3ubuntu0.1 Ubuntu:26.04/resolute-updates [amd64])
+Conf openssl (3.5.5-1ubuntu3.8 Ubuntu:26.04/resolute-updates, Ubuntu:26.04/resolute-security [amd64])
+Conf sudo (1.9.17p2-1ubuntu3.3 Ubuntu:26.04/resolute-updates [amd64])
+Conf ubuntu-pro-client (37.3ubuntu0.1 Ubuntu:26.04/resolute-updates [amd64])
+"""
+UPDATES = MIRROR + "packages resolute-updates/main amd64 Packages"
+SECURITY = MIRROR + "security resolute-security/main amd64 Packages"
+PHASED_VERSIONS = (("systemd", "259.9-0ubuntu0.1", [UPDATES], 10),
+                   ("openssl", "3.5.5-1ubuntu3.8", [UPDATES, SECURITY], None),
+                   ("sudo", "1.9.17p2-1ubuntu3.3", [UPDATES], None),
+                   ("ubuntu-pro-client", "37.3ubuntu0.1", [UPDATES], None))
+
+
+def with_version(policy, name, version, sources, phased=None):
+    """`apt-cache policy` output with `version` of `name` as its candidate,
+    above the installed one, from `sources` (and apt's note on a phased
+    version)."""
+    lines = policy.splitlines(keepends=True)
+    i = lines.index(name + ":\n")
+    lines[i + 2] = f"  Candidate: {version}\n"
+    note = f" (phased {phased}%)" if phased is not None else ""
+    lines[i + 4:i + 4] = [f"     {version} 500{note}\n"] + [f"        500 {s}\n" for s in sources]
+    return "".join(lines)
+
+
+def phased_results(scenario="resolute-nodesource"):
+    """`results` for FakeSystem: the scenario during the rollout above."""
+    with open(os.path.join(FIXTURES, scenario, "commands", "apt-cache-policy-installed.txt"), encoding="utf-8") as f:
+        policy = f.read()
+    for name, version, suites, phased in PHASED_VERSIONS:
+        policy = with_version(policy, name, version, suites, phased)
+    return {"apt-get-s-dist-upgrade": gapsproc.Result(0, PHASED_SIMULATION, ""),
+            "apt-cache-policy-installed": gapsproc.Result(0, policy, "")}
+
 
 class FakeSystem:
     def __init__(self, scenario, uid=None, missing=(), results=None, files=None, now=None, snapd=None):

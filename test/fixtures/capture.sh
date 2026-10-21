@@ -39,7 +39,7 @@ done > stamps.txt
 systemctl show apt-daily.service apt-daily-upgrade.service -p Id -p Result -p ExecMainExitTimestamp -p ExecMainStatus > systemctl-show.txt 2>&1
 systemctl is-enabled apt-daily.timer apt-daily-upgrade.timer unattended-upgrades.service > systemctl-is-enabled.txt 2>&1
 journalctl -u apt-daily.service --since -3d -o short-iso --no-pager 2> /dev/null | strip > journal-apt-daily.txt
-apt-config dump 2> /dev/null | grep -E '^(Unattended-Upgrade::|APT::Periodic::)' > apt-config.txt
+apt-config dump 2> /dev/null | grep -iE '^(Unattended-Upgrade::|APT::Periodic::|(APT::Get|Update-Manager)::(Always|Never)-Include-Phased-Updates )' > apt-config.txt
 t=$(ms); timeout 120 systemd-run --quiet --wait --pipe --collect -p PrivateNetwork=yes -p ProtectSystem=strict \
   -p ReadWritePaths=-/var/log/ubuntu-advantage.log pro security-status --format json > pro.json 2> pro.err; echo "pro $? $(( $(ms) - t ))" >> timings.txt
 t=$(ms); timeout 120 needrestart -b -r l > needrestart.txt 2> needrestart.err; echo "needrestart $? $(( $(ms) - t ))" >> timings.txt

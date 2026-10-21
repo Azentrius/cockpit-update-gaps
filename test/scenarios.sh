@@ -67,6 +67,7 @@ for x in doc["checks"]:
 assert doc["root"] and doc["pm"] == "apt", doc
 assert not [x for x in doc["checks"] if x["state"] in ("error", "timeout")], "a check failed"
 assert "tzdata" in [f["package"] for f in c["held"]["findings"]], c["held"]
+assert c["phased"]["state"] in ("none", "found") and c["phased"]["include"] == "default", c["phased"]
 local = {f["package"]: f for f in c["local"]["findings"]}
 assert local["ug-local"]["cause"] == "lists-missing", local
 missing = [f for f in c["lists"]["findings"] if f["kind"] == "missing"]

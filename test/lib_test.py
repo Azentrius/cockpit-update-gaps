@@ -110,6 +110,8 @@ foo:
         self.assertEqual(L.entry_sources(L.installed_entry(p["hc-utils"])), [])
         self.assertIsNone(p["foo"]["installed"])
         self.assertEqual(p["foo"]["versions"][0]["priority"], 500)
+        self.assertEqual(p["foo"]["versions"][0]["phased"], 10)
+        self.assertNotIn("phased", p["docker-ce"]["versions"][0], "only a phased version carries the share")
 
     def test_dist_upgrade(self):
         text = """Reading package lists...
@@ -150,6 +152,28 @@ Conf libssl3t64 (3.0.13-0ubuntu3.6 Ubuntu:24.04/noble-updates, Ubuntu:24.04/nobl
         self.assertEqual(conf["Unattended-Upgrade::Allowed-Origins"], ["${distro_id}:${distro_codename}"])
         self.assertEqual(L.config_scalar(conf, "APT::Periodic::Unattended-Upgrade"), "1")
         self.assertEqual(conf["Unattended-Upgrade::Package-Blacklist"], ["^docker\\.io"])
+
+    def test_phasing_policy(self):
+        def policy(text):
+            return L.phasing_policy(L.parse_apt_config(text))
+        self.assertEqual(policy('APT::Periodic::Unattended-Upgrade "1";\n'), ("default", None))
+        self.assertEqual(policy('APT::Get::Always-Include-Phased-Updates "true";\n'),
+                         ("always", "APT::Get::Always-Include-Phased-Updates"))
+        self.assertEqual(policy('apt::get::always-include-phased-updates "1";\n'),
+                         ("always", "APT::Get::Always-Include-Phased-Updates"), "keys without regard to case")
+        self.assertEqual(policy('Update-Manager::Always-Include-Phased-Updates "yes";\n'),
+                         ("always", "Update-Manager::Always-Include-Phased-Updates"), "update-manager's key is the fallback")
+        self.assertEqual(policy('APT::Get::Always-Include-Phased-Updates "false";\n'
+                                'Update-Manager::Always-Include-Phased-Updates "true";\n'), ("default", None),
+                         "apt's own key, set to false, wins over the fallback")
+        self.assertEqual(policy('APT::Get::Never-Include-Phased-Updates "on";\n'),
+                         ("never", "APT::Get::Never-Include-Phased-Updates"))
+        self.assertEqual(policy('APT::Get::Never-Include-Phased-Updates "true";\n'
+                                'APT::Get::Always-Include-Phased-Updates "true";\n')[0], "always", "always is asked first")
+        self.assertEqual(policy('APT::Get::Always-Include-Phased-Updates "";\n'), ("default", None), "empty is not set")
+        self.assertEqual(policy('APT::Get::Always-Include-Phased-Updates "maybe";\n'), ("default", None))
+        self.assertEqual([L.apt_bool(v) for v in ("1", "Yes", "TRUE", "with", "on", "enable", "0", "no", "off", "2", "")],
+                         [True] * 6 + [False] * 5)
 
     def test_deb822(self):
         recs = L.parse_deb822("Site: a\nRelease: x\n\nSite: b\nDescription: one\n two\n")

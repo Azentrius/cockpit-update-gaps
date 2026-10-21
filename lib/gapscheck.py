@@ -42,6 +42,7 @@ RADAR_MAX = 8 << 20
 RADAR_STALE_H = 72      # the radar runs daily; older data is called stale
 POCKETS = ("Release", "Security", "Updates", "Backports")
 VERSION_RE = re.compile(r"^[0-9][0-9A-Za-z.+~:-]{0,99}$")
+PACKAGE_RE = re.compile(r"^[a-z0-9][a-z0-9+.-]{0,99}(:[a-z0-9][a-z0-9-]{0,19})?$")   # name[:arch]
 SERIES_RE = re.compile(r"^[a-z]{2,20}$")
 CPU_VULN = "/sys/devices/system/cpu/vulnerabilities"
 DMI = "/sys/class/dmi/id"
@@ -232,6 +233,14 @@ class Context:
     def held(self):
         return self._cached("held", lambda: sorted(set(self.cmd(["apt-mark", "showhold"]).out.split())))
 
+    def simulation(self):
+        """What `apt-get dist-upgrade` would do, simulated (no lock: it only reads)."""
+        return self._cached("simulation", lambda: L.parse_dist_upgrade(
+            self.cmd(["apt-get", "-s", "-o", "Debug::NoLocking=1", "dist-upgrade"]).out))
+
+    def apt_config(self):
+        return self._cached("apt-config", lambda: L.parse_apt_config(self.cmd(["apt-config", "dump"]).out))
+
     def indextargets(self, everything):
         key = "targets-all" if everything else "targets"
         argv = ["apt-get", "indextargets"] + (["--no-release-info"] if everything else [])
@@ -298,11 +307,58 @@ def newer_versions(pkg):
 # ------------------------------------------------------------------ checks --
 
 def check_updates(ctx):
-    sim = L.parse_dist_upgrade(ctx.cmd(["apt-get", "-s", "-o", "Debug::NoLocking=1", "dist-upgrade"]).out)
+    sim = ctx.simulation()
     sec = sum(1 for i in sim["inst"] if any(L.is_security_origin(o) for o in i["origins"]))
     out = {"count": len(sim["inst"]), "security": sec, "kept_back": sim["kept_back"],
            "phased": sim["phased"], "source": ["apt-get -s dist-upgrade"]}
     out["state"] = "found" if sim["inst"] else "none"
+    return out
+
+
+def _phased_version(pkg):
+    """The version apt defers: the candidate when it is phased, else the
+    newest phased version above the installed one."""
+    inst = pkg.get("installed")
+    phased = [v for v in pkg["versions"] if "phased" in v and (not inst or L.vercmp(v["version"], inst) > 0)]
+    cand = next((v for v in phased if v["version"] == pkg.get("candidate")), None)
+    return cand or (max(phased, key=lambda v: L.Version(v["version"])) if phased else None)
+
+
+def check_phased(ctx):
+    """Updates Ubuntu rolls out in phases that apt defers on this host for
+    now ("deferred due to phasing"). Cockpit's Software Updates (PackageKit)
+    lists them all the same and refuses them when it installs, and with them
+    every other update of the same transaction. With the versions and the
+    share of the rollout (`apt-cache policy`) and how apt's configuration
+    treats phasing (`apt-config dump`, local)."""
+    names = [n for n in ctx.simulation()["phased"] if PACKAGE_RE.match(n)]
+    source = ["apt-get -s dist-upgrade"]
+    try:
+        include, setting = L.phasing_policy(ctx.apt_config())
+        source.append("apt-config dump")
+    except CommandError:
+        include, setting = None, None           # not known: the page offers the setting as one way
+    pol = bool(names)
+    if names:
+        try:
+            ctx.policy()
+            source.append("apt-cache policy")
+        except CommandError:
+            pol = False                         # the names are enough to say what fails
+    packages = []
+    for name in names:
+        pkg = (ctx.pkg(name) if pol else None) or {"installed": None, "candidate": None, "versions": []}
+        inst = pkg["installed"] if pkg["installed"] and VERSION_RE.match(pkg["installed"]) else None
+        entry = _phased_version(pkg)
+        version = entry["version"] if entry else pkg["candidate"]
+        packages.append({"package": ctx.display(name), "installed": inst,
+                         "version": version if version and version != inst and VERSION_RE.match(version) else None,
+                         "percent": entry["phased"] if entry else None})
+    items, more = _cap(packages)
+    out = {"state": "found" if packages else "none", "packages": items, "include": include, "setting": setting,
+           "source": source}
+    if more:
+        out["more"] = more
     return out
 
 
@@ -566,7 +622,7 @@ def check_local(ctx):
 
 def check_auto(ctx):
     inst = ctx.installed()
-    conf = L.parse_apt_config(ctx.cmd(["apt-config", "dump"]).out)
+    conf = ctx.apt_config()
     did, code = L.distro_id(ctx.osr), ctx.codename
     allowed = [L.uu_expand(v, did, code) for v in conf.get("Unattended-Upgrade::Allowed-Origins", [])]
     patterns = [L.uu_expand(v, did, code) for v in conf.get("Unattended-Upgrade::Origins-Pattern", [])]
@@ -1235,6 +1291,7 @@ def check_upstream(ctx):
 
 CHECKS = (
     ("updates", check_updates),
+    ("phased", check_phased),
     ("held", check_held),
     ("pro", check_pro),
     ("restart", check_restart),

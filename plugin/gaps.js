@@ -24,15 +24,15 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.4.1";
+    const VERSION = "0.5.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
     const MONITOR_MANIFEST = "/usr/share/cockpit/image-updates/manifest.json";
     const FORMAT = 1;          // newest scan.json format this page knows
     const STALE_H = 24;        // a state older than this gets a hint
-    const CARDS = ["held", "pro", "cve", "upstream", "restart", "cpu", "firmware", "snaps", "lists", "local", "auto", "backports",
-                   "newer", "outside", "eol"];
+    const CARDS = ["phased", "held", "pro", "cve", "upstream", "restart", "cpu", "firmware", "snaps", "lists", "local", "auto",
+                   "backports", "newer", "outside", "eol"];
     const RADAR_CHECKS = ["cve", "upstream", "newer"];   // stage 2: they read the radar's network data
     const ALL = ["updates"].concat(CARDS);
 
@@ -298,8 +298,8 @@
                (count ? `<span class="az-label az-label--info">${esc(count)}</span>` : "") + "</div>" +
                `<div class="az-card__body" id="ug-card-${check}-body"${open ? "" : " hidden"}>${inner}</div></section>`;
     }
-    function explain(check, extraTodo) {
-        return `<div class="ug-explain"><p><strong>${esc(t("card.why"))}</strong>${rich(t(check + ".why"))}</p>` +
+    function explain(check, extraTodo, whyTitle) {
+        return `<div class="ug-explain"><p><strong>${esc(t(whyTitle || "card.why"))}</strong>${rich(t(check + ".why"))}</p>` +
                `<p><strong>${esc(t("card.todo"))}</strong>${rich(t(check + ".todo"))}${extraTodo ? " " + extraTodo : ""}</p></div>`;
     }
     function sourceLine(c) {
@@ -356,8 +356,46 @@
     }
     function until(iso) { return iso ? fmtDate(iso) : t("snaps.forever"); }
 
+    // Commands for a terminal, to copy (the page itself installs nothing): the command, then what it does.
+    function commands(list) {
+        return `<ul class="ug-cmds">${list.map(([cmd, html]) => `<li><pre class="ug-lines ug-cmd">${esc(cmd)}</pre><p>${html}</p></li>`).join("")}</ul>`;
+    }
+    const PHASED_ALWAYS = "APT::Get::Always-Include-Phased-Updates";
+
     // --- Cards -------------------------------------------------------------
     const RENDER = {
+        // Software Updates lists what apt defers and fails on it, the other updates with it: the
+        // message it shows, the packages, and the ways around it as commands.
+        phased(c, all) {
+            const pk = c.packages || [];
+            const u = all.updates || {};
+            const first = pk[0] || {};
+            const id = [first.package || "?"].concat(first.version ? [first.version] : []).join(";") + ";…";
+            let fail = tr("phased.fail", { id });
+            if (u.count > 0) {
+                fail += " " + esc(t("phased.blocks", { n: u.count })) + (u.security ? " " + esc(t("sum.updatesSec", { n: u.security })) : "");
+            }
+            const rows = pk.map((f) => [
+                cell(esc(f.package)),
+                ver(f.installed),
+                ver(f.version),
+                cell(typeof f.percent === "number" ? esc(t("phased.percent", { n: f.percent })) : "?"),
+            ]);
+            const names = pk.map((f) => f.package).filter((n) => /^[a-z0-9][a-z0-9+.:-]*$/.test(String(n || "")));
+            const cmds = [["sudo apt-get upgrade", rich(t("phased.cmdUpgrade"))]];
+            if (names.length) cmds.push(["sudo apt-get install --only-upgrade " + names.join(" "), rich(t("phased.cmdOnly"))]);
+            let setting = "";
+            if (c.include === "always") setting = tr("phased.always", { key: c.setting || PHASED_ALWAYS });
+            else if (c.include === "never") setting = tr("phased.never", { key: c.setting || "APT::Get::Never-Include-Phased-Updates" });
+            else cmds.push([`echo '${PHASED_ALWAYS} "true";' | sudo tee /etc/apt/apt.conf.d/99-phased-updates`, rich(t("phased.cmdAlways"))]);
+            const more = c.more ? `<p class="ug-note">${esc(t("held.more", { n: c.more }))}</p>` : "";
+            return card("phased", t("phased.count", { n: pk.length + (c.more || 0) }),
+                explain("phased", "", "card.whyFails") + alertHtml("warning", t("phased.failTitle"), fail) +
+                table(["col.package", "col.installed", "col.deferred", "col.rollout"], rows) + more +
+                `<p class="ug-sub">${esc(t("phased.cmdTitle"))}</p>` + commands(cmds) +
+                (setting ? `<p class="ug-note">${setting}</p>` : "") + sourceLine(c));
+        },
+
         held(c) {
             const rows = c.findings.map((f) => [
                 cell(esc(f.package)),
@@ -646,6 +684,11 @@
     function cleanDetail(k, c) {
         const parts = [];
         if (k === "updates") parts.push(esc(t("clean.updates")));
+        if (k === "phased" && c.state === "none") {
+            parts.push(c.include === "always" ? tr("clean.phasedAlways", { key: c.setting || PHASED_ALWAYS })
+                : c.include === "never" ? tr("clean.phasedNever", { key: c.setting || "APT::Get::Never-Include-Phased-Updates" })
+                : esc(t("clean.phased")));
+        }
         if (k === "lists" && c.last_update) parts.push(esc(t("clean.lists", { ago: ago(c.last_update.ts) })));
         if (k === "eol" && c.standard_until) parts.push(esc(t("eol.supported", { date: fmtDay(c.standard_until) })));
         if (k === "cpu" && c.state === "none") parts.push(esc(t("clean.cpu", { m: c.mitigated || 0, n: c.not_affected || 0 })));

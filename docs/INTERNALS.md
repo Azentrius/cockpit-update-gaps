@@ -68,9 +68,10 @@ install without a state checks once by itself when an administrator opens the pa
 - `format`: 1. A page that knows a lower format says so and shows what it can.
 - `pm`: `apt`, or `null` on a system without `/usr/bin/apt-get`; then every check is `skipped` with
   `reason: "unsupported-os"` and nothing runs.
-- `checks`: always in this order: `updates`, `held`, `pro`, `restart`, `lists`, `local`, `auto`,
-  `backports`, `outside`, `eol`. Each has `check`, `state`, `took_ms` and, when it ran, `source`
-  (the commands and files, for the page's “Source” line).
+- `checks`: always in this order: `updates`, `phased` (0.5.0), `held`, `pro`, `restart`, `cpu`,
+  `firmware`, `snaps`, `lists`, `local`, `auto`, `backports`, `outside`, `eol`, `cve`, `upstream`,
+  `newer`. Each has `check`, `state`, `took_ms` and, when it ran, `source` (the commands and files,
+  for the page's “Source” line). A page that does not know a check leaves it out.
 
 `state`:
 
@@ -84,13 +85,43 @@ install without a state checks once by itself when an administrator opens the pa
 | `error` | the check failed | `error` (short, credentials removed); `reason: "settings"` for `/etc/update-gaps.conf` |
 
 A failing command breaks only the checks that need it (`apt-cache policy` of the installed packages:
-`held`, `local`, `auto`, `backports`).
+`held`, `local`, `auto`, `backports`; `apt-get -s dist-upgrade`: `updates` and `phased`;
+`apt-config dump`: `auto`). `phased` keeps going without the other two: without `apt-cache policy`
+its packages have no versions, without `apt-config dump` its `include` is `null`.
 
 ### The checks
 
 **`updates`** (`apt-get -s -o Debug::NoLocking=1 dist-upgrade`): `count` (`Inst` lines), `security`
 (those with a `-security` origin), `kept_back[]`, `phased[]` (“deferred due to phasing”). `found`
 when `count` > 0; the page shows it in the overview, not as a card.
+
+**`phased`** (0.5.0; the same simulation, run once per scan, `apt-cache policy`, `apt-config
+dump`): updates Ubuntu rolls out in phases that apt defers on this host for now. Software Updates
+(PackageKit) lists them all the same and refuses them in its install transaction, which then fails
+as a whole, the other updates with it (“Package id '<name>;<version>;…' is not available as an
+update candidate”, [LP #1466587](https://bugs.launchpad.net/ubuntu/+source/packagekit/+bug/1466587)).
+`packages[]` (at most 300, the rest in `more`):
+
+```json
+{"package": "systemd", "installed": "259.5-0ubuntu3.4", "version": "259.9-0ubuntu0.1", "percent": 10}
+```
+
+`version` is the deferred version: the candidate when `apt-cache policy` marks it `(phased N%)`,
+else the newest phased version above the installed one; `percent` is that share of the rollout.
+Both, and `installed`, are `null` when `apt-cache policy` failed or did not say. Only names that
+look like package names (`name` or `name:arch`) are taken. `include` is how apt's configuration
+treats phasing, read as apt reads it (`pkgDepCache::PhasingApplied`): `always` when
+`APT::Get::Always-Include-Phased-Updates` is true (or, when that key is not set,
+`Update-Manager::Always-Include-Phased-Updates`), else `never` for the `Never-Include` pair, else
+`default`; `null` when `apt-config dump` failed. `setting` names the key that decided, or `null`.
+`found` with a package; with `include: "always"` apt defers nothing, and the page says so under “No
+findings” instead of offering the setting. The page quotes PackageKit's message with the first
+package, counts the other updates from `updates`, and gives commands to copy, never to run:
+`sudo apt-get upgrade` (the rest, still deferring the phased ones), `sudo apt-get install
+--only-upgrade <packages>` (the phased ones ahead of the rollout) and, unless `include` is
+`always` or `never`, the host-wide setting in `/etc/apt/apt.conf.d/99-phased-updates` with its
+price (the server is among the first of every rollout). The status for the Status Board has no
+item for it.
 
 **`held`** (`apt-mark showhold`, `apt-cache policy`, `/var/log/dpkg.log*`): `findings[]`:
 
@@ -456,11 +487,11 @@ public state and logs below `$XDG_CACHE_HOME`.
 
 | File | Checks |
 |---|---|
-| `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy`, `apt-get -s`, needrestart, deb822, `apt-config`, dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed; stage 3: CPU vulnerabilities sorted, `/proc/cpuinfo`, the kernel command line, DMI values and dates, the JSON of fwupd, snapd's times |
-| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current; stage 3: the VMs of the recorded hosts where only the provider can fix `tsa`, an Intel VM, a physical server with and without its microcode package (Debian without `non-free-firmware`), protections switched off, containers (also without `systemd-detect-virt`), fwupd with an update, old metadata and the refresh timer off, nothing to update, a failing fwupdmgr; snaps held, put off, failing and on an old base, snapd not asked without snaps, snapd not answering |
+| `test/lib_test.py` | Debian version order (against `dpkg --compare-versions` when dpkg is there), the parsers of `apt-cache policy` (with the share of a phased version), `apt-get -s`, needrestart, deb822, `apt-config` (and how it treats phased updates: both keys, the fallback, case, apt's booleans), dpkg's log, Release dates, unattended-upgrades matching, the settings file, credentials removed; stage 3: CPU vulnerabilities sorted, `/proc/cpuinfo`, the kernel command line, DMI values and dates, the JSON of fwupd, snapd's times |
+| `test/scan_test.py` | every check against output recorded on real hosts (`test/fixtures/<scenario>/`, `test/fakesys.py`): the findings of each host, no host names in the result; no root, missing tools, a time-out and a failing command breaking only their checks, Debian, a system without apt, the settings file; the state file written atomically; `gapsproc` (environment, time-out of a process group, `nobody` with a private `HOME`), `pro` without root; the `scan-*.json` and `status-*.json` fixtures current; stage 3: the VMs of the recorded hosts where only the provider can fix `tsa`, an Intel VM, a physical server with and without its microcode package (Debian without `non-free-firmware`), protections switched off, containers (also without `systemd-detect-virt`), fwupd with an update, old metadata and the refresh timer off, nothing to update, a failing fwupdmgr; snaps held, put off, failing and on an old base, snapd not asked without snaps, snapd not answering; phased updates: none on the recorded hosts, systemd deferred during a rollout (versions, share, the updates beside it), the setting on or set to never, a failing `apt-config dump` or `apt-cache policy`, a time-out of the simulation, names that are no package names |
 | `test/radar_test.py` | the radar's parsers (versions, Launchpad, GitHub, OVAL with a refused `DOCTYPE`), fetching through a stub (ETag and 304, size limit, no plain http, no redirect away from https, slow-down), old answers kept and marked, a whole run without network; the checks `cve`, `upstream`, `newer` on the recorded hosts with `radar-*.json`, another release, broken and oversized files, values checked, only the scan's own selection, old data, the status item; the selection with a superseded installed version (an Ubuntu build stays selected, an unmarked or third-party build is named as unverified), a failed OVAL download without a copy (an error, not "nothing found"), a good download without entries, an old copy after failed downloads and old Launchpad and GitHub answers (their own age, also in the status), a copy of unknown time, the radar keeping the time of its last good download; data of unknown age (a copy without its time and failed downloads, twice and six days apart: no time in the status, at least a warning, a danger kept, the summary in both languages; nothing found in them; known old and fresh times; a state without `data_at`) |
 | `test/status_test.py` | the status (schema 1) of every recorded host (`checked_at` and `stale_after` optional, but valid when there) in both languages: fields, ids, links, states and the overall state, nothing private, no German in English; checks that did not run, Debian, other systems, end of support; `gaps-status.py`: languages, no file, a broken file, wrong calls (64), unreadable (77), well within 2 seconds; `gaps-scan.py --status`; the items `cpu` (info in a VM, a warning for this server), `firmware` and `snaps` (only with a finding) |
-| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the network data after a failed fetch without a copy (under “Not checked”, not “No findings”), an old copy (its age on the card and at the top, partly checked without findings), packages of unclear origin, a state of 0.4.1 without `data_at`; data of unknown age (neither “0 hours old” nor the radar's run as their time, the reason under “No findings”, the menu's warning and tooltip); the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages |
+| `test/page_test.js` | the page in jsdom with the `scan-*.json` fixtures: cards and their order, overview, “No findings”, “Not checked”, page messages (no admin, no state, old state, software changed, failed and running scans, other systems, newer formats), the first check by itself, Refresh, the timer dialog, links, escaping, the watch, both languages and every text key; the menu icon (the recorded hosts in both languages, no file, a broken one, an item worse than the whole, out of date, the check again at 24 hours, what the board ignores), the page loaded hidden (nothing run, the first check only once shown), a link while the page is hidden; the network data after a failed fetch without a copy (under “Not checked”, not “No findings”), an old copy (its age on the card and at the top, partly checked without findings), packages of unclear origin, a state of 0.4.1 without `data_at`; data of unknown age (neither “0 hours old” nor the radar's run as their time, the reason under “No findings”, the menu's warning and tooltip); the cards `cpu`, `firmware` and `snaps` for a VM, a physical server and what the hosts do not have, escaped, in both languages; phased updates (the card first, PackageKit's message with the package and version, the other updates it blocks, the share of the rollout, the commands to copy and no button, the setting said instead of offered, odd names kept out of the command, escaped, nothing deferred and the setting under “No findings”, both languages) |
 | `test/contrast_test.py`, `test/fonts_test.py` | WCAG contrast of every colour pair in light and dark; every font the page uses ships with it |
 | `test/scenarios.sh` | CI (job `scenarios`), in Debian 12/13 and Ubuntu 22.04/24.04/26.04 containers: a held package, a package without a source, a source without lists, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist; the scan as root and as a user; the status read by a user; never `apt-get` from `/usr/local`; `cpu` and `firmware` skipped in the container, no snaps |
 | `test/cockpit-setup.sh`, `test/cockpit-session.py` | CI (job `cockpit`): a real Cockpit with systemd on a throw-away runner, Playwright with Chromium: the page in the menu, the first check by itself through the service (no network), findings of the setup on the page, Refresh, the timer set up and switched off from the page, a user without administrative access in German, the status through the manifest's command as a user, a link `#/restart` at its card; since 0.2.0 the page loaded hidden after the login without checking, the menu icon as `gaps-status.py status` says (English, and German before the page is opened), `cockpit.jump` into the loaded page (another card while it is shown, a card while it is hidden, no reload); since 0.4.0 `cpu`, `firmware` and `snaps` in the real service (the runner is a VM); no JavaScript or resource errors beyond Cockpit's own |
@@ -470,4 +501,7 @@ public state and logs below `$XDG_CACHE_HOME`.
 Fixtures: `test/fixtures/capture.sh` records the commands' output on a host (read only);
 `test/fixtures/import_capture.py` turns it into a scenario without host names and with neutral names
 for files outside apt; `test/fixtures/make_scans.py` writes the `scan-*.json` the page tests and the
-preview read.
+preview read. `scan-resolute-nodesource-phased.json` is the recorded host during a phased rollout
+(`fakesys.phased_results`: systemd 259.9 at 10 % beside three regular updates, as on the recorded
+Ubuntu 26.04 hosts on 2026-10-20). `capture.sh` keeps the keys of `apt-config dump` that the scan
+reads (unattended-upgrades, `APT::Periodic`, the phasing keys), nothing else of it.

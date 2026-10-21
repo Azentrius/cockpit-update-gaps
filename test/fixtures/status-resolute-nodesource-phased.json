@@ -1,0 +1,108 @@
+{
+ "schema": 1,
+ "addon": "update-gaps",
+ "label": "Update Gaps",
+ "version": "0.1.0",
+ "checked_at": "2026-10-19T20:55:00Z",
+ "state": "info",
+ "summary": "Findings in 4 areas: CPU vulnerabilities, Fixes only with Ubuntu Pro, Package lists, Regular updates.",
+ "items": [
+  {
+   "id": "held",
+   "state": "ok",
+   "title": "Held packages",
+   "value": "0",
+   "link": "#/held",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "restart",
+   "state": "ok",
+   "title": "Restart",
+   "link": "#/restart",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "cpu",
+   "state": "info",
+   "title": "CPU vulnerabilities",
+   "value": "1",
+   "detail": "tsa; only the provider can fix it (virtual machine)",
+   "link": "#/cpu",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "pro",
+   "state": "info",
+   "title": "Fixes only with Ubuntu Pro",
+   "value": "1",
+   "detail": "restic",
+   "link": "#/pro",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "lists",
+   "state": "info",
+   "title": "Package lists",
+   "detail": "apt-daily reported problems",
+   "link": "#/lists",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "eol",
+   "state": "ok",
+   "title": "Support of the release",
+   "detail": "standard support until 2031-05-29",
+   "link": "#/eol",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  },
+  {
+   "id": "updates",
+   "state": "info",
+   "title": "Regular updates",
+   "value": "3",
+   "detail": "1 from a security source",
+   "checked_at": "2026-10-19T20:55:00Z",
+   "stale_after": 86400
+  }
+ ],
+ "i18n": {
+  "de": {
+   "summary": "Befunde in 4 Bereichen: CPU-Schwachstellen, Fixes nur mit Ubuntu Pro, Paketlisten, Reguläre Updates.",
+   "items": {
+    "held": {
+     "title": "Gehaltene Pakete"
+    },
+    "restart": {
+     "title": "Neustart"
+    },
+    "cpu": {
+     "title": "CPU-Schwachstellen",
+     "detail": "tsa; beheben kann es nur der Anbieter (virtuelle Maschine)"
+    },
+    "pro": {
+     "title": "Fixes nur mit Ubuntu Pro",
+     "detail": "restic"
+    },
+    "lists": {
+     "title": "Paketlisten",
+     "detail": "apt-daily meldete Probleme"
+    },
+    "eol": {
+     "title": "Unterstützung der Version",
+     "detail": "Standard-Unterstützung bis 2031-05-29"
+    },
+    "updates": {
+     "title": "Reguläre Updates",
+     "detail": "1 aus einer Sicherheitsquelle"
+    }
+   }
+  }
+ }
+}

@@ -12,7 +12,8 @@
                         error
 
 and the cases those hosts do not have: no root, missing tools, time limits,
-broken settings, another distribution."""
+broken settings, another distribution, a phased rollout (resolute-nodesource
+while Ubuntu rolls systemd out in phases, fakesys.phased_results)."""
 
 import importlib.util
 import json
@@ -27,7 +28,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "lib"))
 sys.path.insert(0, HERE)
 import gapscheck  # noqa: E402
 import gapsproc  # noqa: E402
-from fakesys import FakeSystem  # noqa: E402
+from fakesys import FakeSystem, phased_results  # noqa: E402
 
 STATES = {"found", "none", "partial", "skipped", "timeout", "error"}
 CHECKS = [name for name, _ in gapscheck.CHECKS]
@@ -250,6 +251,66 @@ class Degraded(unittest.TestCase):
         self.assertIsNone(doc["pm"])
         self.assertTrue(all(c["state"] == "skipped" and c["reason"] == "unsupported-os" for c in doc["checks"]))
         self.assertEqual(fs.calls, [], "nothing runs on a system without apt")
+
+
+def apt_config_plus(scenario, text):
+    with open(os.path.join(HERE, "fixtures", scenario, "commands", "apt-config-dump.txt"), encoding="utf-8") as f:
+        return gapsproc.Result(0, f.read() + text, "")
+
+
+class Phased(unittest.TestCase):
+    """Ubuntu rolls an update out in phases and apt defers it here; Software
+    Updates (PackageKit) lists it all the same and fails on it."""
+
+    def test_none_on_the_recorded_hosts(self):
+        for sc in ("noble-held", "resolute-stale-lists", "resolute-nodesource"):
+            p = scan(sc)[1]["phased"]
+            self.assertEqual((p["state"], p["packages"], p["include"], p["setting"]), ("none", [], "default", None), sc)
+            self.assertEqual(p["source"], ["apt-get -s dist-upgrade", "apt-config dump"], "no apt-cache policy without a phased package")
+
+    def test_deferred_with_versions_and_share(self):
+        doc, c = scan("resolute-nodesource", results=phased_results())
+        self.assertEqual([x["check"] for x in doc["checks"]][:3], ["updates", "phased", "held"])
+        p = c["phased"]
+        self.assertEqual(p["state"], "found")
+        self.assertEqual(p["packages"], [{"package": "systemd", "installed": "259.5-0ubuntu3.4",
+                                          "version": "259.9-0ubuntu0.1", "percent": 10}])
+        self.assertEqual((p["include"], p["setting"]), ("default", None))
+        self.assertEqual(p["source"], ["apt-get -s dist-upgrade", "apt-config dump", "apt-cache policy"])
+        u = c["updates"]
+        self.assertEqual((u["state"], u["count"], u["security"], u["phased"]), ("found", 3, 1, ["systemd"]),
+                         "the updates Software Updates fails on together with systemd")
+
+    def test_setting_read_from_apt_config(self):
+        on = apt_config_plus("resolute-nodesource", 'APT::Get::Always-Include-Phased-Updates "true";\n')
+        p = scan("resolute-nodesource", results={"apt-config-dump": on})[1]["phased"]
+        self.assertEqual((p["state"], p["include"], p["setting"]), ("none", "always", "APT::Get::Always-Include-Phased-Updates"))
+        never = apt_config_plus("resolute-nodesource", 'Update-Manager::Never-Include-Phased-Updates "1";\n')
+        p = scan("resolute-nodesource", results=dict(phased_results(), **{"apt-config-dump": never}))[1]["phased"]
+        self.assertEqual((p["state"], p["include"], p["setting"]), ("found", "never", "Update-Manager::Never-Include-Phased-Updates"))
+
+    def test_failing_apt_config_or_policy(self):
+        broken = gapsproc.Result(100, "", "E: broken")
+        doc, c = scan("resolute-nodesource", results=dict(phased_results(), **{"apt-config-dump": broken}))
+        p = c["phased"]
+        self.assertEqual((p["state"], p["include"], p["setting"]), ("found", None, None), "the setting is not known")
+        self.assertEqual(c["auto"]["state"], "error", "auto needs the configuration")
+        doc, c = scan("resolute-nodesource", results=dict(phased_results(), **{"apt-cache-policy-installed": broken}))
+        p = c["phased"]
+        self.assertEqual(p["state"], "found")
+        self.assertEqual(p["packages"], [{"package": "systemd", "installed": None, "version": None, "percent": None}],
+                         "the name is enough to say what fails")
+        self.assertNotIn("apt-cache policy", p["source"])
+
+    def test_simulation_timeout_and_odd_names(self):
+        c = scan("noble-held", results={"apt-get-s-dist-upgrade": gapsproc.Result(None, timeout=True)})[1]
+        self.assertEqual((c["updates"]["state"], c["phased"]["state"]), ("timeout", "timeout"))
+        odd = phased_results()
+        odd["apt-get-s-dist-upgrade"] = gapsproc.Result(0, odd["apt-get-s-dist-upgrade"].out.replace(
+            "  systemd\n", "  systemd $(reboot) libfoo:i386\n"), "")
+        p = scan("resolute-nodesource", results=odd)[1]["phased"]
+        self.assertEqual([x["package"] for x in p["packages"]], ["systemd", "libfoo:i386"], "only what looks like a package name")
+        self.assertEqual(p["packages"][1], {"package": "libfoo:i386", "installed": None, "version": None, "percent": None})
 
 
 VULN = gapscheck.CPU_VULN

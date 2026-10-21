@@ -30,6 +30,18 @@
    "took_ms": 0
   },
   {
+   "check": "phased",
+   "state": "none",
+   "packages": [],
+   "include": "default",
+   "setting": null,
+   "source": [
+    "apt-get -s dist-upgrade",
+    "apt-config dump"
+   ],
+   "took_ms": 0
+  },
+  {
    "check": "held",
    "state": "found",
    "findings": [

@@ -15,8 +15,9 @@
       the kernel reports, firmware updates (with fwupd), snaps that are not refreshed, missing or
       old package lists, packages without a source, sources the automatic updates leave out,
       backports not installed, software outside the package manager and the end of support.
-      For every finding it says why Software Updates does not show it and what you can do.
-      It only reads.
+      For every finding it says why Software Updates does not show it and what you can do. When
+      Ubuntu rolls updates out in phases and Software Updates fails on them, it says why and gives
+      the commands that get around it. It only reads.
     </p>
     <p>
       Once set up, network data add security issues Ubuntu has not fixed yet, fixes released
@@ -30,7 +31,8 @@
       alte Paketlisten, Pakete ohne Paketquelle, Quellen außerhalb der automatischen Updates,
       nicht installierte Backports, Software außerhalb des Paketmanagers und das Ende der
       Unterstützung. Zu jedem Befund steht, warum Software-Updates ihn nicht zeigt und was Sie
-      tun können. Sie liest nur.
+      tun können. Verteilt Ubuntu Updates schrittweise und scheitert Software-Updates daran,
+      erklärt sie, warum, und nennt die Befehle, die daran vorbeiführen. Sie liest nur.
     </p>
     <p xml:lang="de">
       Einmal eingerichtet, kommen Netzdaten hinzu: Sicherheitslücken, die Ubuntu noch nicht

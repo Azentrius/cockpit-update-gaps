@@ -31,6 +31,7 @@ showing what that does.
 
 | Area | Source on the server | Why “Software Updates” does not show it |
 |---|---|---|
+| **Phased updates Software Updates cannot install** (Ubuntu) | `apt-get -s dist-upgrade` (“deferred due to phasing”), `apt-cache policy`, `apt-config dump` | it lists them, but its install fails on them, and on every other update with them ([LP #1466587](https://bugs.launchpad.net/ubuntu/+source/packagekit/+bug/1466587)); the card gives the commands that work around it |
 | **Held packages** and what they miss | `apt-mark showhold`, `apt-cache policy` | a package on hold is never upgraded, and PackageKit does not list it |
 | **Fixes only with Ubuntu Pro** | `pro security-status --format json` | without Ubuntu Pro apt has no source for `esm-apps` and `esm-infra` |
 | **Restart pending** | `needrestart -b -r l`, `/var/run/reboot-required` | on Debian and Ubuntu Cockpit does not tell when a restart is pending |
@@ -67,7 +68,9 @@ VMs and home directories, and whether a security issue applies to the configurat
 - **Cards:** one per area with findings, in a fixed order, each opened and closed through its title (the
   browser remembers which are closed): what keeps a fix back first, then the
   state of the system, then what the automatic updates cover, then the inventory. Each card has
-  “Why Software Updates does not show it”, “What you can do” and the source of the data.
+  “Why Software Updates does not show it” (for phased updates: “Why Software Updates fails”),
+  “What you can do” and the source of the data. Where a card gives commands, they are to copy
+  into a terminal: the page installs nothing.
 - **No findings:** the areas checked without a finding, and what was only partly checked.
 - **Not checked:** what the page cannot see, plus every area that was skipped, failed or ran out
   of time on this server, with the reason.

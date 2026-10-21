@@ -200,10 +200,14 @@ def parse_policy_sources(text):
     return sources
 
 
+PHASED_RE = re.compile(r"\(phased (\d{1,3})%\)")
+
+
 def parse_policy_packages(text):
     """`apt-cache policy <pkg> …` -> {name: {"installed", "candidate",
     "versions": [{"version", "priority", "current", "sources": [(prio, key)]}]}}.
-    "installed" and "candidate" are None for "(none)"."""
+    "installed" and "candidate" are None for "(none)". A version Ubuntu rolls
+    out in phases ("2.0-1 500 (phased 10%)") has "phased": 10 as well."""
     pkgs = {}
     cur = ver = None
     for line in (text or "").splitlines():
@@ -231,6 +235,9 @@ def parse_policy_packages(text):
                 continue
             ver = {"version": m.group(1), "priority": int(m.group(2)),
                    "current": s.startswith("*** "), "sources": []}
+            ph = PHASED_RE.search(s)
+            if ph:
+                ver["phased"] = int(ph.group(1))
             cur["versions"].append(ver)
         elif line.startswith("        ") and ver is not None:
             m = re.match(r"^(-?\d+) (\S.*?)\s*$", s)
@@ -389,6 +396,40 @@ def parse_apt_config(text):
 def config_scalar(conf, key, default=None):
     values = conf.get(key)
     return values[-1] if values else default
+
+
+def apt_bool(value, default=False):
+    """A boolean of apt's configuration as apt reads it: 0 and 1,
+    yes/true/with/on/enable and no/false/without/off/disable in any case;
+    anything else is the default."""
+    v = (value or "").strip().lower()
+    if v in ("1", "yes", "true", "with", "on", "enable"):
+        return True
+    if v in ("0", "no", "false", "without", "off", "disable"):
+        return False
+    return default
+
+
+# apt's keys for phased updates, each with the key of update-manager it falls back to.
+PHASING_KEYS = (("always", ("APT::Get::Always-Include-Phased-Updates", "Update-Manager::Always-Include-Phased-Updates")),
+                ("never", ("APT::Get::Never-Include-Phased-Updates", "Update-Manager::Never-Include-Phased-Updates")))
+
+
+def phasing_policy(conf):
+    """How apt's configuration treats phased updates, in apt's order
+    (pkgDepCache::PhasingApplied): ("always", key) when an Always-Include key
+    is true, else ("never", key) when a Never-Include key is true, else
+    ("default", None). The APT::Get:: key wins over the Update-Manager:: key
+    it falls back to; apt reads keys without regard to case."""
+    low = {k.lower(): v for k, v in conf.items()}
+    for policy, keys in PHASING_KEYS:
+        for key in keys:
+            values = low.get(key.lower())
+            if values:
+                if apt_bool(values[-1]):
+                    return policy, key
+                break
+    return "default", None
 
 
 # --------------------------------------------------- unattended-upgrades --

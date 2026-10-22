@@ -12,7 +12,7 @@ VERSION := $(shell sed -n 's/^ *const VERSION = "\(.*\)";.*/\1/p' plugin/gaps.js
 # Reproducible archives and packages: file times from the last commit.
 SOURCE_DATE_EPOCH ?= $(shell git log -1 --format=%ct 2>/dev/null || date +%s)
 
-.PHONY: all install uninstall check lint dist stage packages
+.PHONY: all install uninstall check lint dist stage packages preview
 
 all:
 	@echo "Nothing to build. Try: make check, make lint, make packages, sudo make install"
@@ -59,6 +59,11 @@ stage:
 	install -m 644 plugin/CC-BY-4.0-Font-Awesome.txt build/root/usr/share/doc/cockpit-update-gaps/
 
 # cockpit-update-gaps_VERSION-1_all.deb and cockpit-update-gaps-VERSION-1.noarch.rpm in dist/
-# (needs dpkg-deb and rpmbuild), reproducible. Releases of 0.1 carry only the .deb.
+# (needs dpkg-deb and rpmbuild), reproducible. Releases carry no .rpm yet: the page checks only
+# apt systems so far.
 packages: stage
 	SOURCE_DATE_EPOCH=$(SOURCE_DATE_EPOCH) sh tools/build-packages.sh build/root $(VERSION) dist
+
+# The page with recorded data: tools/preview/out/update-gaps/index.html?scenario=noble-held
+preview:
+	python3 tools/preview/build.py

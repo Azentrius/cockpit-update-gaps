@@ -55,6 +55,15 @@ def main():
         a, b = (pg.locator(f"#ug-card-{k}").bounding_box() for k in ("dpkg", "boot"))
         pg.screenshot(path=os.path.join(OUT, "upkeep.png"), full_page=True,
                       clip={"x": a["x"], "y": a["y"], "width": a["width"], "height": b["y"] + b["height"] - a["y"]})
+        # Acknowledged findings: the overview with the acknowledged areas, down to the held card.
+        pg = page(1440, 1000, "scenario=noble-held-accepted&lang=en")
+        a, b = (pg.locator(s).bounding_box() for s in ("#ug-summary", "#ug-card-held"))
+        pg.screenshot(path=os.path.join(OUT, "accepted.png"), full_page=True,
+                      clip={"x": a["x"], "y": a["y"], "width": a["width"], "height": b["y"] + b["height"] - a["y"]})
+        pg = page(1440, 900, "scenario=noble-held&lang=en")
+        pg.locator("#ug-card-pro [data-accept]").first.click()
+        pg.wait_for_timeout(300)
+        pg.screenshot(path=os.path.join(OUT, "acknowledge-dialog.png"))
         pg = page(1440, 900, "scenario=noble-held&lang=en")
         pg.click("#ug-timer-setup")
         pg.wait_for_timeout(300)

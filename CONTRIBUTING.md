@@ -24,22 +24,39 @@ pip install -r test/requirements.txt   # pinned check tools: shellcheck, ruff, p
 make check                       # every offline test: helpers with fake commands, page under jsdom, version and changelog
 make lint                        # shellcheck, ruff, systemd-analyze for the units, as in CI
 make packages                    # .deb and .rpm in dist/ (needs dpkg-deb and rpmbuild)
-python3 tools/preview/build.py   # the page with test data: tools/preview/out/update-gaps/index.html?lang=en (or de)
+python3 tools/preview/build.py   # the page with test data: tools/preview/out/update-gaps/index.html?scenario=noble-held&lang=en (or de)
 ```
 
-The offline tests need no root and no network: the helpers run against fake `apt`, `dpkg`,
-`needrestart`, `pro`, `fwupdmgr` and snapd answers and recorded files of `/sys` and `/proc` from real
-systems (`test/fixtures/`), and the radar against a stub instead of the network services. The
-`test` workflow runs the lint, the tests and the package build on every push and pull request; it has
-to be green before a merge.
+The offline tests need no root and no network: the helpers run against fake `apt`, `apt-config`,
+`dpkg`, `needrestart`, `pro`, `gpg`, `systemctl`, `journalctl`, `fwupdmgr` and snapd answers
+(`test/fakesys.py`) and recorded files of `/sys`, `/proc` and `/boot` (with its free room,
+`statvfs`) and the log of unattended-upgrades from real systems (`test/fixtures/`), and the radar
+against a stub instead of the network services. The `test` workflow runs the lint, the tests and the
+package build on every push and pull request; its job `test` has to be green before a merge. Its
+other jobs: `python-min` runs the helper tests on Python 3.8, `scenarios` runs the helpers on Debian
+12 and 13 and Ubuntu 22.04, 24.04 and 26.04 in throw-away containers, and `install` installs and
+removes the packages on more distributions and checks that Ubuntu 20.04 and Rocky Linux 8 refuse
+them.
+
+## The page in a real Cockpit
+
+The job `cockpit` installs Cockpit on a throw-away GitHub runner and drives the page through
+Cockpit's login with Playwright (`test/cockpit-setup.sh`, `test/cockpit-session.py`): this build
+installed with apt, the page in the menu, the first check by itself through the service, “Refresh”,
+the regular check and the network data set up from the page, a finding acknowledged and taken back,
+a user without administrative access, the links of the status, errors in the browser. It creates
+users, holds a package and sets the reboot flag, so it runs only there, never on a machine you use.
+Its summary lists the versions and every step; the artifact `cockpit-session` has screenshots. A
+change to what the page does in Cockpit gets a step there.
 
 ## How the add-on is built
 
 - **Read only.** The helpers never run `apt update`, install, remove or restart anything. They write
-  only the add-on's own state (`/var/lib/update-gaps/scan.json`) and lock. The only changes from the
-  page are setting up the add-on's own timers (the regular check, the network data), and they run as
-  show → confirm → live output → result. The add-on never installs anything, not even a tool it
-  could use (fwupd, needrestart): the page says what it could not check.
+  only the add-on's own files in `/var/lib/update-gaps` (`scan.json`, `status.json`, and
+  `accepted.json` through `gaps-accept.py`) and their locks. The only changes from the page are
+  setting up the add-on's own timers (the regular check, the network data) and acknowledging
+  findings, each as show → confirm → live output → result. The add-on never installs anything, not
+  even a tool it could use (fwupd, needrestart): the page says what it could not check.
 - **Root code only in `lib/`**, installed to `/usr/lib/cockpit-update-gaps` (root-owned). Nothing is
   ever run or imported from a directory others can write.
 - **Root never on the network, network never as root.** The scan service runs with

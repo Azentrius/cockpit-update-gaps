@@ -55,6 +55,8 @@ function proc(out, { chunks = [], fail = null, gate = null } = {}) {
         if (gate) gate.then(go); else go();
     });
     p.stream = (f) => { cb = f; return p; };
+    p.inputs = [];
+    p.input = (data) => { p.inputs.push(data); return p; };
     return track(p);
 }
 
@@ -89,14 +91,15 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
             };
         },
         spawn(argv, opts) {
-            calls.spawn.push({ argv: argv.slice(), opts: opts || {} });
+            const call = { argv: argv.slice(), opts: opts || {} };
+            calls.spawn.push(call);
             const verb = argv.slice(1).join(" ");
             if (onSpawn) {
                 const r = onSpawn(verb, opts || {}, files);
-                if (r) return r;
+                if (r) return (call.proc = r);
             }
-            if (verb === "status") return proc(JSON.stringify(typeof status === "function" ? status() : status));
-            return proc("", { chunks: ["ok\n"] });
+            if (verb === "status") return (call.proc = proc(JSON.stringify(typeof status === "function" ? status() : status)));
+            return (call.proc = proc("", { chunks: ["ok\n"] }));
         },
         jump(p) { calls.jumps.push(p); },
         transport: { wait() {}, control(c, o) { calls.notes.push([c, JSON.parse(JSON.stringify(o))]); } },
@@ -108,10 +111,12 @@ function boot({ language = "en", state = scan("noble-held"), status = STATUS, no
     return { w, d: w.document, calls, files, watchers, listeners, hint };
 }
 
-// The visible text, with a space between table cells and list items as a reader sees them.
+// The visible text, with a space between table cells and list items as a reader sees them. The
+// buttons to acknowledge a finding are left out (the tests look at them on their own).
 function text(el) {
     if (!el) return "";
     const c = el.cloneNode(true);
+    c.querySelectorAll(".ug-ack-btn").forEach((x) => x.remove());
     c.querySelectorAll("td, th, li, dt, dd, p, summary").forEach((x) => x.append(" "));
     return c.textContent.replace(/\s+/g, " ").trim();
 }

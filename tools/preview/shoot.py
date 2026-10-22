@@ -22,7 +22,7 @@ REPO = os.path.dirname(os.path.dirname(HERE))
 PAGE = os.path.join(HERE, "out", "update-gaps", "index.html")
 OUT = sys.argv[1] if len(sys.argv) > 1 else os.path.join(REPO, "docs", "img")
 SCENARIOS = ("noble-held", "resolute-stale-lists", "resolute-nodesource", "resolute-nodesource-user",
-             "resolute-nodesource-phased", "noble-held-upkeep", "none")
+             "resolute-nodesource-phased", "noble-held-upkeep", "noble-held-accepted", "none")
 
 
 def main():

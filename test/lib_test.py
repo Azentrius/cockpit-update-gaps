@@ -3,6 +3,7 @@
 """gapslib: Debian version order, the parsers of apt, dpkg and needrestart
 output, unattended-upgrades matching, the settings file."""
 
+import json
 import os
 import shutil
 import subprocess
@@ -417,6 +418,59 @@ class UnattendedLogTest(unittest.TestCase):
                              ("iF", "half-configured"), ("iH", "half-installed"), ("iW", "triggers-awaited"),
                              ("it", "triggers-pending"), ("iiR", "reinst-required"), ("", None), (None, None)):
             self.assertEqual(L.dpkg_problem(abbrev), want, abbrev)
+
+
+class AcknowledgedTest(unittest.TestCase):
+    HELD = {"package": "docker-ce", "installed": "5:29.8.0-1", "candidate": "5:29.9.1-1", "newer": 4, "security": None}
+
+    def test_ref_and_pin(self):
+        ref = L.finding_ref("held", self.HELD)
+        self.assertRegex(ref, r"^held-[0-9a-f]{12}$")
+        self.assertRegex(ref, L.REF_RE)
+        newer = dict(self.HELD, candidate="5:29.9.2-1", newer=5)
+        self.assertEqual(L.finding_ref("held", newer), ref, "a new version is the same finding")
+        self.assertEqual(L.finding_pin("held", newer), L.finding_pin("held", self.HELD), "and still what was acknowledged")
+        self.assertNotEqual(L.finding_pin("held", dict(self.HELD, security=True)), L.finding_pin("held", self.HELD),
+                            "a fix from a security source is not")
+        self.assertNotEqual(L.finding_ref("held", dict(self.HELD, package="docker-ce-cli")), ref)
+        self.assertNotEqual(L.finding_ref("local", self.HELD), ref, "the check is part of the name")
+        # Firmware updates and failed snap refreshes are told apart by device and change.
+        self.assertNotEqual(L.finding_ref("firmware", {"kind": "update", "device": "UEFI dbx"}),
+                            L.finding_ref("firmware", {"kind": "update", "device": "Dock"}))
+        self.assertNotEqual(L.finding_ref("snaps", {"kind": "refresh-failed", "id": "41"}),
+                            L.finding_ref("snaps", {"kind": "refresh-failed", "id": "42"}))
+
+    def test_label_and_reason(self):
+        self.assertEqual(L.finding_label(self.HELD), "docker-ce")
+        self.assertEqual(L.finding_label({"kind": "space", "free": 1}), "space")
+        self.assertEqual(L.finding_label({"kind": "expired", "file": "/usr/share/keyrings/x.gpg"}), "/usr/share/keyrings/x.gpg")
+        self.assertEqual(L.finding_label({}), "")
+        self.assertEqual(L.clean_reason("  until\nthe\twindow \x1b[31m "), "until the window [31m")
+        self.assertEqual(len(L.clean_reason("x" * 500)), 200)
+        self.assertEqual(L.clean_reason(None), "")
+
+    def test_parse_accepted(self):
+        ref = L.finding_ref("held", self.HELD)
+        good = {"ref": ref, "check": "held", "label": "docker-ce", "pin": "0123456789ab", "until": "2026-11-01",
+                "reason": "maintenance\nwindow", "at": "2026-10-19T08:00:00Z"}
+        today = L.parse_day("2026-10-22")
+        text = json.dumps({"format": 1, "accepted": [
+            good,
+            dict(good, ref="held-zzzz"),                                       # not a ref
+            dict(good, ref="cpu-0123456789ab"),                                # ref of another check
+            dict(good, ref="cve-0123456789ab", check="cve"),                   # network data cannot be acknowledged
+            dict(good, ref="held-111111111111", until="2027-03-01"),           # more than 90 days after it was given
+            dict(good, ref="held-222222222222", until="2026-09-01"),           # ended more than 30 days ago
+            dict(good, ref="held-333333333333", until="2026-10-01"),           # ended, still shown
+            dict(good, ref="held-444444444444", until="2026-13-01"),           # no day
+            dict(good, ref="held-555555555555", pin="no"),                     # no pin: never matches
+            "nonsense"]})
+        out = L.parse_accepted(text, today)
+        self.assertEqual(sorted(out), sorted([ref, "held-333333333333", "held-555555555555"]))
+        self.assertEqual(out[ref]["reason"], "maintenance window")
+        self.assertEqual(out["held-555555555555"]["pin"], "")
+        for bad in ("", "{", "[]", '{"format": 2, "accepted": []}', '{"format": 1, "accepted": {}}'):
+            self.assertEqual(L.parse_accepted(bad, today), {}, bad)
 
 
 if __name__ == "__main__":

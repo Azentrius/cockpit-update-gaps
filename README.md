@@ -8,8 +8,8 @@ section never means “safe”: the page always says what it did not check and h
 The add-on only reads. A local service without network access checks the server and writes the
 state; the page shows it. Network data (security issues Ubuntu has not fixed yet, upstream
 releases) come from a separate unprivileged service, only once set up. The only changes the page
-can make are to switch the add-on's own regular check and its network data on or off, after
-showing what that does.
+can make are to switch the add-on's own regular check and its network data on or off, and to
+acknowledge a finding for a while, each after showing what that does.
 
 ![Update Gaps on a server with held packages, fixes only with Ubuntu Pro and a pending restart](docs/img/overview.png)
 
@@ -78,6 +78,13 @@ VMs and home directories, and whether a security issue applies to the configurat
   “What you can do” and the source of the data. Where a card gives commands, they are to copy
   into a terminal: the page installs nothing. A finding an earlier check saw as well says since
   when (“seen since”); the time is kept in the state file, nowhere else.
+- **Acknowledging a finding:** with administrative access, “Acknowledge” beside a finding takes it
+  out of the status (Status Board, menu icon) until a day you pick, at most 90 days ahead, with an
+  optional reason. The page keeps showing it, marked “acknowledged until …”; the overview lists such
+  areas apart. It counts again after that day, or as soon as it changes in a way that matters (a
+  held package that gets a fix from a security source, a CPU vulnerability that becomes this
+  server's to fix). “Take back” ends it early. Findings from the network data cannot be
+  acknowledged.
 - **No findings:** the areas checked without a finding, and what was only partly checked.
 - **Not checked:** what the page cannot see, plus every area that was skipped, failed or ran out
   of time on this server, with the reason.
@@ -98,7 +105,7 @@ flowchart LR
         P["Cockpit page<br/>plugin/gaps.js"]
     end
     subgraph H["Server: helpers in /usr/lib/cockpit-update-gaps"]
-        CTL["gaps-ctl.sh<br/>status / scan / radar / install|remove timer|radar"]
+        CTL["gaps-ctl.sh<br/>status / scan / radar / install|remove timer|radar<br/>accept|unaccept (gaps-accept.py)"]
         SVC["update-gaps-scan.service<br/>gaps-scan.py, root, no network"]
         RAD["update-gaps-radar.service<br/>gaps-radar.py, DynamicUser, network"]
     end
@@ -127,7 +134,8 @@ flowchart LR
 | `lib/gaps-scan.py` | `/usr/lib/cockpit-update-gaps/` | every check, writes the state atomically |
 | `lib/gapscheck.py`, `gapslib.py`, `gapsproc.py` | `/usr/lib/cockpit-update-gaps/` | the checks, the parsers, commands with time limits |
 | `lib/gaps-radar.py`, `gapsradar.py` | `/usr/lib/cockpit-update-gaps/` | the network data: what to ask about, fetching, parsing (never as root) |
-| `lib/gaps-ctl.sh` | `/usr/lib/cockpit-update-gaps/` | status for the page, “Refresh”, the timers |
+| `lib/gaps-ctl.sh` | `/usr/lib/cockpit-update-gaps/` | status for the page, “Refresh”, the timers, acknowledging findings |
+| `lib/gaps-accept.py` | `/usr/lib/cockpit-update-gaps/` | writes the acknowledged findings (`accepted.json`) for `gaps-ctl.sh` |
 | `lib/gaps-status.py`, `gapsstatus.py` | `/usr/lib/cockpit-update-gaps/` | the add-on's state for the Status Board, in English or German |
 | `systemd/update-gaps-scan.service`, `.timer` | `/usr/lib/systemd/system/` | the check, hardened and without network; the timer is off until set up from the page |
 | `systemd/update-gaps-radar.service`, `.timer` | `/usr/lib/systemd/system/` | the network data, once a day as a user of its own; off until set up from the page |
@@ -137,7 +145,7 @@ all Azentrius add-ons share (unfixed security issues with the network data, held
 newer versions, a pending restart, CPU vulnerabilities, fixes only with Ubuntu Pro, package lists,
 the end of support, regular updates, and, only when there is a finding, packages dpkg left half
 done, room in `/boot`, signing keys, the runs of the automatic updates, firmware and snaps, each
-with its state). The Status
+with its state; acknowledged findings do not count). The Status
 Board finds the command in the page's `manifest.json` (`azentrius.status`) and runs
 `gaps-status.py status --lang en|de`, which needs no administrative access; a link of an item
 (`#/held`) opens this page at its card.
@@ -148,7 +156,10 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
 ## Security model
 
 - **Read only.** The scan never runs `apt update`, never installs, removes or restarts anything.
-  It writes only its state files (`scan.json`, `status.json`) and its lock.
+  It writes only its state files (`scan.json`, `status.json`) and its lock. Acknowledging a finding
+  writes one more file of the add-on's own, `/var/lib/update-gaps/accepted.json`, through
+  `gaps-accept.py` as root: it checks the finding against the last state and the day, takes the
+  reason from stdin, never from the command line, and changes nothing else.
 - **Network data only unprivileged, and only when set up.** The radar of stage 2
   (`update-gaps-radar.service`) runs once a day as a user of its own (`DynamicUser`, no
   capabilities, exposure 1.1) and writes only its own folder. What leaves the server: the release
@@ -166,7 +177,8 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
   installed (a request would start snapd, which then goes to the Store on its own).
 - **Fixed commands.** The helpers run fixed argument lists with a PATH that leaves `/usr/local`
   out (a program there can never stand in for apt), in the C locale and with time limits. The page
-  calls only fixed verbs.
+  calls only fixed verbs; the one with arguments, `accept REF DAY`, checks both in the shell and
+  again in Python.
 - **Root code in one place.** Everything that runs as root lives in `/usr/lib/cockpit-update-gaps`
   (root-owned); Python runs isolated (`-I`) and imports only from there.
 - **No secrets in the state.** The state file is readable by every local user. Credentials in
@@ -236,6 +248,7 @@ journalctl -u update-gaps-scan.service -n 20            # how the last check wen
 sudo /usr/lib/cockpit-update-gaps/gaps-scan.py | less   # the same checks, on stdout
 /usr/lib/cockpit-update-gaps/gaps-ctl.sh status         # timer, admin, last package change
 /usr/lib/cockpit-update-gaps/gaps-status.py status --lang de   # what the Status Board shows
+cat /var/lib/update-gaps/accepted.json                  # the findings acknowledged on the page
 sudo systemctl start update-gaps-radar.service          # fetch the network data now (once set up)
 journalctl -u update-gaps-radar.service -n 20            # how the last fetch went
 systemctl list-timers update-gaps-scan.timer            # the regular check

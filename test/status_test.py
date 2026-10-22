@@ -302,6 +302,35 @@ class Contract(unittest.TestCase):
             for x in texts(gapsstatus.document(doc, lang, "0.1.0")):
                 self.assertIsNone(PRIVATE.search(x), (lang, x))
 
+    def test_acknowledged_findings_do_not_count(self):
+        """scan-noble-held-accepted.json: Docker held until the maintenance window and tsa
+        acknowledged on the page. The board sees neither; the details say how many."""
+        doc = fixture("scan-noble-held-accepted.json")
+        items = {i["id"]: (i["state"], i.get("value"), i.get("detail")) for i in gapsstatus.document(doc, "en", "0.1.0")["items"]}
+        self.assertEqual(items["held"], ("ok", "0", "6 acknowledged"))
+        self.assertEqual(items["cpu"], ("ok", "0", "1 acknowledged"))
+        de = {i["id"]: i.get("detail") for i in gapsstatus.document(doc, "de", "0.1.0")["items"]}
+        self.assertEqual((de["held"], de["cpu"]), ("6 quittiert", "1 quittiert"))
+        self.assertEqual(gapsstatus.document(doc, "en", "0.1.0")["summary"], "Findings in 2 areas: Restart, Fixes only with Ubuntu Pro.")
+        # One acknowledgement ended, one no longer holds: both count again.
+        held = next(c for c in doc["checks"] if c["check"] == "held")
+        held["findings"][0]["accepted"]["expired"] = True
+        held["findings"][1]["accepted"]["changed"] = True
+        i = self.item(doc, "held")
+        self.assertEqual((i["state"], i["value"]), ("warning", "2"))
+        self.assertTrue(i["detail"].startswith("newer versions for containerd.io, docker-buildx-plugin; 4 acknowledged"), i["detail"])
+        # Checks with an item only when something is found: all acknowledged, no item.
+        up = fixture("scan-noble-held-upkeep.json")
+        for c in up["checks"]:
+            if c["check"] in ("boot", "keys"):
+                for f in c["findings"]:
+                    f["accepted"] = {"until": "2026-11-01", "reason": "", "at": "2026-10-19T08:00:00Z"}
+        ids = [i["id"] for i in gapsstatus.document(up, "en", "0.1.0")["items"]]
+        self.assertNotIn("boot", ids)
+        self.assertNotIn("keys", ids)
+        self.assertIn("dpkg", ids)
+        self.assertEqual(gapsstatus.problems(gapsstatus.status_file(doc, "0.1.0")), [])
+
     def test_old_kernels_and_keys_that_expire_are_info(self):
         doc = fixture("scan-noble-held-upkeep.json")
         checks = {c["check"]: c for c in doc["checks"]}

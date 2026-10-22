@@ -37,6 +37,7 @@ OUT = sys.argv[1] if len(sys.argv) > 1 else "cockpit-session"
 FRAME = 'iframe[name$="/update-gaps"]'
 STATE = "/var/lib/update-gaps/scan.json"
 STATUS = "/var/lib/update-gaps/status.json"
+ACCEPTED = "/var/lib/update-gaps/accepted.json"
 os.makedirs(OUT, exist_ok=True)
 
 report = {"environment": {}, "steps": [], "errors": [], "addon_files": []}
@@ -324,6 +325,32 @@ def main():
         title, text, ok, log = run_dialog(page, frame, frame.locator("#ug-radar-off"), 120)
         radar_timer = root("systemctl", "is-enabled", "update-gaps-radar.timer", check=False)
         note("network data switched off from the page", ok and radar_timer == "disabled", f"{title} -> {text}; timer {radar_timer}")
+
+        # 4c. Acknowledge the held package of the setup on the page (gaps-ctl.sh accept, gaps-accept.py
+        # as root): accepted.json written, the finding marked, the status leaves it out; then take it back.
+        before = (state() or {}).get("generated")
+        title, text, ok, log = run_dialog(page, frame, frame.locator(f'#ug-card-held [data-accept][data-label="{E["HELD"]}"]'), 300)
+        mode = root("stat", "-c", "%a %U", ACCEPTED, check=False)
+        after = poll(page, lambda: (state() or {}).get("generated") != before and state(), 120) or {}
+        held = next((c for c in after.get("checks", []) if c["check"] == "held"), {})
+        marked = [f.get("package") for f in held.get("findings", []) if f.get("accepted")]
+        try:
+            st = json.loads(root("runuser", "-u", E["PLAIN_USER"], "--", *verb, "--lang", "en", check=False))
+        except ValueError:
+            st = {}
+        item = next((i for i in st.get("items", []) if i.get("id") == "held"), {})
+        note("a finding acknowledged from the page: accepted.json 0644, marked, left out of the status",
+             ok and mode == "644 root" and marked == [E["HELD"]] and item.get("state") == "ok"
+             and "acknowledged" in (item.get("detail") or ""),
+             f"{title} -> {text}; {mode}; marked {marked}; held item {item.get('state')}: {item.get('detail')}; log {log.strip()[-160:]}")
+        poll(page, lambda: frame.locator("#ug-card-held [data-unaccept]").count() == 1, 60)
+        shot(page, "acknowledged")
+        title, text, ok, log = run_dialog(page, frame, frame.locator("#ug-card-held [data-unaccept]"), 300)
+        try:
+            left = json.loads(root("cat", ACCEPTED)).get("accepted")
+        except (RuntimeError, ValueError):
+            left = None
+        note("the acknowledgement taken back from the page", ok and left == [], f"{title} -> {text}; left {left}")
         ctx.close()
 
         # 5. Without administrative access (a user without sudo, German browser).

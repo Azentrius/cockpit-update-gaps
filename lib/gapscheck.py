@@ -1516,41 +1516,74 @@ def run_check(ctx, name, fn):
     return res
 
 
-# Checks whose findings stay the same from one scan to the next: the list they are in and the fields that
-# name a finding (the others may change: versions, counts, ages). Findings from the network data change
-# with every download and are left out.
-SINCE = {"phased": ("packages", ("package",)), "dpkg": ("findings", ("kind", "package")),
-         "boot": ("findings", ("kind",)), "held": ("findings", ("package",)), "pro": ("findings", ("package",)),
-         "cpu": ("findings", ("name",)), "firmware": ("findings", ("kind", "remote")),
-         "snaps": ("findings", ("kind", "snap")), "lists": ("findings", ("kind", "site", "release", "file")),
-         "keys": ("findings", ("kind", "file", "inline")), "local": ("findings", ("package",)),
-         "auto": ("findings", ("kind", "what", "site", "o", "a", "pattern")), "uu": ("findings", ("kind",)),
-         "backports": ("findings", ("source",))}
+# The checks whose findings carry `since` and can be acknowledged, with the list they are in and the
+# fields that name a finding (gapslib.FINDING_KEYS).
+SINCE = L.FINDING_KEYS
 SINCE_RE = re.compile(r"^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\dZ$")
+ACCEPTED = "/var/lib/update-gaps/accepted.json"     # written by gaps-accept.py (root) from the page
+ACCEPTED_MAX = 1 << 20
 
 
 def _since_entries(doc):
     for c in (doc or {}).get("checks") or []:
         if isinstance(c, dict) and c.get("check") in SINCE:
-            field, keys = SINCE[c["check"]]
-            for f in c.get(field) or []:
+            for f in c.get(SINCE[c["check"]][0]) or []:
                 if isinstance(f, dict):
-                    yield f, (c["check"], json.dumps([f.get(k) for k in keys]))
+                    yield c["check"], f
 
 
 def mark_since(doc, previous):
     """Every finding of the checks in SINCE gets `since`, when a scan saw it
     first: carried over from `previous` (the last scan.json, read as data),
     else the time of this scan."""
-    before = {key: f["since"] for f, key in _since_entries(previous)
+    before = {(check, L.finding_key(check, f)): f["since"] for check, f in _since_entries(previous)
               if isinstance(f.get("since"), str) and SINCE_RE.match(f["since"])}
-    for f, key in _since_entries(doc):
-        f["since"] = min(before.get(key, doc["generated"]), doc["generated"])
+    for check, f in _since_entries(doc):
+        f["since"] = min(before.get((check, L.finding_key(check, f)), doc["generated"]), doc["generated"])
+
+
+def mark_accepted(doc, accepted, today):
+    """Every finding of the checks in SINCE gets its `ref`; one an
+    administrator acknowledged (`accepted`, from accepted.json) gets
+    `accepted`: `until`, `reason`, `at`, and `expired` once the day has
+    passed or `changed` when what it was acknowledged for changed (its pin).
+    Only an acknowledgement without either counts: the status leaves such a
+    finding out, the page marks it. A check counts its own in `accepted`."""
+    for check, f in _since_entries(doc):
+        f["ref"] = ref = L.finding_ref(check, f)
+        e = accepted.get(ref)
+        if not e:
+            continue
+        a = {"until": e["until"], "reason": e["reason"], "at": e["at"]}
+        if L.parse_day(e["until"]) < today:
+            a["expired"] = True
+        elif e["pin"] != L.finding_pin(check, f):
+            a["changed"] = True
+        f["accepted"] = a
+    for c in doc["checks"]:
+        n = sum(1 for f in c.get(SINCE[c["check"]][0]) or [] if isinstance(f, dict)
+                and isinstance(f.get("accepted"), dict) and not f["accepted"].get("expired")
+                and not f["accepted"].get("changed")) if c.get("check") in SINCE else 0
+        if n:
+            c["accepted"] = n
+
+
+def read_accepted(system, today):
+    """The acknowledgements, or {} when there are none or the file does not
+    hold up (it never stops a scan)."""
+    try:
+        data = system.read_bytes(ACCEPTED, ACCEPTED_MAX + 1)
+        if data is None or len(data) > ACCEPTED_MAX:
+            return {}
+        return L.parse_accepted(data.decode("utf-8", "replace"), today)
+    except Exception:  # noqa: BLE001 - a broken file means no acknowledgement, not a broken scan
+        return {}
 
 
 def scan(system=None, only=None, previous=None):
     """Every check (or those named in `only`) -> the document of scan.json.
-    `previous` is the last one, for the time each finding was first seen."""
+    `previous` is the last one, for the time each finding was first seen;
+    the acknowledgements come from accepted.json."""
     system = system or System()
     t = time.monotonic()
     ctx = Context(system)
@@ -1570,5 +1603,7 @@ def scan(system=None, only=None, previous=None):
         doc["checks"].append(run_check(ctx, name, fn))
     doc["generated"] = L.iso(system.now())
     mark_since(doc, previous)
+    today = system.now().date()
+    mark_accepted(doc, read_accepted(system, today), today)
     doc["took_ms"] = int((time.monotonic() - t) * 1000)
     return doc

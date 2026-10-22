@@ -24,7 +24,7 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.6.0";
+    const VERSION = "0.7.0";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";
@@ -34,6 +34,13 @@
     const CARDS = ["phased", "dpkg", "boot", "held", "pro", "cve", "upstream", "restart", "cpu", "firmware", "snaps", "lists",
                    "keys", "local", "auto", "uu", "backports", "newer", "outside", "eol"];
     const RADAR_CHECKS = ["cve", "upstream", "newer"];   // stage 2: they read the radar's network data
+    // The checks whose findings can be acknowledged (gapslib.FINDING_KEYS), with the list they are in.
+    const ACK_CHECKS = ["phased", "dpkg", "boot", "held", "pro", "cpu", "firmware", "snaps", "lists", "keys", "local",
+                        "auto", "uu", "backports"];
+    const ACK_LIST = { phased: "packages" };
+    const ACK_MAX_DAYS = 90;
+    const ACK_DEFAULT_DAYS = 30;
+    const LABEL_FIELDS = ["package", "name", "snap", "device", "source", "file", "pattern", "site", "remote", "kind"];
     const ALL = ["updates"].concat(CARDS);
 
     // --- i18n --------------------------------------------------------------
@@ -209,12 +216,15 @@
         }
         $("ug-sum-updates").innerHTML = html;
         const found = CARDS.filter((k) => c[k] && c[k].state === "found");
-        $("ug-sum-found").innerHTML = found.length
-            ? `<p>${esc(t("sum.found", { n: found.length }))}</p><div class="ug-chips">` +
-              found.map((k) => `<button type="button" class="az-btn az-btn--plain az-btn--sm ug-chip" data-go="${k}">` +
-                               `<span class="az-label az-label--info">${icon("info-circle")}${esc(t("chk." + k))}</span></button>`).join("") +
-              "</div>"
-            : `<p>${esc(t("sum.foundNone"))}</p>`;
+        const acked = found.filter((k) => allAcked(k, c[k]));
+        const open = found.filter((k) => !acked.includes(k));
+        const chips = (list, cls, ic) => `<div class="ug-chips">` +
+            list.map((k) => `<button type="button" class="az-btn az-btn--plain az-btn--sm ug-chip" data-go="${k}">` +
+                            `<span class="az-label${cls}">${icon(ic)}${esc(t("chk." + k))}</span></button>`).join("") + "</div>";
+        $("ug-sum-found").innerHTML = (open.length
+            ? `<p>${esc(t("sum.found", { n: open.length }))}</p>` + chips(open, " az-label--info", "info-circle")
+            : `<p>${esc(t(acked.length ? "sum.foundAcked" : "sum.foundNone"))}</p>`) +
+            (acked.length ? `<p>${esc(t("sum.acked", { n: acked.length }))}</p>` + chips(acked, "", "check-circle") : "");
         renderTimer();
         renderRadar();
     }
@@ -367,6 +377,48 @@
         return (gb ? n / 1e9 : n / 1e6).toLocaleString(LOCALE, { maximumFractionDigits: gb ? 1 : 0 }) + (gb ? " GB" : " MB");
     }
     const PKG_RE = /^[a-z0-9][a-z0-9+.:-]*$/;
+
+    // --- Acknowledged findings ------------------------------------------------
+    // An administrator can acknowledge a finding until a day (at most 90 days ahead): it then no
+    // longer counts for the status (the Status Board, the menu icon), and the page marks it. It counts
+    // again once the day has passed (`expired`) or what it was acknowledged for changed (`changed`).
+    function isAcked(f) {
+        const a = f && f.accepted;
+        return !!a && !a.expired && !a.changed;
+    }
+    function ackList(k, c) {
+        return ACK_CHECKS.includes(k) ? (c[ACK_LIST[k] || "findings"] || []).filter((f) => f && typeof f === "object") : [];
+    }
+    // Every finding of a card acknowledged, and nothing else on it that counts.
+    function allAcked(k, c) {
+        const list = ackList(k, c);
+        if (!list.length || !list.every(isAcked)) return false;
+        if (k === "cpu") return !(c.mitigations_off || []).length && !(c.microcode_package && !c.microcode_package.installed);
+        return true;
+    }
+    function labelOf(f) {
+        const k = LABEL_FIELDS.find((x) => typeof f[x] === "string" && f[x]);
+        return k ? f[k] : "";
+    }
+    function ack(f, inList) {
+        if (!f || !/^[a-z]{2,12}-[0-9a-f]{12}$/.test(String(f.ref || ""))) return "";
+        const a = f.accepted;
+        const wrap = (html) => (inList ? ` <span class="ug-ack">${html}</span>` : ` <span class="az-cell-sub ug-ack">${html}</span>`);
+        const btn = (verb) => (isAdmin()
+            ? ` <button type="button" class="az-btn az-btn--link az-btn--sm ug-ack-btn" data-${verb}="${esc(f.ref)}" data-label="${esc(labelOf(f))}">` +
+              `${esc(t(verb === "accept" ? "btn.accept" : "btn.unaccept"))}</button>` : "");
+        if (isAcked(f)) {
+            return wrap(`<span class="ug-ack-mark">${icon("check-circle")}${esc(t("ack.until", { date: fmtDay(a.until) }))}` +
+                        `${a.reason ? ": " + esc(a.reason) : ""}</span>` + btn("unaccept"));
+        }
+        const note = a && a.expired ? t("ack.expired", { date: fmtDay(a.until) }) : a && a.changed ? t("ack.changed") : "";
+        return note || isAdmin() ? wrap((note ? `<span class="ug-ack-lapsed">${esc(note)}</span>` : "") + btn("accept")) : "";
+    }
+    // What a finding carries besides its own text: since when it is seen, its acknowledgement.
+    function mark(f, inList) { return seen(f, inList) + ack(f, inList); }
+    function utcDay(offsetDays) {
+        return new Date(Date.now() + offsetDays * 86400000).toISOString().slice(0, 10);
+    }
     // Keyrings the scan could not read (not a finding: apt may read them all the same).
     function keysUnchecked(c, bare) {
         const un = c.unchecked || [];
@@ -395,7 +447,7 @@
                 fail += " " + esc(t("phased.blocks", { n: u.count })) + (u.security ? " " + esc(t("sum.updatesSec", { n: u.security })) : "");
             }
             const rows = pk.map((f) => [
-                cell(esc(f.package) + seen(f)),
+                cell(esc(f.package) + mark(f)),
                 ver(f.installed),
                 ver(f.version),
                 cell(typeof f.percent === "number" ? esc(t("phased.percent", { n: f.percent })) : "?"),
@@ -419,11 +471,11 @@
         dpkg(c) {
             const parts = [];
             const stopped = c.findings.find((f) => f.kind === "interrupted");
-            if (stopped) parts.push(alertHtml("warning", t("dpkg.interruptedTitle"), rich(t("dpkg.interrupted")) + seen(stopped, true)));
+            if (stopped) parts.push(alertHtml("warning", t("dpkg.interruptedTitle"), rich(t("dpkg.interrupted")) + mark(stopped, true)));
             const pk = c.findings.filter((f) => f.kind === "package");
             if (pk.length) {
                 parts.push(table(["col.package", "col.version", "col.state"], pk.map((f) => [
-                    cell(esc(f.package) + seen(f)), ver(f.version), cell(esc(t("dpkg.state." + f.state))),
+                    cell(esc(f.package) + mark(f)), ver(f.version), cell(esc(t("dpkg.state." + f.state))),
                 ])));
             }
             if (c.more) parts.push(`<p class="ug-note">${esc(t("held.more", { n: c.more }))}</p>`);
@@ -440,9 +492,9 @@
         boot(c) {
             const parts = [];
             const sp = c.findings.find((f) => f.kind === "space");
-            if (sp) parts.push(alertHtml("warning", t("boot.spaceTitle"), tr("boot.space", { free: bytes(sp.free), need: bytes(sp.need) }) + seen(sp, true)));
+            if (sp) parts.push(alertHtml("warning", t("boot.spaceTitle"), tr("boot.space", { free: bytes(sp.free), need: bytes(sp.need) }) + mark(sp, true)));
             const old = c.findings.find((f) => f.kind === "old-kernels");
-            if (old) parts.push(`<p>${tr("boot.old", { list: (old.kernels || []).join(", ") })}${seen(old, true)}</p>`);
+            if (old) parts.push(`<p>${tr("boot.old", { list: (old.kernels || []).join(", ") })}${mark(old, true)}</p>`);
             const k = c.kernels || [];
             if (k.length) {
                 parts.push(`<p class="ug-note">${tr("boot.line", { n: k.length, running: c.running || "?", free: bytes(c.free), size: bytes(c.size) })}</p>`);
@@ -455,7 +507,7 @@
 
         held(c) {
             const rows = c.findings.map((f) => [
-                cell(esc(f.package) + seen(f)),
+                cell(esc(f.package) + mark(f)),
                 ver(f.installed),
                 f.candidate
                     ? cell(esc(f.candidate) + (f.newer > 1 ? ` <span class="az-cell-sub">${esc(t("held.more", { n: f.newer - 1 }))}</span>` : "") +
@@ -472,7 +524,7 @@
             const auto = all.auto;
             const esm = auto && (auto.allowed || []).concat(auto.patterns || []).some((a) => /ESM/i.test(a));
             const rows = c.findings.map((f) => [
-                cell(esc(f.package) + seen(f)),
+                cell(esc(f.package) + mark(f)),
                 ver(f.installed),
                 ver(f.version),
                 cell(esc(f.service || "") + (f.status ? ` <span class="az-cell-sub">${tr("pro.status." + f.status, { service: f.service || "" })}</span>` : "")),
@@ -511,7 +563,7 @@
             }
             if ((c.findings || []).length) {
                 parts.push(table(["col.vulnerability", "col.kernel", "col.fixBy"], c.findings.map((f) => [
-                    cell(vulnName(f.name) + seen(f)),
+                    cell(vulnName(f.name) + mark(f)),
                     cell(esc(f.text)),
                     cell(esc(t(f.fix === "provider" ? "cpu.fix.provider" : "cpu.fix.here"))),
                 ])));
@@ -550,7 +602,7 @@
                 if (f.kind === "refresh-off") return tr("firmware.refreshOff", { state: f.timer });
                 if (f.kind === "no-remote") return rich(t("firmware.noRemote"));
                 return esc(f.kind);
-            }).map((line, i) => line + seen((c.findings || []).filter((f) => f.kind !== "update")[i], true));
+            }).map((line, i) => line + mark((c.findings || []).filter((f) => f.kind !== "update")[i], true));
             if (other.length) parts.push(`<ul class="ug-plain-list">${other.map((i) => `<li>${i}</li>`).join("")}</ul>`);
             return card("firmware", ups.length ? t("firmware.count", { n: ups.length }) : "", explain("firmware") + parts.join("") + sourceLine(c));
         },
@@ -569,7 +621,7 @@
                            (f.error ? `<pre class="ug-lines">${esc(f.error)}</pre>` : "");
                 }
                 return esc(f.kind);
-            }).map((line, i) => line + seen(c.findings[i], true));
+            }).map((line, i) => line + mark(c.findings[i], true));
             return card("snaps", t("snaps.count", { n: items.length }),
                 explain("snaps") + `<ul class="ug-plain-list">${items.map((i) => `<li>${i}</li>`).join("")}</ul>` +
                 `<p class="ug-note">${esc(t("snaps.installed", { n: c.installed || 0 }))}</p>` + sourceLine(c));
@@ -586,7 +638,7 @@
                     return head + ((f.lines || []).length ? `<pre class="ug-lines">${esc(f.lines.join("\n"))}</pre>` : "");
                 }
                 return esc(f.kind);
-            }).map((line, i) => line + seen(c.findings[i], true));
+            }).map((line, i) => line + mark(c.findings[i], true));
             const last = c.last_update
                 ? `<p class="ug-note">${tr("lists.last", { ago: ago(c.last_update.ts), src: t("lists.src." + c.last_update.src) })}</p>` : "";
             return card("lists", t("lists.count", { n: c.findings.length }),
@@ -596,7 +648,7 @@
         // The keys apt checks the sources with: expired, about to expire, or their file is gone.
         keys(c) {
             const rows = c.findings.map((f) => [
-                cell(code(f.file) + seen(f) + (f.inline ? `<span class="az-cell-sub">${esc(t("keys.inline"))}</span>` : "") +
+                cell(code(f.file) + mark(f) + (f.inline ? `<span class="az-cell-sub">${esc(t("keys.inline"))}</span>` : "") +
                      (f.default ? `<span class="az-cell-sub">${esc(t("keys.default"))}</span>` : "")),
                 cell(pkgList(f.sources)),
                 cell(f.kind === "missing" ? esc(t("keys.missing"))
@@ -608,7 +660,7 @@
         },
 
         local(c) {
-            const rows = c.findings.map((f) => [cell(esc(f.package) + seen(f)), ver(f.version), cell(esc(f.arch || ""))]);
+            const rows = c.findings.map((f) => [cell(esc(f.package) + mark(f)), ver(f.version), cell(esc(f.arch || ""))]);
             const lm = c.findings.some((f) => f.cause === "lists-missing")
                 ? alertHtml("warning", t("chk.lists"), rich(t("local.listsMissing"))) : "";
             const more = c.more ? `<p class="ug-note">${esc(t("held.more", { n: c.more }))}</p>` : "";
@@ -620,12 +672,12 @@
             const parts = [];
             c.findings.filter((f) => f.kind === "disabled").forEach((f) => {
                 const key = f.what === "not-installed" ? "auto.notInstalled" : f.what === "periodic-off" ? "auto.periodicOff" : "auto.timerOff";
-                parts.push(alertHtml("warning", t("chk.auto"), tr(key, { state: f.timer || "" }) + seen(f, true)));
+                parts.push(alertHtml("warning", t("chk.auto"), tr(key, { state: f.timer || "" }) + mark(f, true)));
             });
             const sources = c.findings.filter((f) => f.kind === "source");
             if (sources.length) {
                 parts.push(`<p class="ug-sub">${esc(t("auto.sourceTitle"))}</p>` +
-                    table(["col.origin", "col.packages"], sources.map((f) => [cell(originText(f) + seen(f)), cell(pkgList(f.packages, f.more))])));
+                    table(["col.origin", "col.packages"], sources.map((f) => [cell(originText(f) + mark(f)), cell(pkgList(f.packages, f.more))])));
             }
             const bl = c.findings.filter((f) => f.kind === "blacklist");
             if (bl.length) {
@@ -654,7 +706,7 @@
                 else if (f.kind === "conffile") line = tr("uu.conffile", { pkgs: (f.packages || []).join(", ") });
                 else if (f.kind === "service") line = tr("uu.service", { result: f.result });
                 else line = esc(f.kind);
-                return line + seen(f, true);
+                return line + mark(f, true);
             });
             const last = c.last_run && c.outcome
                 ? `<p class="ug-note">${esc(t("uu.last", { ago: ago(c.last_run), outcome: t("uu.outcome." + c.outcome) }))}</p>` : "";
@@ -663,7 +715,7 @@
         },
 
         backports(c) {
-            const rows = c.findings.map((f) => [cell(esc(f.source) + seen(f)), cell(pkgList(f.packages)), ver(f.installed),
+            const rows = c.findings.map((f) => [cell(esc(f.source) + mark(f)), cell(pkgList(f.packages)), ver(f.installed),
                                                 ver(f.backport), cell(esc(f.suite))]);
             const n = c.findings.reduce((s, f) => s + (f.packages || []).length, 0);
             return card("backports", t("backports.count", { n }),
@@ -971,10 +1023,23 @@
     const dlg = {
         running: false,
         argv: null,
-        open(title, desc, label, argv) {
+        ackRef: null,
+        open(title, desc, label, argv, ackRef) {
             this.argv = argv;
+            this.ackRef = ackRef || null;
             $("ug-dialog-title").textContent = title;
             $("ug-dialog-desc").innerHTML = rich(desc);
+            const form = $("ug-dialog-form");
+            form.hidden = !this.ackRef;
+            if (this.ackRef) {
+                const until = $("ug-ack-until");
+                until.min = utcDay(0);
+                until.max = utcDay(ACK_MAX_DAYS);
+                until.value = utcDay(ACK_DEFAULT_DAYS);
+                until.disabled = false;
+                $("ug-ack-reason").value = "";
+                $("ug-ack-reason").disabled = false;
+            }
             const log = $("ug-dialog-log");
             log.textContent = "";
             log.hidden = true;
@@ -1002,6 +1067,19 @@
         },
         run() {
             if (this.running || !this.argv) return;
+            let argv = this.argv;
+            let input = null;
+            if (this.ackRef) {
+                const day = $("ug-ack-until").value;
+                if (!/^\d{4}-\d\d-\d\d$/.test(day) || day < utcDay(0) || day > utcDay(ACK_MAX_DAYS)) {
+                    this.result(t("ack.badDay", { n: ACK_MAX_DAYS }), false);
+                    return;
+                }
+                argv = [CTL, "accept", this.ackRef, day];
+                input = $("ug-ack-reason").value.slice(0, 200);
+                $("ug-ack-until").disabled = true;
+                $("ug-ack-reason").disabled = true;
+            }
             this.running = true;
             const log = $("ug-dialog-log");
             log.hidden = false;
@@ -1021,7 +1099,8 @@
             };
             let proc;
             try {
-                proc = spawn(this.argv, "require");
+                proc = spawn(argv, "require");
+                if (input !== null) proc.input(input);
             } catch (ex) {
                 finish(t("dialog.error", { msg: (ex && ex.message) || String(ex) }), false);
                 return;
@@ -1052,7 +1131,13 @@
                      t("btn.radarSetup"), [CTL, "install", "radar"]);
         } else if (el.id === "ug-radar-now") dlg.open(t("dlg.radar.now.title"), t("dlg.radar.now.desc"), t("btn.radarNow"), [CTL, "radar"]);
         else if (el.id === "ug-radar-off") dlg.open(t("dlg.radar.remove.title"), t("dlg.radar.remove.desc"), t("btn.switchOff"), [CTL, "remove", "radar"]);
-        else if (el.dataset.fold) setOpen(el.dataset.fold, el.getAttribute("aria-expanded") !== "true");
+        else if (el.dataset.accept) {
+            const label = String(el.dataset.label || el.dataset.accept).replace(/`/g, "'");
+            dlg.open(t("dlg.accept.title"), t("dlg.accept.desc", { label, n: ACK_MAX_DAYS }), t("btn.accept"), [CTL, "accept"], el.dataset.accept);
+        } else if (el.dataset.unaccept) {
+            const label = String(el.dataset.label || el.dataset.unaccept).replace(/`/g, "'");
+            dlg.open(t("dlg.unaccept.title"), t("dlg.unaccept.desc", { label }), t("btn.unaccept"), [CTL, "unaccept", el.dataset.unaccept]);
+        } else if (el.dataset.fold) setOpen(el.dataset.fold, el.getAttribute("aria-expanded") !== "true");
         else if (el.dataset.go) {
             const card = $("ug-card-" + el.dataset.go);
             if (card) {

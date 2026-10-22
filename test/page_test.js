@@ -40,7 +40,7 @@ test("held host, English: cards in their fixed order, overview, lists", async ()
     assert.match(text(un), /Container images/);
     assert.match(text(un), /needs data from the network/);
     assert.ok(d.getElementById("ug-loading").hidden, "no loading block once the state is there");
-    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.6.0");
+    assert.strictEqual(text(d.getElementById("ug-sig-version")), "Update Gaps 0.7.0");
     assert.strictEqual(text(d.getElementById("ug-sig-host")), "server");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
     assert.deepStrictEqual(calls.spawn.map((c) => c.argv.slice(1).join(" ")), ["status"]);
@@ -706,7 +706,7 @@ test("phased updates: the failure quoted, what is deferred, commands to copy, th
     assert.deepStrictEqual(cmds, ["sudo apt-get upgrade", "sudo apt-get install --only-upgrade systemd",
         `echo 'APT::Get::Always-Include-Phased-Updates "true";' | sudo tee /etc/apt/apt.conf.d/99-phased-updates`]);
     assert.match(all, /The price: this server gets each update at the start of its rollout/);
-    assert.ok(!card.querySelector(".az-card__body button"), "no button on the card: it installs nothing");
+    assert.ok(!card.querySelector(".az-card__body button:not(.ug-ack-btn)"), "no button on the card: it installs nothing");
     assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
 
     // German
@@ -816,6 +816,89 @@ test("upkeep gone wrong: dpkg, /boot, signing keys, the last run of unattended-u
     await settle();
     assert.match(text(d.getElementById("ug-clean-list")),
         /Signing keys: 3 keyrings, none expires soon; partly: Not every keyring could be read\. Not checked: \/usr\/share\/keyrings\/node'source\.gpg \(not readable\)\./);
+});
+
+test("acknowledged findings: marked, apart in the overview, acknowledged and taken back through the dialog", async () => {
+    let { d, calls } = boot({ state: scan("noble-held-accepted") });
+    await settle();
+    // Overview: the open areas, then the acknowledged ones apart.
+    const sum = text(d.getElementById("ug-sum-found"));
+    assert.match(sum, /^Findings in 5 areas: Fixes only with Ubuntu Pro\s*Restart pending\s*Packages without a source\s*Left out of automatic updates\s*Software outside the package manager\s*Acknowledged, so not counted in the status \(2 areas\): Held packages\s*CPU vulnerabilities the kernel reports$/);
+    assert.strictEqual(d.querySelectorAll('#ug-sum-found .ug-chip [data-icon="check-circle"]').length, 2);
+    // Cards: the mark with day and reason, and "Take back" for an administrator.
+    const held = d.getElementById("ug-card-held");
+    assert.match(text(held.querySelector("tbody tr")),
+        /containerd\.io acknowledged until 1 Nov 2026: Docker is updated in the maintenance window on 2026-11-01 2\.3\.5/);
+    assert.strictEqual(held.querySelector("tbody tr [data-unaccept]").textContent, "Take back");
+    assert.strictEqual(held.querySelectorAll("[data-unaccept]").length, 6);
+    assert.match(text(d.getElementById("ug-card-cpu")), /acknowledged until 15 Jan 2027: Only Hetzner can fix it/);
+    const pro = d.querySelector("#ug-card-pro [data-accept]");
+    assert.ok(pro, "the others can be acknowledged");
+
+    // Acknowledge: the dialog with the day (30 days ahead, at most 90) and a reason on stdin.
+    pro.click();
+    await settle();
+    const dlg = d.getElementById("ug-dialog");
+    assert.ok(dlg.hasAttribute("open"));
+    assert.strictEqual(text(d.getElementById("ug-dialog-title")), "Acknowledge a finding");
+    assert.match(text(d.getElementById("ug-dialog-desc")), /^“python3-pip” no longer counts in the Status Board/);
+    const until = d.getElementById("ug-ack-until");
+    assert.deepStrictEqual([until.min, until.value, until.max], ["2026-10-19", "2026-11-18", "2027-01-17"]);
+    until.value = "2027-02-01";
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    assert.match(text(d.getElementById("ug-dialog-result")), /Pick a day from today to 90 days ahead/);
+    assert.ok(!calls.spawn.some((c) => c.argv[1] === "accept"), "nothing ran");
+    until.value = "2026-12-31";
+    d.getElementById("ug-ack-reason").value = "Pro is not used on this server";
+    const before = calls.spawn.length;
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    const run = calls.spawn.slice(before).find((c) => c.argv[1] === "accept");
+    assert.strictEqual(JSON.stringify(run.argv.slice(1)), JSON.stringify(["accept", pro.dataset.accept, "2026-12-31"]));
+    assert.strictEqual(run.opts.superuser, "require");
+    assert.strictEqual(JSON.stringify(run.proc.inputs), JSON.stringify(["Pro is not used on this server"]),
+        "the reason goes on stdin, not on the command line");
+    assert.match(text(d.getElementById("ug-dialog-result")), /Done/);
+
+    // Take back.
+    d.querySelector("#ug-card-held [data-unaccept]").click();
+    await settle();
+    assert.strictEqual(text(d.getElementById("ug-dialog-title")), "Take the acknowledgement back");
+    assert.ok(d.getElementById("ug-dialog-form").hidden, "no day to pick");
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    assert.strictEqual(JSON.stringify(calls.spawn.filter((c) => c.argv[1] === "unaccept").map((c) => c.argv.slice(1, 2))), '[["unaccept"]]');
+    assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+
+    // An acknowledgement that ended or no longer holds is said, and the finding counts again.
+    const s = scan("noble-held-accepted");
+    const h = s.checks.find((c) => c.check === "held");
+    h.findings[0].accepted.expired = true;
+    h.findings[1].accepted.changed = true;
+    ({ d } = boot({ state: s }));
+    await settle();
+    const rows = d.querySelectorAll("#ug-card-held tbody tr");
+    assert.match(text(rows[0]), /containerd\.io acknowledgement ended on 1 Nov 2026 2\.3\.5/);
+    assert.match(text(rows[1]), /docker-buildx-plugin acknowledgement no longer holds: the finding changed 0\.37/);
+    assert.deepStrictEqual([...rows].slice(0, 3).map((r) => r.querySelector(".ug-ack-btn").textContent), ["Acknowledge", "Acknowledge", "Take back"]);
+    assert.match(text(d.getElementById("ug-sum-found")), /^Findings in 6 areas: Held packages/);
+
+    // Without administrative access: the marks, no buttons.
+    ({ d } = boot({ state: scan("noble-held-accepted"), status: Object.assign({}, STATUS, { root: false }) }));
+    await settle();
+    assert.strictEqual(d.querySelectorAll(".ug-ack-btn").length, 0);
+    assert.strictEqual(d.querySelectorAll("#ug-card-held .ug-ack-mark").length, 6);
+
+    // German
+    ({ d } = boot({ state: scan("noble-held-accepted"), language: "de" }));
+    await settle();
+    assert.match(text(d.getElementById("ug-sum-found")), /Quittiert, zählt nicht im Status \(2 Bereiche\): Gehaltene Pakete/);
+    assert.match(text(d.getElementById("ug-card-held")), /quittiert bis 01\.11\.2026: Docker is updated/);
+    assert.strictEqual(d.querySelector("#ug-card-held [data-unaccept]").textContent, "Aufheben");
+    d.querySelector("#ug-card-pro [data-accept]").click();
+    await settle();
+    assert.match(text(d.getElementById("ug-dialog-desc")), /^„python3-pip“ zählt bis zu dem Tag, den Sie wählen/);
 });
 
 test("texts: every key in both languages, same plural shape, no em dash", () => {

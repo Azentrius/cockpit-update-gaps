@@ -23,7 +23,7 @@ sys.path.insert(0, os.path.join(HERE, "..", "..", "lib"))
 sys.path.insert(0, os.path.join(HERE, ".."))
 import gapscheck  # noqa: E402
 import gapsstatus  # noqa: E402
-from fakesys import FakeSystem, phased_results, upkeep  # noqa: E402
+from fakesys import NOBLE_ACCEPTED, FakeSystem, accepted_files, phased_results, upkeep  # noqa: E402
 
 SCANS = {
     "scan-noble-held.json": ("noble-held", {}),
@@ -41,6 +41,8 @@ SCANS = {
     # Upkeep gone wrong: /boot full, a kernel half configured, unattended-upgrades failed, a key
     # expired (see fakesys.upkeep).
     "scan-noble-held-upkeep.json": ("noble-held", {"upkeep": True}),
+    # Acknowledged on the page: Docker held until the maintenance window, tsa the provider's.
+    "scan-noble-held-accepted.json": ("noble-held", {"accepted": True}),
 }
 STATUS_VERSION = "0.1.0"
 
@@ -60,6 +62,8 @@ def scan(scenario, kw):
         kw["results"] = phased_results(scenario)
     if kw.pop("upkeep", False):
         kw.update(upkeep(scenario))
+    if kw.pop("accepted", False):
+        kw["files"] = accepted_files(scenario, NOBLE_ACCEPTED)
     doc = gapscheck.scan(FakeSystem(scenario, **kw))
     doc["took_ms"] = 3300
     for c in doc["checks"]:

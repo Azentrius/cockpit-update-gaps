@@ -10,8 +10,12 @@
 #   gaps-ctl.sh install radar    enable update-gaps-radar.timer (network data), fetch, scan (root)
 #   gaps-ctl.sh remove radar     disable update-gaps-radar.timer; its data stay until out of date (root)
 #   gaps-ctl.sh radar            fetch the network data now, then scan (root)
+#   gaps-ctl.sh accept REF DAY   acknowledge a finding until DAY (YYYY-MM-DD), the reason on
+#                                stdin (gaps-accept.py), then scan (root)
+#   gaps-ctl.sh unaccept REF     take an acknowledgement back, then scan (root)
 # Everything else is rejected (exit 64). Nothing here changes the system beyond the
-# add-on's own timers; the scan only reads (gaps-scan.py), the radar runs unprivileged.
+# add-on's own timers and acknowledgements; the scan only reads (gaps-scan.py), the radar
+# runs unprivileged.
 #
 # Lives in /usr/lib/cockpit-update-gaps (root-owned, from the package cockpit-update-gaps).
 #
@@ -30,6 +34,7 @@ RADAR_TIMER=update-gaps-radar.timer
 RADAR_FILE=/var/lib/update-gaps-radar/radar.json
 STATE=/var/lib/update-gaps/scan.json
 SETTINGS=/etc/update-gaps.conf
+ACCEPT=/usr/lib/cockpit-update-gaps/gaps-accept.py
 
 msg() { if [ "${GAPS_LANG:-en}" = de ]; then printf '%s\n' "$1"; else printf '%s\n' "$2"; fi; }
 die() { code=$1; shift; msg "$@" >&2; exit "$code"; }
@@ -137,6 +142,27 @@ do_remove_radar() {
         "Network data switched off. The last data stay until they are out of date."
 }
 
+# After an acknowledgement: a new state, so the page and the status show it (no systemd, no scan).
+scan_after() {
+    if [ -d /run/systemd/system ] && unit_exists "$SERVICE"; then
+        run systemctl start "$SERVICE"
+    else
+        msg "Kein systemd: Der nächste Scan zeigt es." "No systemd: the next scan shows it."
+    fi
+}
+
+do_accept() {
+    need_root
+    "$ACCEPT" accept "$1" "$2"
+    scan_after
+}
+
+do_unaccept() {
+    need_root
+    "$ACCEPT" unaccept "$1" < /dev/null
+    scan_after
+}
+
 do_radar() {
     need_root
     unit_exists "$RADAR_SERVICE" || die 2 "Der Dienst $RADAR_SERVICE fehlt." "The service $RADAR_SERVICE is missing."
@@ -144,9 +170,23 @@ do_radar() {
     msg "Fertig." "Done."
 }
 
-USAGE_DE="Aufruf: gaps-ctl.sh status | scan | radar | install timer|radar | remove timer|radar"
-USAGE_EN="usage: gaps-ctl.sh status | scan | radar | install timer|radar | remove timer|radar"
+USAGE_DE="Aufruf: gaps-ctl.sh status | scan | radar | install timer|radar | remove timer|radar | accept REF JJJJ-MM-TT | unaccept REF"
+USAGE_EN="usage: gaps-ctl.sh status | scan | radar | install timer|radar | remove timer|radar | accept REF YYYY-MM-DD | unaccept REF"
 
+# A finding's ref (gapslib.REF_RE) and a day, checked here and again by gaps-accept.py.
+is_ref() { printf '%s' "$1" | grep -Eq '^[a-z]{2,12}-[0-9a-f]{12}$'; }
+is_day() { printf '%s' "$1" | grep -Eq '^[0-9]{4}-[0-9]{2}-[0-9]{2}$'; }
+
+case "${1:-}" in
+    accept)
+        [ $# -eq 3 ] && is_ref "$2" && is_day "$3" || die 64 "$USAGE_DE" "$USAGE_EN"
+        do_accept "$2" "$3"
+        exit 0 ;;
+    unaccept)
+        [ $# -eq 2 ] && is_ref "$2" || die 64 "$USAGE_DE" "$USAGE_EN"
+        do_unaccept "$2"
+        exit 0 ;;
+esac
 [ $# -le 2 ] || die 64 "$USAGE_DE" "$USAGE_EN"
 case "${1:-} ${2:-}" in
     "status ") do_status ;;

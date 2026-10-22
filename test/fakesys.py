@@ -117,6 +117,32 @@ def upkeep(scenario="noble-held"):
                      "statvfs": {"/boot": [29696 * 4096, 253107 * 4096]}}}
 
 
+# What the administrator of noble-held acknowledged on 2026-10-19: Docker stays held until the
+# maintenance window, and only the provider can fix tsa in the VM.
+NOBLE_ACCEPTED = [
+    ("held", name, "2026-11-01", "Docker is updated in the maintenance window on 2026-11-01")
+    for name in ("containerd.io", "docker-buildx-plugin", "docker-ce", "docker-ce-cli", "docker-ce-rootless-extras",
+                 "docker-compose-plugin")
+] + [("cpu", "tsa", "2027-01-15", "Only Hetzner can fix it: microcode of the hypervisor")]
+
+
+def accepted_files(scenario, entries, at="2026-10-19T08:00:00Z"):
+    """`files` for FakeSystem: accepted.json as gaps-accept.py writes it,
+    acknowledging the findings of the scenario's own scan named by (check,
+    label, until, reason)."""
+    import gapscheck
+    import gapslib as L
+    doc = gapscheck.scan(FakeSystem(scenario))
+    found = {(c["check"], L.finding_label(f)): (c["check"], f) for c in doc["checks"] if c["check"] in L.FINDING_KEYS
+             for f in c.get(L.FINDING_KEYS[c["check"]][0]) or []}
+    items = []
+    for check, label, until, reason in entries:
+        check, f = found[(check, label)]
+        items.append({"ref": L.finding_ref(check, f), "check": check, "label": label, "pin": L.finding_pin(check, f),
+                      "until": until, "reason": reason, "at": at})
+    return {gapscheck.ACCEPTED: json.dumps({"format": 1, "accepted": items}, indent=1)}
+
+
 class FakeSystem:
     def __init__(self, scenario, uid=None, missing=(), results=None, files=None, now=None, snapd=None, meta=None):
         self.dir = os.path.join(FIXTURES, scenario)

@@ -49,6 +49,7 @@ jobs:
             test -x /usr/lib/cockpit-update-gaps/gaps-scan.py
             test -x /usr/lib/cockpit-update-gaps/gaps-ctl.sh
             test -x /usr/lib/cockpit-update-gaps/gaps-status.py
+            test -x /usr/lib/cockpit-update-gaps/gaps-accept.py
             test -f /usr/lib/systemd/system/update-gaps-scan.timer
             test -f /usr/share/cockpit/update-gaps/manifest.json
             test -f /usr/share/metainfo/de.azentrius.update_gaps.metainfo.xml

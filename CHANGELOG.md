@@ -1,5 +1,29 @@
 # Changelog
 
+## 0.7.0 – 2026-10-22
+
+Findings that are meant to be there can be acknowledged on the page for a while: the page keeps
+showing them, the Status Board stops counting them.
+
+- **Acknowledge a finding:** with administrative access, “Acknowledge” beside a finding of the local
+  checks takes it out of the status until a day you pick, at most 90 days ahead, with an optional
+  reason. The page keeps showing it, marked “acknowledged until …: reason”, and lists such areas
+  apart in the overview; the Status Board and the menu icon leave it out, and the item says how many
+  are acknowledged. It counts again after that day, or as soon as what it was acknowledged for
+  changes: a held package that gets a fix from a security source, a CPU vulnerability that becomes
+  this server's to fix, firmware with a newer release, another Pro status or dpkg state. “Take
+  back” ends it early. Findings from the network data cannot be acknowledged.
+- **How it is kept:** `gaps-ctl.sh accept REF DAY` and `unaccept REF` run the new `gaps-accept.py`
+  as root. It checks the finding against the last state and the day, takes the reason from stdin,
+  never from the command line, and writes only `/var/lib/update-gaps/accepted.json` (0644); then the
+  scan runs. The scan reads the file as data and never fails over it.
+- **Formats:** the findings of the local checks carry `ref`, acknowledged ones `accepted`, and their
+  check counts them in `accepted`. Firmware updates are now named by their device and failed snap
+  refreshes by their change, so their `since` starts anew once.
+- **Tests:** a recorded host with acknowledgements (Docker held until the maintenance window, `tsa`
+  the provider's); in the containers the held package acknowledged with `gaps-accept.py` as root and
+  refused to a user; in the real Cockpit session acknowledged and taken back through the page.
+
 ## 0.6.0 – 2026-10-21
 
 Four new checks for what keeps updates back on the server itself, and since when each finding has

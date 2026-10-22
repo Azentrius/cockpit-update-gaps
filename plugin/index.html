@@ -10,14 +10,14 @@
          never flashes in the wrong brightness, then the shared stylesheet,
          then what only this page needs. Everything is local, so Cockpit's
          default (strict) CSP applies unchanged. -->
-    <script src="azentrius-theme.js?v=0.6.0"></script>
-    <link rel="stylesheet" href="azentrius.css?v=0.6.0">
-    <link rel="stylesheet" href="gaps.css?v=0.6.0">
+    <script src="azentrius-theme.js?v=0.7.0"></script>
+    <link rel="stylesheet" href="azentrius.css?v=0.7.0">
+    <link rel="stylesheet" href="gaps.css?v=0.7.0">
     <!-- Cockpit base API + Cockpit's own translation file for the session
          language (sets cockpit.language, e.g. "de"; absent for English). -->
     <script src="../base1/cockpit.js"></script>
     <script src="../base1/po.js"></script>
-    <script src="icons.js?v=0.6.0"></script>
+    <script src="icons.js?v=0.7.0"></script>
 </head>
 <body>
     <!-- Static texts are English (the fallback) and get translated by
@@ -92,6 +92,17 @@
         </div>
         <div class="az-modal__body">
             <p id="ug-dialog-desc" class="ug-dialog-desc"></p>
+            <div id="ug-dialog-form" class="ug-dialog-form" hidden>
+                <div class="az-field">
+                    <label class="az-field__label" for="ug-ack-until" data-i18n="ack.untilLabel">Until</label>
+                    <input id="ug-ack-until" class="az-input" type="date" required aria-describedby="ug-ack-until-help">
+                    <p id="ug-ack-until-help" class="az-field__help" data-i18n="ack.untilHelp">At most 90 days ahead.</p>
+                </div>
+                <div class="az-field">
+                    <label class="az-field__label" for="ug-ack-reason" data-i18n="ack.reasonLabel">Reason (optional)</label>
+                    <input id="ug-ack-reason" class="az-input" type="text" maxlength="200" autocomplete="off">
+                </div>
+            </div>
             <p id="ug-dialog-note" class="ug-dialog-note" data-i18n="dialog.note">Runs with administrator privileges via Cockpit.</p>
             <pre id="ug-dialog-log" class="ug-dialog-log" hidden></pre>
             <p id="ug-dialog-result" class="ug-dialog-result" role="status" aria-live="polite"></p>
@@ -104,10 +115,10 @@
         </div>
     </dialog>
 
-    <script src="i18n.js?v=0.6.0"></script>
+    <script src="i18n.js?v=0.7.0"></script>
     <!-- menu-status.js: the status icon in Cockpit's menu (Cockpit loads the page hidden after
          the login for it); gaps.js starts once the page is shown. -->
-    <script src="menu-status.js?v=0.6.0"></script>
-    <script src="gaps.js?v=0.6.0"></script>
+    <script src="menu-status.js?v=0.7.0"></script>
+    <script src="gaps.js?v=0.7.0"></script>
 </body>
 </html>

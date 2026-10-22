@@ -29,6 +29,8 @@ RADAR_STALE_AFTER = 72 * 3600   # the network data (daily): old after 72 hours, 
 KEYS_WARN_DAYS = 14     # a key that expires sooner is a warning, later (up to gapscheck.KEYS_SOON_DAYS) info
 # Checks that have an item only with a finding: nothing to say when all is well.
 QUIET = ("firmware", "snaps", "dpkg", "boot", "keys", "uu")
+# Checks found only through their findings: once every finding is acknowledged, nothing is left.
+ACK_ONLY = ("dpkg", "boot", "held", "pro", "lists", "keys", "uu", "firmware", "snaps")
 ORDER = {"none": 0, "ok": 1, "info": 2, "warning": 3, "danger": 4}
 ID_RE = re.compile(r"^[a-z0-9-]{1,40}$")
 LINK_RE = re.compile(r"^#/[A-Za-z0-9/_-]{0,80}$")
@@ -115,6 +117,7 @@ T = {
         "uu.service": "apt-daily-upgrade.service ended with {result}",
         "uu.kept": "kept back: {names}",
         "uu.conffile": "left for an upgrade by hand: {names}",
+        "acked": {"one": "{n} acknowledged", "other": "{n} acknowledged"},
         "partly": "partly checked",
         "failed": "check failed",
         "skipped": "not checked",
@@ -195,6 +198,7 @@ T = {
         "uu.service": "apt-daily-upgrade.service endete mit {result}",
         "uu.kept": "zurückgehalten: {names}",
         "uu.conffile": "für ein Update von Hand liegen gelassen: {names}",
+        "acked": {"one": "{n} quittiert", "other": "{n} quittiert"},
         "partly": "teilweise geprüft",
         "failed": "Prüfung fehlgeschlagen",
         "skipped": "nicht geprüft",
@@ -260,6 +264,28 @@ def _kernel(k):
     return re.sub(r"-generic$", "", str(k or "?"))
 
 
+def is_acked(f):
+    """Whether a finding is acknowledged on the page and the acknowledgement
+    still holds (not ended, the finding not changed since)."""
+    a = f.get("accepted") if isinstance(f, dict) else None
+    return isinstance(a, dict) and not a.get("expired") and not a.get("changed")
+
+
+def without_acked(c):
+    """A check with its acknowledged findings left out, and how many those
+    were. They do not count for the status; the page still shows them."""
+    f = c.get("findings")
+    if not isinstance(f, list):
+        return c, 0
+    open_ = [x for x in f if not is_acked(x)]
+    if len(open_) == len(f):
+        return c, 0
+    c = dict(c, findings=open_)
+    if not open_ and c.get("state") == "found" and c.get("check") in ACK_ONLY:
+        c["state"] = "none"
+    return c, len(f) - len(open_)
+
+
 def _size(n, lang):
     """Bytes as MB or GB, with the decimal comma in German."""
     if not isinstance(n, int):
@@ -277,7 +303,8 @@ def items_of(doc, lang):
     check that does not apply here (not Ubuntu, no apt, a container) has no
     item, nor do the QUIET ones without a finding; one that did not run is
     `none`. A CPU vulnerability only the provider of a VM can fix is info,
-    not a warning."""
+    not a warning. Findings acknowledged on the page (until a day, unchanged
+    since) do not count; the detail says how many there are."""
     checks = {c.get("check"): c for c in doc.get("checks") or [] if isinstance(c, dict)}
     at = doc.get("generated")
     out = []
@@ -491,6 +518,7 @@ def items_of(doc, lang):
         c = checks.get(cid)
         if not c:
             continue
+        c, acked = without_acked(c)
         st = c.get("state")
         if st == "skipped" and c.get("reason") in ("not-applicable", "unsupported-os", "radar-off", "container"):
             continue
@@ -505,6 +533,8 @@ def items_of(doc, lang):
             out.append(item(cid, "none", detail=t(lang, why), link=cid != "updates"))
             continue
         i = fn(c)
+        if acked:
+            i["detail"] = _clip("; ".join(x for x in (i.get("detail"), t(lang, "acked", n=acked)) if x))
         if st == "partial":
             i["detail"] = "; ".join(x for x in (i.get("detail"), t(lang, "partly")) if x)
         out.append(i)

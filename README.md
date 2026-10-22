@@ -11,7 +11,16 @@ releases) come from a separate unprivileged service, only once set up. The only 
 can make are to switch the add-on's own regular check and its network data on or off, and to
 acknowledge a finding for a while, each after showing what that does.
 
-![Update Gaps on a server with held packages, fixes only with Ubuntu Pro and a pending restart](docs/img/overview.png)
+| Light | Dark |
+|---|---|
+| ![Update Gaps on a server with held packages, fixes only with Ubuntu Pro and a pending restart](docs/img/overview.png) | ![The same page in the dark theme](docs/img/overview-dark.png) |
+
+| Upkeep gone wrong | Acknowledged findings |
+|---|---|
+| ![A kernel update that ran out of room in /boot, with the commands that finish it](docs/img/upkeep.png) | ![Findings acknowledged until the maintenance window: still shown, not counted](docs/img/accepted.png) |
+
+The screenshots show recorded test data; they come from the CI artifact `screenshots`
+(`tools/preview/shoot.py`).
 
 **Contents**
 
@@ -24,6 +33,7 @@ acknowledge a finding for a while, each after showing what that does.
 - [Settings](#settings)
 - [Operation and troubleshooting](#operation-and-troubleshooting)
 - [Development](#development)
+- [Releasing](#releasing)
 - [Known limits](#known-limits)
 - [License](#license)
 
@@ -64,6 +74,10 @@ set up) or of all packages (without), Flatpaks, pip/npm/gem/cargo installs, AppI
 without fwupd, newer snap versions in the Store (snapd refreshes by itself), software in containers,
 VMs and home directories, and whether a security issue applies to the configuration of the server.
 
+Not part of this add-on: what is reachable from where
+([Security Monitor](https://github.com/Azentrius/cockpit-security-monitor)), cron jobs and timers
+([Cron Jobs](https://github.com/Azentrius/cockpit-cronjobs)).
+
 ## Reading the page
 
 - **Header:** when the server was checked and when apt last updated its package lists; “Refresh”
@@ -79,12 +93,13 @@ VMs and home directories, and whether a security issue applies to the configurat
   into a terminal: the page installs nothing. A finding an earlier check saw as well says since
   when (“seen since”); the time is kept in the state file, nowhere else.
 - **Acknowledging a finding:** with administrative access, “Acknowledge” beside a finding takes it
-  out of the status (Status Board, menu icon) until a day you pick, at most 90 days ahead, with an
-  optional reason. The page keeps showing it, marked “acknowledged until …”; the overview lists such
-  areas apart. It counts again after that day, or as soon as it changes in a way that matters (a
-  held package that gets a fix from a security source, a CPU vulnerability that becomes this
-  server's to fix). “Take back” ends it early. Findings from the network data cannot be
-  acknowledged.
+  out of the status ([Status Board](https://github.com/Azentrius/cockpit-status-board), menu icon)
+  until a day you pick, at most 90 days ahead, with an optional reason. The page keeps showing it,
+  marked “acknowledged until …”; the overview lists such areas apart. It counts again after that
+  day, or as soon as it changes in a way that matters (a held package that gets a fix from a
+  security source, a CPU vulnerability that becomes this server's to fix). “Take back” ends it
+  early. Findings from the network data, a pending restart, software outside the package manager
+  and the end of support cannot be acknowledged.
 - **No findings:** the areas checked without a finding, and what was only partly checked.
 - **Not checked:** what the page cannot see, plus every area that was skipped, failed or ran out
   of time on this server, with the reason.
@@ -140,13 +155,14 @@ flowchart LR
 | `systemd/update-gaps-scan.service`, `.timer` | `/usr/lib/systemd/system/` | the check, hardened and without network; the timer is off until set up from the page |
 | `systemd/update-gaps-radar.service`, `.timer` | `/usr/lib/systemd/system/` | the network data, once a day as a user of its own; off until set up from the page |
 
-After every check the service also writes `status.json`: a short summary in the status format
-all Azentrius add-ons share (unfixed security issues with the network data, held packages with
-newer versions, a pending restart, CPU vulnerabilities, fixes only with Ubuntu Pro, package lists,
-the end of support, regular updates, and, only when there is a finding, packages dpkg left half
-done, room in `/boot`, signing keys, the runs of the automatic updates, firmware and snaps, each
-with its state; acknowledged findings do not count). The Status
-Board finds the command in the page's `manifest.json` (`azentrius.status`) and runs
+After every check the service also writes `status.json`: a short summary in the
+[status format all Azentrius add-ons share](https://github.com/Azentrius/cockpit-status-board/blob/main/docs/STATUS-CONTRACT.md)
+(unfixed security issues with the network data, held packages with newer versions, a pending
+restart, CPU vulnerabilities, fixes only with Ubuntu Pro, package lists, the end of support,
+regular updates, and, only when there is a finding, packages dpkg left half done, room in `/boot`,
+signing keys, the runs of the automatic updates, firmware and snaps, each with its state;
+acknowledged findings do not count). The [Status Board](https://github.com/Azentrius/cockpit-status-board)
+finds the command in the page's `manifest.json` (`azentrius.status`) and runs
 `gaps-status.py status --lang en|de`, which needs no administrative access; a link of an item
 (`#/held`) opens this page at its card.
 
@@ -198,7 +214,26 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
   `unattended-upgrades`, `gpg` (signing keys of the sources), `fwupd` (firmware),
   `systemd-detect-virt` (from systemd: tells a VM from a physical server)
 
-Fedora, RHEL and openSUSE are not checked yet: the package installs there, and the page says so.
+Fedora, RHEL and openSUSE are not checked yet. Releases carry no `.rpm`, and packages.azentrius.com
+serves the add-on for Debian and Ubuntu only. An `.rpm` built with `make packages` installs on
+Fedora 43 and Rocky Linux 9 and 10 (CI job `install`), and the page says that it checks nothing
+there.
+
+### Supported systems
+
+What CI really runs, and what is expected but not tested. A package that installs is not a tested
+system by itself.
+
+| | Systems | What is checked |
+|---|---|---|
+| **Tested** | Ubuntu 24.04 (GitHub runner) with Ubuntu's own Cockpit and systemd | the page in a real Cockpit session in Chromium (job `cockpit`): installed with apt, found in the menu, the first check by itself through the hardened service (no network), a held package and the reboot flag on the page, “Refresh”, the regular check set up from the page and switched off, the network data set up from the page with a real fetch as the unprivileged radar, a finding acknowledged and taken back, the status as a user without sudo, a user without administrative access, the links of the status, no JavaScript or resource errors; versions, steps and screenshots in the job summary and the artifact `cockpit-session` |
+| **Tested** | Debian 12 and 13, Ubuntu 22.04, 24.04 and 26.04, in throw-away containers | the helpers as root and as a user (job `scenarios`): a held package, a package without a source, a source without lists, a package dpkg left half configured, files outside apt, a hidden folder, the reboot flag, a Package-Blacklist, never apt-get from `/usr/local` |
+| **Tested** | Python 3.8 and 3.12 | the helper tests (job `python-min` and `make check`); 3.8 is the oldest supported |
+| **Recorded** | three real Ubuntu servers (24.04 and 26.04) | the checks against their outputs, recorded read only and made anonymous (`test/fixtures/`), and variants for what they do not have (Debian, no root, missing tools, time limits, phased updates, upkeep gone wrong) |
+| **Package installs** | Debian 12 and 13, Ubuntu 22.04, 24.04 and 26.04 (`.deb`); Fedora 43, Rocky Linux 9 and 10 (`.rpm` from `make packages`) | the package installs with the distribution's own dependencies, the helpers answer, the package removes cleanly (job `install`, Debian 13 also in job `test`). No Cockpit or systemd runs there. |
+| **Expected, untested** | Debian 12 and 13, Ubuntu 22.04 and newer, with Cockpit 264 or newer | the page in a real Cockpit there |
+| **Refused** | Ubuntu 20.04 (Cockpit 215), Rocky Linux 8 (`python3` is 3.6) | checked in CI: the package manager refuses the package for the dependency that is too old |
+| **Not checked yet** | Fedora, RHEL, openSUSE | the package installs, but the page checks nothing there; releases and the package repository have no `.rpm` |
 
 ## Install, update, uninstall
 
@@ -209,6 +244,9 @@ From the Azentrius package repository (set up once, see
 sudo apt update && sudo apt install cockpit-update-gaps
 ```
 
+Or install **Update Gaps** in Cockpit under **Applications**. The system's updates keep it
+current. Which systems are tested how: [Supported systems](#supported-systems).
+
 Or from the files of a release: download the `.deb` and `SHA256SUMS`, check them, install:
 
 ```bash
@@ -217,14 +255,17 @@ gh attestation verify cockpit-update-gaps_X.Y.Z-1_all.deb --repo Azentrius/cockp
 sudo apt install ./cockpit-update-gaps_X.Y.Z-1_all.deb
 ```
 
+Or build the package yourself: `make packages` (needs dpkg-deb and rpmbuild), then
+`sudo apt install ./dist/cockpit-update-gaps_X.Y.Z-1_all.deb`.
+
 The package must be installed on each server you look at in Cockpit, also behind a Cockpit
 bastion (the page is served by that server's bridge). After the first install, open the page with
 administrative access: it checks the server once by itself. Set up the regular check there if you
 want the state kept current, and the network data if you want them (see the security model for
 what leaves the server).
 
-Uninstall: `sudo apt remove cockpit-update-gaps`. It stops both timers and removes the state and
-the network data; `/etc/update-gaps.conf` stays.
+Uninstall: `sudo apt remove cockpit-update-gaps`. It stops both timers and removes the state, the
+acknowledgements given on the page and the network data; `/etc/update-gaps.conf` stays.
 
 ## Settings
 
@@ -261,14 +302,34 @@ systemctl list-timers update-gaps-scan.timer            # the regular check
 pip install -r test/requirements.txt   # shellcheck, ruff, playwright
 make check                             # every offline test
 make lint                              # shellcheck, ruff, systemd units and their hardening
-python3 tools/preview/build.py         # the page with recorded data:
+make packages                          # .deb and .rpm in dist/ (needs dpkg-deb and rpmbuild)
+python3 tools/preview/build.py         # the page with recorded data (also make preview):
                                        # tools/preview/out/update-gaps/index.html?scenario=noble-held&lang=en
+python3 tools/preview/shoot.py         # screenshots (light, dark, phone) to docs/img; needs Playwright
 ```
 
-The helper tests run against output recorded on real Debian and Ubuntu servers
-(`test/fixtures/`, made anonymous by `test/fixtures/import_capture.py`); `test/scenarios.sh` sets
-up the same situations in throw-away containers, and the CI job `cockpit` uses the page in a real
-Cockpit session. More in [CONTRIBUTING.md](CONTRIBUTING.md).
+The helper tests run against output recorded on three real Ubuntu servers (24.04 and 26.04) and
+made anonymous (`test/fixtures/`, `test/fixtures/import_capture.py`), with variants for the cases
+those servers do not have: Debian, no root, missing tools, time limits, phased updates, upkeep gone
+wrong. Besides the job `test`, CI runs the helper tests on Python 3.8
+(job `python-min`), sets up the same situations on Debian and Ubuntu in throw-away containers
+(`scenarios`, `test/scenarios.sh`), installs and removes the packages on more distributions
+(`install`) and uses the page in a real Cockpit session (`cockpit`); all of it:
+[Supported systems](#supported-systems). More in [CONTRIBUTING.md](CONTRIBUTING.md).
+
+## Releasing
+
+1. Set the new version in `plugin/gaps.js` (`const VERSION`) and in every `?v=` in
+   `plugin/index.html`, and add a section `## X.Y.Z – YYYY-MM-DD` to `CHANGELOG.md`
+   (`tools/check-version.sh` checks that the three agree).
+2. Merge to `main`.
+3. On GitHub: Actions › **release** › Run workflow (branch `main`). The workflow checks the version,
+   waits for the test workflow of that commit to pass, runs the tests, builds the `.deb` and the
+   source archive `cockpit-update-gaps-X.Y.Z.tar.gz` with `SHA256SUMS` and a signed build
+   provenance, and creates the tag `vX.Y.Z` with a release whose notes come from `CHANGELOG.md`.
+   Releases carry no `.rpm` yet.
+4. packages.azentrius.com takes the package from the release within an hour
+   ([Azentrius/packages](https://github.com/Azentrius/packages)).
 
 ## Known limits
 
@@ -293,4 +354,9 @@ Cockpit session. More in [CONTRIBUTING.md](CONTRIBUTING.md).
 ## License
 
 Apache-2.0, see [LICENSE](LICENSE). Third-party material (fonts, icons) is listed in
-[NOTICE](NOTICE).
+[NOTICE](NOTICE). The page contains no code from Cockpit; it uses Cockpit's API `cockpit.js` at
+runtime, which Cockpit itself ships.
+
+Please report security issues privately, see [SECURITY.md](SECURITY.md).
+
+Made by [Azentrius](https://azentrius.com).

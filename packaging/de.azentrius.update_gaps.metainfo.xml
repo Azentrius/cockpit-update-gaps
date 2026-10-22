@@ -68,6 +68,11 @@
       <caption xml:lang="de">Dieselbe Seite im dunklen Design</caption>
       <image type="source" width="1440" height="1000">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/overview-dark.png</image>
     </screenshot>
+    <screenshot>
+      <caption>Findings acknowledged until the maintenance window: still shown, not counted</caption>
+      <caption xml:lang="de">Befunde bis zum Wartungsfenster quittiert: weiter gezeigt, nicht gezählt</caption>
+      <image type="source">https://raw.githubusercontent.com/Azentrius/cockpit-update-gaps/main/docs/img/accepted.png</image>
+    </screenshot>
   </screenshots>
   <developer id="de.azentrius">
     <name>Azentrius</name>

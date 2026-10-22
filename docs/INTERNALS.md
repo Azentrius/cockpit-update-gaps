@@ -55,8 +55,8 @@ install without a state checks once by itself when an administrator opens the pa
 | 0 | ok (`gaps-scan.py`: also with findings and with single checks in `error` or `timeout`) |
 | 1 | unexpected error (`gaps-scan.py`: the previous state file stays as it was); `gaps-ctl.sh scan`: the service failed |
 | 2 | not possible: the service or timer is missing |
-| 65 | `gaps-accept.py`: no such finding in the last state, or a day out of range |
 | 64 | wrong call |
+| 65 | `gaps-accept.py`: no such finding in the last state, or a day out of range |
 | 75 | a scan is running already |
 | 77 | no root rights (`gaps-ctl.sh scan`, `radar`, `install`/`remove timer`/`radar`, `accept`/`unaccept`, `gaps-accept.py`); `gaps-status.py`: `status.json` exists but cannot be read; `gaps-radar.py`: started as root (it never runs as root) |
 
@@ -111,11 +111,12 @@ previous `FILE` first (at most 64 MiB, as data: only a `since` in the format of 
 taken) and carries the time over when the same finding is there again; a new one gets the scan's
 `generated`, one that is gone is gone. Which fields name a finding (the others, such as versions,
 counts and ages, may change): `phased` (`packages[]`) `package`; `dpkg` `kind`, `package`; `boot`,
-`uu` `kind`; `held`, `pro`, `local` `package`; `cpu` `name`; `firmware` `kind`, `remote`; `snaps`
-`kind`, `snap`; `lists` `kind`, `site`, `release`, `file`; `keys` `kind`, `file`, `inline`; `auto`
-`kind`, `what`, `site`, `o`, `a`, `pattern`; `backports` `source`. Findings from the network data
-(`cve`, `upstream`, `newer`) change with every download and have none. The page shows “seen since
-<date>” once an earlier scan saw a finding. A scan to stdout (no `--output`) starts afresh.
+`uu` `kind`; `held`, `pro`, `local` `package`; `cpu` `name`; `firmware` `kind`, `remote`, `device`;
+`snaps` `kind`, `snap`, `id`; `lists` `kind`, `site`, `release`, `file`; `keys` `kind`, `file`,
+`inline`; `auto` `kind`, `what`, `site`, `o`, `a`, `pattern`; `backports` `source`. Findings from
+the network data (`cve`, `upstream`, `newer`) change with every download and have none. The page
+shows “seen since <date>” once an earlier scan saw a finding. A scan to stdout (no `--output`)
+starts afresh.
 
 ### The checks
 
@@ -365,9 +366,10 @@ A newer version in the Store is no finding: snapd refreshes by itself several ti
 
 ## `status.json` and `gaps-status.py status` (status contract)
 
-The status format all Azentrius add-ons share (schema 1), for the Status Board and other tools. The
-service writes `/var/lib/update-gaps/status.json` after `scan.json` (`gaps-scan.py --status FILE`);
-the verb only reads it:
+The [status format all Azentrius add-ons share](https://github.com/Azentrius/cockpit-status-board/blob/main/docs/STATUS-CONTRACT.md)
+(schema 1), for the [Status Board](https://github.com/Azentrius/cockpit-status-board) and other
+tools. The service writes `/var/lib/update-gaps/status.json` after `scan.json`
+(`gaps-scan.py --status FILE`); the verb only reads it:
 
 | Call | Kind | Output |
 |---|---|---|

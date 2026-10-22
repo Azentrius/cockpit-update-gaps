@@ -7,7 +7,7 @@ Please do **not** open a public issue for security problems.
 Report them privately through GitHub instead:
 [Report a vulnerability](https://github.com/Azentrius/cockpit-update-gaps/security/advisories/new)
 (tab **Security → Report a vulnerability** in this repository).
-If you cannot use GitHub, write to **support@azentrius.de**.
+If you cannot use GitHub, write to **support@azentrius.com**.
 
 Please include:
 
@@ -69,6 +69,16 @@ particularly welcome for:
 - credentials from package sources or other secrets that end up in the add-on's state file, which
   every local user can read,
 - the scan service reaching the network although it runs with `PrivateNetwork=yes`,
+- data from security-metadata.canonical.com, api.launchpad.net or api.github.com that the root scan
+  takes as more than checked data, or that reaches the page as markup or script, and the radar
+  running as root,
+- `gaps-ctl.sh accept`/`unaccept` or `gaps-accept.py` writing anything but
+  `/var/lib/update-gaps/accepted.json`, accepting a ref or a day it should refuse, taking the reason
+  from anywhere but stdin, or an acknowledgement that still hides a finding after it changed in a
+  way that matters,
+- `pro` or `gpg` running with root's rights, or writing outside the fresh home the scan gives them
+  (it runs them as `nobody`),
 - `/etc/update-gaps.conf` being accepted when others than root can write it,
 - the package `cockpit-update-gaps` (its install and removal scripts) or `make install` overwriting or
-  exposing files it should not touch.
+  exposing files it should not touch,
+- release archives, packages or `SHA256SUMS` that do not match the tagged source.

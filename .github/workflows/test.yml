@@ -112,8 +112,8 @@ jobs:
   # The packages on more distributions: install (the package manager resolves the dependencies
   # from the distribution, the versions it took are printed), the helpers answer, removal. And two
   # systems below the minimums, which must refuse the package: Ubuntu 20.04 (Cockpit 215) and
-  # Rocky Linux 8 (python3 is 3.6). The page checks only apt systems so far; on Fedora and Rocky
-  # it says so, and releases of 0.1 carry no .rpm.
+  # Rocky Linux 8 (python3 is 3.6). On Fedora and Rocky the page says that it checks nothing there.
+  # Releases carry no .rpm yet: the page checks only apt systems so far.
   install:
     runs-on: ubuntu-24.04
     timeout-minutes: 20

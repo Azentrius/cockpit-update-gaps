@@ -18,7 +18,7 @@ Security problems: do not open a pull request, see SECURITY.md.
 ## Checklist
 
 - [ ] Every new or changed text exists in English and German (`I18N.en` and `I18N.de`, `msg de en`)
-- [ ] Changed formats (`scan.json`, the helpers' JSON) are changed together with the page, `test/fixtures/`, the tests and `docs/INTERNALS.md`
-- [ ] The helpers still only read: no `apt update`, no install, no restart, no network in the scan
+- [ ] Changed formats (`scan.json`, `status.json`, `accepted.json`, `radar.json`, the helpers' JSON) are changed together with the page, `test/fixtures/`, the tests and `docs/INTERNALS.md`
+- [ ] The helpers still only read: they write only `scan.json`, `status.json` and `accepted.json`, the radar only its own folder and only as its own user; no `apt update`, no install, no restart, no network in the scan
 - [ ] No secrets, tokens or real server data (host names, IP addresses, credentials) in code, tests, fixtures or this description
 - [ ] SPDX header on every new source file

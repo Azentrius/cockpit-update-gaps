@@ -53,7 +53,7 @@ The screenshots show recorded test data; they come from the CI artifact `screens
 | **Firmware updates** (with fwupd) | `fwupdmgr get-updates` from fwupd's local metadata | Cockpit has no page for firmware |
 | **Snaps that are not refreshed**: held, put off, failing, on an old base | snapd's API, asked only when snaps are installed | Software Updates shows no snaps |
 | **Package lists** missing, left over, old, expired, apt-daily errors | `apt-get indextargets`, `/var/lib/apt/lists`, apt's success stamp, the journal of `apt-daily.service` | the page compares with the lists on the server; without them the update is missing too |
-| **Signing keys of the sources**: expired, expiring within 60 days, missing | the keyrings of `Signed-By` (else apt's trusted ones), read with `gpg --show-keys` without root | once the last key of a source has expired, apt reads that source no more and its updates drop out of every list; only `apt update` warns |
+| **Signing keys of the sources**: expired, expiring within 60 days, missing | the keyrings of `Signed-By` (else apt's trusted ones), only the keys its fingerprints select, read with `gpg --show-keys` without root | once the last key of a source has expired, apt reads that source no more and its updates drop out of every list; only `apt update` warns |
 | **Packages without a source** | `apt-cache policy` | without a source there is no newer version |
 | **Left out of automatic updates** | `apt-config dump` (`Allowed-Origins`, `Origins-Pattern`, `Package-Blacklist`), the origins of the sources | for apt, Cockpit shows nothing about automatic updates |
 | **What the last run of the automatic updates did**: failed, missing, old, packages kept back or left for an upgrade by hand | `/var/log/unattended-upgrades/unattended-upgrades.log`, `systemctl show apt-daily-upgrade.service` | Cockpit shows nothing of the runs of unattended-upgrades |
@@ -99,7 +99,8 @@ Not part of this add-on: what is reachable from where
   day, or as soon as it changes in a way that matters (a held package that gets a fix from a
   security source, a CPU vulnerability that becomes this server's to fix). “Take back” ends it
   early. Findings from the network data, a pending restart, software outside the package manager
-  and the end of support cannot be acknowledged.
+  and the end of support cannot be acknowledged, nor can those beyond the 300 a card lists: they
+  keep counting.
 - **No findings:** the areas checked without a finding, and what was only partly checked.
 - **Not checked:** what the page cannot see, plus every area that was skipped, failed or ran out
   of time on this server, with the reason.
@@ -347,9 +348,10 @@ wrong. Besides the job `test`, CI runs the helper tests on Python 3.8
   download folder; the list files' own times are the server's `Last-Modified`.
 - The log of unattended-upgrades has the server's local time; the page reads it as UTC. apt-daily's
   download run (`--download-only`) writes no end to the log and is left out.
-- A keyring counts as long as one of its signing keys is valid: which key a source signs with is
-  not checked. A source without `Signed-By` may use any of apt's trusted keyrings, so each of them
-  is shown.
+- A keyring counts as long as one of its signing keys is valid, of those `Signed-By` selects by
+  fingerprint when it names any: which key a source signs with is not checked. A source without
+  `Signed-By` may use any of apt's trusted keyrings, so each of them is shown. A `Signed-By` in a
+  source's Release file (apt's fallback when the source has none) is not read.
 
 ## License
 

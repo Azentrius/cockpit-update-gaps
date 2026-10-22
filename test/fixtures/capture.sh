@@ -107,7 +107,7 @@ rings=$( (grep -hoE 'signed-by=[^] ]+' sources/*.list 2> /dev/null | cut -d= -f2
 home=$(mktemp -d) && chown nobody "$home"
 for k in $rings /etc/apt/trusted.gpg /etc/apt/trusted.gpg.d/*; do
   [ -f "$k" ] || continue
-  runuser -u nobody -- env HOME="$home" gpg --batch --no-autostart --with-colons --show-keys "$k" \
+  runuser -u nobody -- env HOME="$home" gpg --batch --no-autostart --with-colons --with-subkey-fingerprint --show-keys "$k" \
     > "keyrings/$(basename "$k").txt" 2> /dev/null
   printf '%s\t%s\n' "$k" "$(stat -c %s "$k")" >> keyrings.txt
 done

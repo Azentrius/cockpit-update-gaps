@@ -17,6 +17,7 @@ while Ubuntu rolls systemd out in phases, fakesys.phased_results), upkeep gone
 wrong (noble-held with /boot full, a kernel half configured, a failed run of
 unattended-upgrades and an expired key, fakesys.upkeep)."""
 
+import hashlib
 import importlib.util
 import io
 import json
@@ -34,7 +35,9 @@ sys.path.insert(0, HERE)
 import gapscheck  # noqa: E402
 import gapslib as L  # noqa: E402
 import gapsproc  # noqa: E402
-from fakesys import NOBLE_ACCEPTED, FakeSystem, accepted_files, command_text, phased_results, upkeep  # noqa: E402
+import gapsstatus  # noqa: E402
+from fakesys import (FPR_A, FPR_B, FPR_P, NOBLE_ACCEPTED, TWO_KEYS, WITH_SUBKEY, FakeSystem,  # noqa: E402
+                     accepted_files, command_text, phased_results, upkeep)
 
 STATES = {"found", "none", "partial", "skipped", "timeout", "error"}
 UBUNTU_KEYRING = "/usr/share/keyrings/ubuntu-archive-keyring.gpg"
@@ -52,6 +55,18 @@ def bare(findings):
     if isinstance(findings, dict):
         return {k: v for k, v in findings.items() if k not in ("since", "ref", "accepted")}
     return [bare(f) for f in findings]
+
+
+def accepted_for(check, findings, until="2026-11-01", at="2026-10-19T08:00:00Z"):
+    """`files` for FakeSystem: accepted.json as gaps-accept.py writes it, for
+    `findings` (with their ref) of `check` from an earlier scan."""
+    items = [{"ref": f["ref"], "check": check, "label": L.finding_label(f), "pin": L.finding_pin(check, f),
+              "until": until, "reason": "", "at": at} for f in findings]
+    return {gapscheck.ACCEPTED: json.dumps({"format": 1, "accepted": items})}
+
+
+def status_item(doc, cid, lang="en"):
+    return {i["id"]: i for i in gapsstatus.document(doc, lang, "0.1.0")["items"]}.get(cid)
 
 
 class Shape(unittest.TestCase):
@@ -574,6 +589,23 @@ class Dpkg(unittest.TestCase):
         _, c = scan("noble-held", meta={"dirs": {gapscheck.DPKG_UPDATES: ["tmp.i"]}})
         self.assertEqual(c["dpkg"]["state"], "none", "tmp.i is dpkg's scratch file, no unfinished run")
 
+    def test_the_rest_beyond_the_list_counts_when_the_list_is_acknowledged(self):
+        """301 packages half configured: 300 listed, 1 in `more`. Acknowledge the 300 on the page,
+        and the one not listed still counts, as a warning with what it is."""
+        extra = "".join(f"pkg-{i:03d}\t1.0-1\tpkg-{i:03d}\tiF \tamd64\n" for i in range(301))
+        dq = {"dpkg-query-W": gapsproc.Result(0, command_text("noble-held", "dpkg-query-W").rstrip("\n") + "\n" + extra, "")}
+        first = gapscheck.scan(FakeSystem("noble-held", results=dq), only={"dpkg"})
+        d = first["checks"][0]
+        self.assertEqual((d["state"], len(d["findings"]), d["more"], d["findings"][-1]["package"]), ("found", 300, 1, "pkg-299"))
+        later = gapscheck.scan(FakeSystem("noble-held", results=dq, files=accepted_for("dpkg", d["findings"])),
+                               only={"dpkg"}, previous=first)
+        d = later["checks"][0]
+        self.assertEqual((d["state"], d["accepted"], d["more"]), ("found", 300, 1))
+        i = status_item(later, "dpkg")
+        self.assertEqual((i["state"], i["value"], i["detail"]) if i else None,
+                         ("warning", "1", "1 more package left half done, not listed; 300 acknowledged"))
+        self.assertEqual(status_item(later, "dpkg", "de")["detail"], "1 weiteres Paket halb fertig, nicht aufgeführt; 300 quittiert")
+
 
 class Boot(unittest.TestCase):
     def test_recorded_hosts(self):
@@ -717,6 +749,102 @@ class Keys(unittest.TestCase):
     def test_without_gpg(self):
         k = scan("noble-held", missing={"gpg"})[1]["keys"]
         self.assertEqual((k["state"], k["tool"]), ("skipped", "gpg"))
+
+
+DOCKER_LIST = "/etc/apt/sources.list.d/docker.list"
+DOCKER_GPG = "/etc/apt/keyrings/docker.gpg"
+DOCKER_SITE = "https://download.docker.com/linux/ubuntu"
+DOCKER_LINE = "deb [arch=amd64 signed-by={}] https://download.docker.com/linux/ubuntu noble stable\n"
+# The fingerprints of Ubuntu's archive keys in /etc/apt/trusted.gpg.d (2012 CD image, 2018 archive).
+UBUNTU_CD_2012, UBUNTU_2018 = "843938DF228D22F7B3742BC0D94AA3F0EFE21092", "F6ECB3762474EDA9D21B7022871920D1991BC93C"
+
+
+def with_fpr(text, *fprs):
+    """gpg's view of a recorded keyring with the fpr record gpg prints after each key."""
+    out, it = [], iter(fprs)
+    for line in text.splitlines():
+        out.append(line)
+        if line.startswith(("pub:", "sub:")):
+            out.append(f"fpr:::::::::{next(it)}:")
+    return "\n".join(out) + "\n"
+
+
+def docker_keys(sources=None, keyring=TWO_KEYS, **kw):
+    """The check keys of noble-held with docker.list as given and docker.gpg holding `keyring`."""
+    files = {DOCKER_LIST: sources} if sources else {}
+    results = dict({"gpg-docker.gpg": gapsproc.Result(0, keyring, "")}, **kw.pop("results", {}))
+    return scan("noble-held", files=files, results=results, **kw)[1]["keys"]
+
+
+class SignedByFingerprints(unittest.TestCase):
+    """Signed-By with fingerprints (sources.list(5)): apt checks the source with the keys they
+    select, not with every key of the keyring. docker.gpg holds A, which expired, and B."""
+
+    def rings(self, k, file=DOCKER_GPG):
+        return [(r.get("select"), r["sources"], r["expires"]) for r in k["keyrings"] if r["file"] == file]
+
+    def test_without_a_fingerprint_every_key_counts(self):
+        k = docker_keys()
+        self.assertEqual((k["state"], self.rings(k)), ("none", [(None, [DOCKER_SITE], "never")]))
+
+    def test_the_selected_key_expired(self):
+        k = docker_keys(DOCKER_LINE.format(f"{DOCKER_GPG},{FPR_A.lower()}"))
+        self.assertEqual(k["state"], "found")
+        self.assertEqual([(f["kind"], f["file"], f["select"], f["sources"], f["expires"]) for f in k["findings"]],
+                         [("expired", DOCKER_GPG, [FPR_A], [DOCKER_SITE], "2026-09-01T00:00:00Z")])
+
+    def test_the_selected_key_is_valid(self):
+        k = docker_keys(DOCKER_LINE.format(f"{DOCKER_GPG},{FPR_B}"))
+        self.assertEqual((k["state"], k["findings"], self.rings(k)), ("none", [], [([FPR_B], [DOCKER_SITE], "never")]))
+
+    def test_deb822_with_the_fingerprint_on_a_line_of_its_own(self):
+        src = ("Types: deb\nURIs: https://packages.azentrius.com/apt\nSuites: stable\nComponents: main\n"
+               f"Signed-By: /usr/share/keyrings/azentrius.asc\n {FPR_A}\n")
+        k = scan("noble-held", files={"/etc/apt/sources.list.d/azentrius.sources": src},
+                 results={"gpg-azentrius.asc": gapsproc.Result(0, TWO_KEYS, "")})[1]["keys"]
+        self.assertEqual([(f["kind"], f["file"], f["select"]) for f in k["findings"]],
+                         [("expired", "/usr/share/keyrings/azentrius.asc", [FPR_A])])
+
+    def test_one_keyring_selected_differently_by_three_sources(self):
+        src = (DOCKER_LINE.format(f"{DOCKER_GPG},{FPR_A}") +
+               f"deb [signed-by={DOCKER_GPG},{FPR_B}] https://mirror.example/docker noble stable\n"
+               f"deb [signed-by={DOCKER_GPG}] https://plain.example/docker noble stable\n")
+        fs = FakeSystem("noble-held", files={DOCKER_LIST: src}, results={"gpg-docker.gpg": gapsproc.Result(0, TWO_KEYS, "")})
+        k = {x["check"]: x for x in gapscheck.scan(fs)["checks"]}["keys"]
+        self.assertEqual(self.rings(k), [(None, ["https://plain.example/docker"], "never"),
+                                         ([FPR_A], [DOCKER_SITE], "2026-09-01T00:00:00Z"),
+                                         ([FPR_B], ["https://mirror.example/docker"], "never")])
+        self.assertEqual([(f["kind"], f["select"], f["sources"]) for f in k["findings"]], [("expired", [FPR_A], [DOCKER_SITE])])
+        self.assertEqual(fs.calls.count("gpg-docker.gpg"), 1, "gpg reads the file once")
+
+    def test_a_fingerprint_with_its_subkeys_or_alone(self):
+        """A fingerprint selects the key and its subkeys; with `!` that key alone. P only certifies,
+        its subkey S signed until 2026-09-01."""
+        ring = WITH_SUBKEY.replace(":1800000000:", ":1788220800:")
+        k = docker_keys(DOCKER_LINE.format(f"{DOCKER_GPG},{FPR_P}"), ring)
+        self.assertEqual([(f["kind"], f["select"], f["expires"]) for f in k["findings"]],
+                         [("expired", [FPR_P], "2026-09-01T00:00:00Z")])
+        k = docker_keys(DOCKER_LINE.format(f"{DOCKER_GPG},{FPR_P}!"), ring)
+        self.assertEqual((k["state"], k["findings"], k["unchecked"]),
+                         ("partial", [], [{"file": DOCKER_GPG, "reason": "no-selected-key", "select": [FPR_P + "!"]}]))
+
+    def test_a_fingerprint_without_a_file_selects_from_the_trusted_keyrings(self):
+        trusted = {"gpg-ubuntu-keyring-2012-cdimage.gpg": gapsproc.Result(0, with_fpr(command_text(
+                       "noble-held", "gpg-ubuntu-keyring-2012-cdimage.gpg"), UBUNTU_CD_2012), ""),
+                   "gpg-ubuntu-keyring-2018-archive.gpg": gapsproc.Result(0, with_fpr(command_text(
+                       "noble-held", "gpg-ubuntu-keyring-2018-archive.gpg"), UBUNTU_2018), "")}
+        k = docker_keys(DOCKER_LINE.format(UBUNTU_2018), results=trusted)
+        self.assertEqual([(r["file"], r["select"], r.get("default"), r["sources"], r["expires"])
+                          for r in k["keyrings"] if r.get("default")],
+                         [("/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg", [UBUNTU_2018], True, [DOCKER_SITE], "never")])
+        self.assertEqual(k["state"], "none")
+        # A fingerprint none of them holds: apt cannot check the source; not checked, and which.
+        k = docker_keys(DOCKER_LINE.format("E5" * 20), results=trusted)
+        self.assertEqual((k["state"], k["unchecked"]),
+                         ("partial", [{"file": gapscheck.TRUSTED_D, "reason": "no-selected-key", "select": ["E5" * 20]}]))
+
+    def test_gpg_is_asked_for_the_fingerprints_of_subkeys(self):
+        self.assertIn("--with-subkey-fingerprint", gapscheck.GPG_SHOW)
 
 
 class Since(unittest.TestCase):
@@ -916,6 +1044,83 @@ class AcceptHelper(unittest.TestCase):
         self.assertEqual([x["label"] for x in self.entries()], ["docker-ce-cli"])
 
 
+AZ_SOURCES = "/etc/apt/sources.list.d/azentrius.sources"
+
+
+def armored(body):
+    return f"Signed-By:\n -----BEGIN PGP PUBLIC KEY BLOCK-----\n .\n {body}\n -----END PGP PUBLIC KEY BLOCK-----\n"
+
+
+# Two stanzas in one sources file, each with a key of its own in Signed-By.
+TWO_INLINE = ("Types: deb\nURIs: https://packages.azentrius.com/apt\nSuites: stable\nComponents: main\n" + armored("mQINBKEYONE") +
+              "\nTypes: deb\nURIs: https://packages.example/apt\nSuites: stable\nComponents: main\n" + armored("mQINBKEYTWO"))
+
+
+def inline_gpg(stdin):
+    """gpg's view of the key it gets on stdin: A or B, both expired on 2026-09-01."""
+    fpr = FPR_A if b"KEYONE" in stdin else FPR_B
+    return gapsproc.Result(0, f"pub:e:4096:1:{fpr[-16:]}:1662463626:1788220800::-:::sc::::::23::0:\nfpr:::::::::{fpr}:\n", "")
+
+
+class InlineKeys(unittest.TestCase):
+    """Two different keys in one sources file, both expired: two findings, each acknowledged on its
+    own, from the page (gaps-accept.py) to the status."""
+
+    def fs(self, sources=TWO_INLINE, files=None, now=None):
+        return FakeSystem("noble-held", files=dict({AZ_SOURCES: sources}, **(files or {})),
+                          results={"gpg-stdin": inline_gpg}, now=now)
+
+    @staticmethod
+    def keys(doc):
+        return {c["check"]: c for c in doc["checks"]}["keys"]
+
+    def test_two_keys_and_one_acknowledged(self):
+        first = gapscheck.scan(self.fs())
+        found = self.keys(first)["findings"]
+        self.assertEqual(len(found), 2)
+        self.assertNotEqual(found[0]["ref"], found[1]["ref"], "two keys, two findings")
+        self.assertEqual([(f["kind"], f["file"], f.get("inline"), f.get("fingerprints"), f["sources"]) for f in found],
+                         [("expired", AZ_SOURCES, True, [FPR_A], ["https://packages.azentrius.com/apt"]),
+                          ("expired", AZ_SOURCES, True, [FPR_B], ["https://packages.example/apt"])])
+        # The first acknowledged as the page does it: gaps-accept.py with the last scan.json.
+        with tempfile.TemporaryDirectory() as d:
+            state, accepted = os.path.join(d, "scan.json"), os.path.join(d, "accepted.json")
+            with open(state, "w", encoding="utf-8") as f:
+                json.dump(first, f)
+            with redirect_stdout(io.StringIO()):
+                rc = accept_helper().main(["accept", found[0]["ref"], "2026-11-01"], state=state, accepted=accepted,
+                                          lock=os.path.join(d, "lock"), stdin=Stream("the vendor's new key comes"),
+                                          now=datetime(2026, 10, 19, 21, 0, tzinfo=timezone.utc), euid=0)
+            self.assertEqual(rc, 0)
+            with open(accepted, encoding="utf-8") as f:
+                files = {gapscheck.ACCEPTED: f.read()}
+        later = gapscheck.scan(self.fs(files=files, now="2026-10-20T08:00:00Z"), previous=first)
+        k = self.keys(later)
+        self.assertEqual([f["ref"] for f in k["findings"]], [f["ref"] for f in found], "the same findings scan after scan")
+        self.assertEqual([f["since"] for f in k["findings"]], [first["generated"]] * 2)
+        self.assertEqual([(f.get("accepted") or {}).get("reason") for f in k["findings"]], ["the vendor's new key comes", None])
+        self.assertEqual(k["accepted"], 1)
+        # The status leaves the first out; the second still counts.
+        i = status_item(later, "keys")
+        self.assertEqual((i["state"], i["value"], i["detail"]) if i else None,
+                         ("warning", "1", "expired: azentrius.sources; 1 acknowledged"))
+
+    def test_an_acknowledgement_of_0_7_0_covers_neither(self):
+        """0.7.0 named such a finding by kind, file and inline alone: one ref for both keys. An
+        acknowledgement given then must not hide both now."""
+        old = "keys-" + hashlib.sha256(("keys" + json.dumps(["expired", AZ_SOURCES, True])).encode()).hexdigest()[:12]
+        entry = {"ref": old, "check": "keys", "label": AZ_SOURCES, "pin": L.finding_pin("keys", {}),
+                 "until": "2026-11-01", "reason": "", "at": "2026-10-19T08:00:00Z"}
+        k = self.keys(gapscheck.scan(self.fs(files={gapscheck.ACCEPTED: json.dumps({"format": 1, "accepted": [entry]})})))
+        self.assertEqual([f.get("accepted") for f in k["findings"]], [None, None])
+        self.assertNotIn("accepted", k)
+
+    def test_one_key_in_two_stanzas_is_one_keyring(self):
+        k = self.keys(gapscheck.scan(self.fs(TWO_INLINE.replace("KEYTWO", "KEYONE")), only={"keys"}))
+        self.assertEqual([(f["fingerprints"], f["sources"]) for f in k["findings"]],
+                         [([FPR_A], ["https://packages.azentrius.com/apt", "https://packages.example/apt"])])
+
+
 class Settings(unittest.TestCase):
     def fs(self, text, mode="644", uid=0):
         fs = FakeSystem("noble-held", files={"/etc/update-gaps.conf": text})
@@ -1012,6 +1217,12 @@ class Proc(unittest.TestCase):
             r = gapsproc.run_unprivileged(argv, 30, stdin)
             self.assertEqual(r.rc, 0, r.err)
             self.assertEqual(L.keyring_expiry(r.out), "never")
+            # Every key with its fingerprint, so Signed-By can select one (Ubuntu's 2018 archive key).
+            keys = L.keyring_keys(r.out)
+            self.assertTrue(keys and all(k["fpr"] and len(k["fpr"]) == 40 for k in keys), r.out)
+            self.assertEqual(L.keyring_expiry(r.out, [UBUNTU_2018]), "never")
+            self.assertEqual(L.keyring_expiry(r.out, [UBUNTU_2018 + "!"]), "never")
+            self.assertIsNone(L.keyring_expiry(r.out, ["E5" * 20]))
 
 
 if __name__ == "__main__":

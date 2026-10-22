@@ -3,6 +3,7 @@
 """gapslib: Debian version order, the parsers of apt, dpkg and needrestart
 output, unattended-upgrades matching, the settings file."""
 
+import hashlib
 import json
 import os
 import shutil
@@ -11,7 +12,9 @@ import sys
 import unittest
 
 sys.path.insert(0, os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "lib"))
+sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import gapslib as L  # noqa: E402
+from fakesys import FPR_A, FPR_B, FPR_P, FPR_S, TWO_KEYS, WITH_SUBKEY  # noqa: E402
 
 PAIRS = [
     ("1.0", "1.0", 0), ("1.0", "1.1", -1), ("1.10", "1.9", 1), ("1.0~rc1", "1.0", -1),
@@ -350,6 +353,28 @@ class KeysTest(unittest.TestCase):
         self.assertIsNone(L.keyring_expiry("pub:-:4096:1:A:1700000000:::-:::eE:\n"), "no signing key")
         self.assertIsNone(L.keyring_expiry(""))
 
+    def test_fingerprints_of_signed_by_select_keys(self):
+        """As apt does (sources.list(5)): a fingerprint selects that key and its subkeys, one with
+        `!` that key alone; without a fingerprint every key of the keyring counts."""
+        self.assertEqual(L.keyring_expiry(TWO_KEYS), "never", "every key: B signs on")
+        self.assertEqual(L.keyring_expiry(TWO_KEYS, []), "never")
+        self.assertEqual(L.iso(L.keyring_expiry(TWO_KEYS, [FPR_A])), "2026-09-01T00:00:00Z", "only A, which expired")
+        self.assertEqual(L.keyring_expiry(TWO_KEYS, [FPR_B]), "never")
+        self.assertEqual(L.keyring_expiry(TWO_KEYS, [FPR_A, FPR_B]), "never")
+        self.assertIsNone(L.keyring_expiry(TWO_KEYS, ["E5" * 20]), "a fingerprint the keyring does not hold")
+        self.assertIsNone(L.keyring_expiry(TWO_KEYS, [FPR_A.lower()]), "apt compares upper case (sources_keyrings converts)")
+        self.assertIsNone(L.keyring_expiry(TWO_KEYS, [FPR_B, "0123456789ABCDEF"]), "apt refuses the whole value for a key ID")
+        self.assertIsNone(L.keyring_expiry(TWO_KEYS, ["B2" * 32]), "and for 64 digits")
+        # A subkey that signs: selected through its primary key, or by its own fingerprint.
+        self.assertEqual(L.keyring_expiry(WITH_SUBKEY, [FPR_P]).timestamp(), 1800000000)
+        self.assertIsNone(L.keyring_expiry(WITH_SUBKEY, [FPR_P + "!"]), "the primary key alone does not sign")
+        self.assertEqual(L.keyring_expiry(WITH_SUBKEY, [FPR_S]).timestamp(), 1800000000)
+        self.assertEqual(L.keyring_expiry(WITH_SUBKEY, [FPR_S + "!"]).timestamp(), 1800000000)
+        self.assertIsNone(L.keyring_expiry(DOCKER, ["9DC858229FC7DD38854AE2D88D81803C0EBFCD88"]),
+                          "without fingerprints in gpg's output nothing can be selected")
+        keys = L.keyring_keys(WITH_SUBKEY)
+        self.assertEqual([(k["fpr"], k["primary"], k["sign"]) for k in keys], [(FPR_P, FPR_P, False), (FPR_S, FPR_P, True)])
+
     def test_sources_keyrings(self):
         text = ("# comment\nTypes: deb\nURIs: https://download.docker.com/linux/ubuntu/\nSuites: resolute\n"
                 "Signed-By: /etc/apt/keyrings/docker.asc\n\nTypes: deb\nURIs: https://a.example/ https://b.example/\n"
@@ -358,20 +383,35 @@ class KeysTest(unittest.TestCase):
                 "Types: deb\nURIs: https://repo.example/apt\nSigned-By:\n -----BEGIN PGP PUBLIC KEY BLOCK-----\n .\n"
                 " mQINBGZ\n -----END PGP PUBLIC KEY BLOCK-----\n\nTypes: deb\nURIs: https://plain.example/\n")
         self.assertEqual(L.sources_keyrings(text, True), [
-            {"uris": ["https://download.docker.com/linux/ubuntu/"], "inline": None, "keyrings": ["/etc/apt/keyrings/docker.asc"]},
+            {"uris": ["https://download.docker.com/linux/ubuntu/"], "inline": None, "keyrings": ["/etc/apt/keyrings/docker.asc"],
+             "select": []},
             {"uris": ["http://archive.ubuntu.com/ubuntu/"], "inline": None,
-             "keyrings": ["/usr/share/keyrings/a.gpg", "/usr/share/keyrings/b.gpg"]},
-            {"uris": ["https://repo.example/apt"], "keyrings": [],
+             "keyrings": ["/usr/share/keyrings/a.gpg", "/usr/share/keyrings/b.gpg"], "select": ["0123456789ABCDEF"]},
+            {"uris": ["https://repo.example/apt"], "keyrings": [], "select": [],
              "inline": "-----BEGIN PGP PUBLIC KEY BLOCK-----\n\nmQINBGZ\n-----END PGP PUBLIC KEY BLOCK-----\n"},
-            {"uris": ["https://plain.example/"], "inline": None, "keyrings": []}])
+            {"uris": ["https://plain.example/"], "inline": None, "keyrings": [], "select": []}])
         text = ("deb [arch=amd64 signed-by=/etc/apt/keyrings/docker.gpg] https://download.docker.com/linux/ubuntu   noble stable\n"
                 "# deb [signed-by=/old.gpg] https://old.example/ x main\ndeb-src https://src.example/ x main\n"
                 "deb [ arch=amd64 ] http://archive.ubuntu.com/ubuntu noble main\n")
         self.assertEqual(L.sources_keyrings(text, False), [
-            {"uris": ["https://download.docker.com/linux/ubuntu"], "inline": None, "keyrings": ["/etc/apt/keyrings/docker.gpg"]},
-            {"uris": ["https://src.example/"], "inline": None, "keyrings": []},
-            {"uris": ["http://archive.ubuntu.com/ubuntu"], "inline": None, "keyrings": []}])
+            {"uris": ["https://download.docker.com/linux/ubuntu"], "inline": None, "keyrings": ["/etc/apt/keyrings/docker.gpg"],
+             "select": []},
+            {"uris": ["https://src.example/"], "inline": None, "keyrings": [], "select": []},
+            {"uris": ["http://archive.ubuntu.com/ubuntu"], "inline": None, "keyrings": [], "select": []}])
         self.assertEqual(L.sources_keyrings(None, True), [])
+
+    def test_sources_keyrings_keep_the_fingerprints(self):
+        """Fingerprints in Signed-By, upper case as apt makes them, `!` kept; apt splits the value at
+        commas and whitespace in both formats."""
+        a, b = FPR_A.lower(), FPR_B
+        text = (f"deb [signed-by=/etc/apt/keyrings/x.gpg,{a}] https://x.example/ noble main\n"
+                f"deb [arch=amd64 signed-by={b}!] https://y.example/ noble main\n")
+        self.assertEqual([(e["keyrings"], e["select"]) for e in L.sources_keyrings(text, False)],
+                         [(["/etc/apt/keyrings/x.gpg"], [FPR_A]), ([], [FPR_B + "!"])])
+        text = (f"Types: deb\nURIs: https://x.example/\nSuites: noble\nSigned-By: /etc/apt/keyrings/x.gpg {a}\n\n"
+                f"Types: deb\nURIs: https://y.example/\nSuites: noble\nSigned-By: {b},{FPR_S}!\n")
+        self.assertEqual([(e["keyrings"], e["select"]) for e in L.sources_keyrings(text, True)],
+                         [(["/etc/apt/keyrings/x.gpg"], [FPR_A]), ([], [FPR_B, FPR_S + "!"])])
 
 
 # unattended-upgrades.log as 2.9 and 2.12 write it (Ubuntu 24.04 and 26.04).
@@ -439,6 +479,23 @@ class AcknowledgedTest(unittest.TestCase):
                             L.finding_ref("firmware", {"kind": "update", "device": "Dock"}))
         self.assertNotEqual(L.finding_ref("snaps", {"kind": "refresh-failed", "id": "41"}),
                             L.finding_ref("snaps", {"kind": "refresh-failed", "id": "42"}))
+
+    def test_keys_are_told_apart_by_their_fingerprints(self):
+        """Two keys in one sources file, or one keyring that two sources select from in different
+        ways, are different findings. One without those fields keeps the ref it had in 0.7.0."""
+        ring = {"kind": "expired", "file": "/usr/share/keyrings/x.gpg", "sources": ["https://x.example/"],
+                "expires": "2026-09-01T00:00:00Z"}
+        old = "keys-" + hashlib.sha256(("keys" + json.dumps(["expired", "/usr/share/keyrings/x.gpg", None])).encode()).hexdigest()[:12]
+        self.assertEqual(L.finding_ref("keys", ring), old)
+        self.assertEqual(L.finding_ref("keys", dict(ring, sources=["https://y.example/"], expires="2026-09-02T00:00:00Z")), old)
+        a, b = dict(ring, select=[FPR_A]), dict(ring, select=[FPR_B])
+        self.assertEqual(len({L.finding_ref("keys", x) for x in (ring, a, b)}), 3)
+        inline = {"kind": "expired", "file": "/etc/apt/sources.list.d/x.sources", "inline": True}
+        k1, k2 = dict(inline, fingerprints=[FPR_A]), dict(inline, fingerprints=[FPR_B])
+        self.assertNotEqual(L.finding_ref("keys", k1), L.finding_ref("keys", k2))
+        self.assertEqual(L.finding_ref("keys", k1), L.finding_ref("keys", dict(k1, sources=["https://z.example/"])))
+        self.assertEqual(L.finding_label(k1), "/etc/apt/sources.list.d/x.sources (" + FPR_A[-16:] + ")")
+        self.assertEqual(L.finding_label(dict(ring, select=[FPR_S + "!"])), "/usr/share/keyrings/x.gpg (" + FPR_S[-16:] + "!)")
 
     def test_label_and_reason(self):
         self.assertEqual(L.finding_label(self.HELD), "docker-ce")

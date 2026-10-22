@@ -674,7 +674,12 @@ KEYS_SOON_DAYS = 60     # a keyring whose last signing key expires within this m
 TRUSTED = "/etc/apt/trusted.gpg"
 TRUSTED_D = "/etc/apt/trusted.gpg.d"
 # Without --no-options: it would keep gpg from creating its home (a fresh one, see gapsproc.run_unprivileged).
-GPG_SHOW = ["gpg", "--batch", "--no-autostart", "--with-colons", "--show-keys"]
+# The fingerprints of subkeys, too, for the keys Signed-By selects (gpg 2.4 prints them anyway, 2.2 only so).
+GPG_SHOW = ["gpg", "--batch", "--no-autostart", "--with-colons", "--with-subkey-fingerprint", "--show-keys"]
+
+
+class _NoGpg(Exception):
+    pass
 
 
 def check_keys(ctx):
@@ -682,10 +687,13 @@ def check_keys(ctx):
     when they expire. Once the last signing key of a source's keyring has
     expired, apt stops reading that source: its updates drop out of every
     list, Software Updates included, and only `apt update` warns. The
-    keyrings are those of Signed-By, else apt's trusted ones; gpg reads them
-    without root and imports nothing."""
+    keyrings are those of Signed-By, else apt's trusted ones, with only the
+    keys Signed-By selects by fingerprint (sources.list(5)): sources that
+    share a keyring file may select from it differently, so each selection
+    is a keyring of its own. gpg reads them without root and imports
+    nothing."""
     files = sorted({r.get("Sourcesentry", "").rpartition(":")[0] for r in ctx.indextargets(True)} - {""})
-    rings, default_sites, todo, unchecked, findings = {}, [], [], [], []
+    rings, selected, inline, default_sites, unchecked, findings = {}, {}, {}, [], [], []
     for path in files:
         text = ctx.sys.read(path)
         if text is None:
@@ -693,43 +701,105 @@ def check_keys(ctx):
             continue
         for e in L.sources_keyrings(text, path.endswith(".sources")):
             sites = [L.strip_credentials(u) for u in e["uris"]]
-            for k in e["keyrings"]:
-                rings.setdefault(k, []).extend(sites)
             if e["inline"]:
-                todo.append(({"file": path, "inline": True, "sources": sites}, e["inline"]))
-            elif not e["keyrings"]:
+                inline.setdefault((path, e["inline"]), []).extend(sites)
+            elif e["select"]:
+                selected.setdefault((tuple(e["keyrings"]), tuple(e["select"])), []).extend(sites)
+            elif e["keyrings"]:
+                for k in e["keyrings"]:
+                    rings.setdefault(k, []).extend(sites)
+            else:
                 default_sites.extend(sites)
-    todo[:0] = [({"file": k, "sources": sorted(set(s))}, None) for k, s in sorted(rings.items())]
-    if default_sites:           # entries without Signed-By: apt trusts every key of these
+    trusted = []
+    if default_sites or any(not paths for paths, _ in selected):
         trusted = [TRUSTED] if ctx.sys.lstat(TRUSTED) is not None else []
         trusted += [f"{TRUSTED_D}/{n}" for n in ctx.sys.listdir(TRUSTED_D) or [] if n.endswith((".gpg", ".asc"))]
-        todo += [({"file": k, "default": True, "sources": sorted(set(default_sites))}, None)
-                 for k in trusted if k not in rings]
-    keyrings = []
-    for ring, key in todo:
-        ring["sources"] = ring["sources"][:20]
-        if key is None and ctx.sys.lstat(ring["file"]) is None:
-            findings.append(dict(ring, kind="missing"))     # apt cannot check the source and leaves it out
-            continue
-        r = ctx.sys.run_unprivileged(GPG_SHOW + ([] if key else [ring["file"]]), 30,
-                                     key.encode("utf-8") if key else None)
+    shown, keyrings = {}, []
+
+    def show(path=None, key=None):
+        """gpg's view of a keyring file (once per file) or of a key from a sources file."""
+        if key is None and path in shown:
+            return shown[path]
+        r = ctx.sys.run_unprivileged(GPG_SHOW + ([] if key else [path]), 30, key.encode("utf-8") if key else None)
         if r.missing:
-            return {"state": "skipped", "reason": "tool-missing", "tool": "gpg"}
-        until = None if r.timeout else L.keyring_expiry(r.out)
-        if until is None:
-            unchecked.append({"file": ring["file"], "reason": "no-key" if r.out.strip() else "unreadable"})
-            continue
+            raise _NoGpg()
+        if key is None:
+            shown[path] = r
+        return r
+
+    def judge(ring, until):
         ring["expires"] = "never" if until == "never" else L.iso(until)
         keyrings.append(ring)
-        if until == "never":
-            continue
-        days = (until - ctx.now).total_seconds() / 86400
-        if days < 0:
+        days = None if until == "never" else (until - ctx.now).total_seconds() / 86400
+        if days is not None and days < 0:
             findings.append(dict(ring, kind="expired"))
-        elif days <= KEYS_SOON_DAYS:
+        elif days is not None and days <= KEYS_SOON_DAYS:
             findings.append(dict(ring, kind="expires", days=int(days)))
+
+    def whole(ring, path):
+        """A keyring file with every key it holds."""
+        if ctx.sys.lstat(path) is None:
+            findings.append(dict(ring, kind="missing"))     # apt cannot check the source and leaves it out
+            return
+        r = show(path)
+        until = None if r.timeout else L.keyring_expiry(r.out)
+        if until is None:
+            unchecked.append({"file": path, "reason": "no-key" if r.out.strip() else "unreadable"})
+        else:
+            judge(ring, until)
+
+    def chosen(paths, select, sites):
+        """The keys Signed-By selects by fingerprint, from its files or (none named) from apt's trusted
+        ones: valid while one of them is."""
+        base = dict({"select": list(select), "sources": sorted(set(sites))[:20]}, **({} if paths else {"default": True}))
+        keys, read = [], False
+        for path in paths or trusted:
+            if paths and ctx.sys.lstat(path) is None:
+                findings.append(dict(base, file=path, kind="missing"))
+                continue
+            r = show(path)
+            if r.timeout or not r.out.strip():
+                unchecked.append({"file": path, "reason": "unreadable"})
+                continue
+            read = True
+            keys += [dict(k, file=path) for k in L.keyring_keys(r.out)]
+        signing = [k for k in L.select_keys(keys, select) if k["sign"] and not k["revoked"]]
+        if signing:
+            # Named by the file of the selected key that lasts longest (the first of them on a tie).
+            judge(dict(base, file=max(signing, key=lambda k: k["until"])["file"]), L.keys_expiry(signing))
+        elif read or not (paths or trusted):
+            unchecked.append({"file": paths[0] if paths else TRUSTED_D, "reason": "no-selected-key", "select": list(select)})
+
+    def embedded(path, key, sites):
+        """A key in a sources file itself (deb822 Signed-By), named by its fingerprints."""
+        ring = {"file": path, "inline": True, "sources": sorted(set(sites))[:20]}
+        r = show(key=key)
+        keys = [] if r.timeout else L.keyring_keys(r.out)
+        fprs = [k["fpr"] for k in keys if k["fpr"] and k["fpr"] == k["primary"]]
+        if fprs:
+            ring["fingerprints"] = fprs
+        until = L.keys_expiry(keys)
+        if until is None:
+            unchecked.append({"file": path, "reason": "no-key" if r.out.strip() else "unreadable"})
+        else:
+            judge(ring, until)
+
+    try:
+        for path, sites in sorted(rings.items()):
+            whole({"file": path, "sources": sorted(set(sites))[:20]}, path)
+        for (paths, select), sites in sorted(selected.items()):
+            chosen(paths, select, sites)
+        for (path, key), sites in inline.items():
+            embedded(path, key, sites)
+        # Entries without Signed-By: apt trusts every key of its trusted keyrings for them.
+        for path in trusted if default_sites else []:
+            if path not in rings:
+                whole({"file": path, "default": True, "sources": sorted(set(default_sites))[:20]}, path)
+    except _NoGpg:
+        return {"state": "skipped", "reason": "tool-missing", "tool": "gpg"}
     out = {"state": "found" if findings else "none", "findings": findings, "keyrings": keyrings,
            "soon_days": KEYS_SOON_DAYS, "source": ["apt-get indextargets", "Signed-By", "gpg --show-keys"]}
+    unchecked = [u for i, u in enumerate(unchecked) if u not in unchecked[:i]]     # a file named twice, once
     if unchecked:
         out["unchecked"] = unchecked
         out["missing"] = ["keyrings"]

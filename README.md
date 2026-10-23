@@ -32,6 +32,7 @@ The screenshots show recorded test data; they come from the CI artifact `screens
 - [Install, update, uninstall](#install-update-uninstall)
 - [Settings](#settings)
 - [Operation and troubleshooting](#operation-and-troubleshooting)
+- [Translations](#translations)
 - [Development](#development)
 - [Releasing](#releasing)
 - [Known limits](#known-limits)
@@ -179,13 +180,14 @@ Interfaces, the formats of `scan.json` and `status.json` and the exit codes:
   reason from stdin, never from the command line, and changes nothing else.
 - **Network data only unprivileged, and only when set up.** The radar of stage 2
   (`update-gaps-radar.service`) runs once a day as a user of its own (`DynamicUser`, no
-  capabilities, exposure 1.1) and writes only its own folder. What leaves the server: the release
-  name to security-metadata.canonical.com, the names of selected source packages to
-  api.launchpad.net, and which of a fixed list of projects are installed to api.github.com. The
-  root scan reads its file as data, checks every value and asks only about its own selection.
+  capabilities, `systemd-analyze security` exposure at most 5.0, checked in CI) and writes only its
+  own folder. What leaves the server: the release name to security-metadata.canonical.com, the
+  names of selected source packages to api.launchpad.net, and which of a fixed list of projects are
+  installed to api.github.com. The root scan reads its file as data, checks every value and asks
+  only about its own selection.
 - **No network for root code.** The scan runs as `update-gaps-scan.service` with
   `PrivateNetwork=yes`, `IPAddressDeny=any`, `ProtectSystem=strict` and more
-  (`systemd-analyze security` exposure 4.9, checked in CI). “Refresh” starts the same service, so
+  (`systemd-analyze security` exposure at most 5.0, checked in CI). “Refresh” starts the same service, so
   every scan runs in the same sandbox. It may write only its own folder, `/var/lib/update-gaps`;
   `pro security-status` runs as `nobody`, since as root it writes its own log and lock; `gpg`,
   which shows the keyrings of the sources, runs as `nobody` too, in a fresh home it imports
@@ -295,6 +297,18 @@ sudo systemctl start update-gaps-radar.service          # fetch the network data
 journalctl -u update-gaps-radar.service -n 20            # how the last fetch went
 systemctl list-timers update-gaps-scan.timer            # the regular check
 ```
+
+## Translations
+
+The page is in English and German: the texts live in `plugin/i18n.js` (`I18N.en` and `I18N.de`, the
+German addressing the user as “Sie”), and the page takes German when Cockpit uses German, English
+otherwise. The menu entry is the product name, which is not translated, so `plugin/po.manifest.de.js`,
+Cockpit's translation file for the manifest, has no entries. The messages of `lib/gaps-ctl.sh`
+(`msg de en`) and the status for the Status Board (`gaps-status.py status --lang de|en`; any other
+language gets English) come in the same two languages. Another language needs a block of its own in
+`plugin/i18n.js` and a change where `plugin/gaps.js` and `plugin/menu-status.js` pick the language.
+`test/page_test.js` checks that every text exists in both languages with the same shape and that the
+English page shows no German.
 
 ## Development
 

@@ -24,7 +24,7 @@
     // The one place for the version (SemVer). index.html loads every script and
     // stylesheet of the add-on with ?v=VERSION; tools/check-version.sh keeps
     // them in step.
-    const VERSION = "0.7.0";
+    const VERSION = "0.7.1";
     const LIB = "/usr/lib/cockpit-update-gaps/";
     const CTL = LIB + "gaps-ctl.sh";
     const STATE_PATH = "/var/lib/update-gaps/scan.json";

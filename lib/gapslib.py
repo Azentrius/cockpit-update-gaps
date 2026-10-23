@@ -995,7 +995,7 @@ FINDING_KEYS = {
     "auto": ("findings", ("kind", "what", "site", "o", "a", "pattern")), "uu": ("findings", ("kind",)),
     "backports": ("findings", ("source",)),
 }
-# Fields that name a finding as well when it has them (newer than 0.7.0), so one without them keeps
+# Fields that name a finding as well when it has them (0.7.1), so one without them keeps
 # its ref of 0.7.0: the keys Signed-By selects from a keyring (sources may share a keyring file and
 # select from it differently), the fingerprints of a key in a sources file (one file may hold several).
 FINDING_MORE_KEYS = {"keys": ("select", "fingerprints")}

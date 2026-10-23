@@ -1,5 +1,32 @@
 # Changelog
 
+## 0.7.1 – 2026-10-23
+
+Signing keys are judged by the keys a source accepts, and acknowledging findings no longer hides
+any that still count.
+
+- **Fingerprints in `Signed-By`:** a source that names fingerprints is checked with the keys they
+  select, as apt does: a fingerprint selects that key and its subkeys, one with `!` that key alone,
+  from the keyrings of `Signed-By` or, without one, from apt's trusted keyrings. Until now every
+  key of the file counted, so a source whose selected key had expired looked fine as long as
+  another key in the file was valid. Sources that share a keyring file and select from it
+  differently are judged each on their own; a selection that matches no signing key is listed
+  under “Not checked”. gpg is asked for the fingerprints of subkeys as well.
+- **Two keys in one sources file:** each is a finding of its own, named by its fingerprints, and is
+  acknowledged on its own. Before, both had one name, and acknowledging one hid both. Such a key
+  acknowledged in 0.7.0 counts again until it is acknowledged once more; every other
+  acknowledgement holds.
+- **Findings beyond a card's list:** a card lists at most 300 findings. Those beyond cannot be
+  acknowledged, and they now keep counting once the listed ones are acknowledged: the Status Board
+  keeps the item (“1 more package left half done, not listed”), the overview keeps the card among
+  the open ones.
+- **Acknowledging on more cards:** firmware updates and the Package-Blacklist and held packages of
+  the automatic updates show their acknowledgement and the buttons like every other finding. The
+  Package-Blacklist line also counts the packages beyond its list.
+- **Formats:** signing keys carry `select` (the fingerprints of `Signed-By`) and, for a key in a
+  sources file, `fingerprints`; both name the finding when present, so other findings keep their
+  refs. States of 0.7.0 still read.
+
 ## 0.7.0 – 2026-10-22
 
 Findings that are meant to be there can be acknowledged on the page for a while: the page keeps

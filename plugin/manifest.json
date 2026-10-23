@@ -6,10 +6,16 @@
     "menu": {
         "index": {
             "label": "Update Gaps",
-            "order": 36,
+            "order": 103,
             "keywords": [
                 {
-                    "matches": ["update", "updates", "apt", "held", "hold", "restart", "reboot", "ubuntu pro", "esm", "unattended", "backports", "security", "phased", "dpkg", "kernel", "boot", "firmware", "fwupd", "microcode", "cpu", "snap", "cve"]
+                    "matches": ["update", "updates", "apt", "held", "hold", "restart", "reboot", "ubuntu pro", "esm", "unattended", "backports", "security", "phased", "dpkg", "kernel", "boot", "firmware", "fwupd", "microcode", "cpu", "snap", "cve", "azentrius"]
+                }
+            ],
+            "docs": [
+                {
+                    "label": "Update Gaps",
+                    "url": "https://github.com/Azentrius/cockpit-update-gaps#readme"
                 }
             ]
         }

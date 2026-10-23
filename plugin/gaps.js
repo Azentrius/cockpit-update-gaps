@@ -389,16 +389,28 @@
     function ackList(k, c) {
         return ACK_CHECKS.includes(k) ? (c[ACK_LIST[k] || "findings"] || []).filter((f) => f && typeof f === "object") : [];
     }
-    // Every finding of a card acknowledged, and nothing else on it that counts.
+    // Every finding of a card acknowledged, and nothing else on it that counts: findings beyond its
+    // list (`more`, at most 300 are listed) cannot be acknowledged and still count.
     function allAcked(k, c) {
         const list = ackList(k, c);
-        if (!list.length || !list.every(isAcked)) return false;
+        if (!list.length || !list.every(isAcked) || c.more > 0) return false;
         if (k === "cpu") return !(c.mitigations_off || []).length && !(c.microcode_package && !c.microcode_package.installed);
         return true;
     }
+    // A fingerprint of Signed-By as a key ID (its last 16 digits), "!" kept (gapslib.short_key).
+    function shortKey(fpr) {
+        const s = String(fpr == null ? "" : fpr);
+        return s.replace(/!$/, "").slice(-16) + (/!$/.test(s) ? "!" : "");
+    }
+    // The keys that tell a keyring apart: those of a key in a sources file, or those Signed-By selects.
+    function keysOf(f) {
+        const keys = Array.isArray(f.fingerprints) && f.fingerprints.length ? f.fingerprints : Array.isArray(f.select) ? f.select : [];
+        return keys.map(shortKey);
+    }
     function labelOf(f) {
         const k = LABEL_FIELDS.find((x) => typeof f[x] === "string" && f[x]);
-        return k ? f[k] : "";
+        const keys = keysOf(f).slice(0, 3);
+        return k ? f[k] + (keys.length ? ` (${keys.join(", ")})` : "") : "";
     }
     function ack(f, inList) {
         if (!f || !/^[a-z]{2,12}-[0-9a-f]{12}$/.test(String(f.ref || ""))) return "";
@@ -423,7 +435,9 @@
     function keysUnchecked(c, bare) {
         const un = c.unchecked || [];
         if (!un.length) return "";
-        const html = rich(t("keys.unchecked", { list: un.map((u) => t("keys.reason." + u.reason, { file: String(u.file || "?").replace(/`/g, "'") })).join(", ") }));
+        const plain = (s) => String(s == null ? "?" : s).replace(/`/g, "'");
+        const html = rich(t("keys.unchecked", { list: un.map((u) => t("keys.reason." + u.reason, {
+            file: plain(u.file), keys: plain((u.select || []).map(shortKey).join(", ")) })).join(", ") }));
         return bare ? " " + html : `<p class="ug-note">${html}</p>`;
     }
 
@@ -590,7 +604,7 @@
             const parts = [];
             if (ups.length) {
                 parts.push(table(["col.device", "col.installed", "col.available", "col.urgency", "col.fixes"], ups.map((f) => [
-                    cell(esc(f.device) + (f.vendor ? `<span class="az-cell-sub">${esc(f.vendor)}</span>` : "")),
+                    cell(esc(f.device) + (f.vendor ? `<span class="az-cell-sub">${esc(f.vendor)}</span>` : "") + mark(f)),
                     ver(f.version),
                     ver(f.new),
                     cell(f.urgency ? esc(t("firmware.urgency." + f.urgency)) : `<span class="az-cell-sub">${esc(t("firmware.urgency.none"))}</span>`),
@@ -647,9 +661,16 @@
 
         // The keys apt checks the sources with: expired, about to expire, or their file is gone.
         keys(c) {
+            // What the keyring is: a key in the sources file, the keys Signed-By selects, apt's trusted ones.
+            const what = (f) => {
+                const keys = keysOf(f);
+                const vars = { n: keys.length, keys: keys.join(", ") };
+                if (f.inline) return t(keys.length ? "keys.inlineKey" : "keys.inline", vars);
+                if (keys.length) return t(f.default ? "keys.selectDefault" : "keys.select", vars);
+                return f.default ? t("keys.default") : "";
+            };
             const rows = c.findings.map((f) => [
-                cell(code(f.file) + mark(f) + (f.inline ? `<span class="az-cell-sub">${esc(t("keys.inline"))}</span>` : "") +
-                     (f.default ? `<span class="az-cell-sub">${esc(t("keys.default"))}</span>` : "")),
+                cell(code(f.file) + mark(f) + (what(f) ? `<span class="az-cell-sub">${esc(what(f))}</span>` : "")),
                 cell(pkgList(f.sources)),
                 cell(f.kind === "missing" ? esc(t("keys.missing"))
                     : f.kind === "expired" ? `<span class="az-label az-label--warning">${esc(t("keys.expired", { date: fmtDay(f.expires) }))}</span>`
@@ -683,10 +704,11 @@
             if (bl.length) {
                 parts.push(`<p class="ug-sub">${rich(t("auto.blacklistTitle"))}</p><ul class="ug-plain-list">` +
                     bl.map((f) => "<li>" + (f.invalid ? tr("auto.blacklistInvalid", { pattern: f.pattern })
-                        : tr("auto.blacklistLine", { pattern: f.pattern, pkgs: (f.packages || []).join(", ") })) + "</li>").join("") + "</ul>");
+                        : tr("auto.blacklistLine", { pattern: f.pattern, pkgs: (f.packages || []).join(", ") +
+                                                     (f.more ? " " + t("held.more", { n: f.more }) : "") })) + mark(f, true) + "</li>").join("") + "</ul>");
             }
             const held = c.findings.find((f) => f.kind === "held");
-            if (held) parts.push(`<p class="ug-sub">${esc(t("auto.heldTitle"))}</p><p>${pkgList(held.packages)}</p>`);
+            if (held) parts.push(`<p class="ug-sub">${esc(t("auto.heldTitle"))}</p><p>${pkgList(held.packages)}${mark(held, true)}</p>`);
             if ((c.allowed || []).length || (c.patterns || []).length) {
                 parts.push(`<p class="ug-note">${tr("auto.allowed", { list: (c.allowed || []).concat(c.patterns || []).join(", ") })}</p>`);
             }

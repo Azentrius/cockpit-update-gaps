@@ -901,6 +901,155 @@ test("acknowledged findings: marked, apart in the overview, acknowledged and tak
     assert.match(text(d.getElementById("ug-dialog-desc")), /^„python3-pip“ zählt bis zu dem Tag, den Sie wählen/);
 });
 
+const ACK = { until: "2026-11-01", reason: "", at: "2026-10-19T08:00:00Z" };
+const chipsOf = (d, acked) => [...d.querySelectorAll("#ug-sum-found .ug-chip")]
+    .filter((b) => !!b.querySelector('[data-icon="check-circle"]') === acked).map((b) => b.dataset.go);
+
+test("acknowledged findings: those beyond a card's list (more) keep it counted in the overview", async () => {
+    const s = scan("noble-held-upkeep");
+    const by = Object.fromEntries(s.checks.map((c) => [c.check, c]));
+    by.dpkg.findings.forEach((f) => { f.accepted = ACK; });
+    by.local.findings.forEach((f) => { f.accepted = ACK; });
+    by.dpkg.more = 1;
+    by.local.more = 2;
+    let { d } = boot({ state: s });
+    await settle();
+    assert.ok(chipsOf(d, false).includes("dpkg") && chipsOf(d, false).includes("local"), "open: " + chipsOf(d, false).join());
+    assert.ok(!chipsOf(d, true).includes("dpkg") && !chipsOf(d, true).includes("local"), "acknowledged: " + chipsOf(d, true).join());
+    assert.match(text(d.getElementById("ug-card-dpkg")), /Packages dpkg left half done\s*2 packages/);
+    assert.match(text(d.getElementById("ug-card-dpkg")), /\+1 more/);
+    // Nothing beyond the lists: both acknowledged.
+    delete by.dpkg.more;
+    delete by.local.more;
+    ({ d } = boot({ state: s }));
+    await settle();
+    assert.ok(chipsOf(d, true).includes("dpkg") && chipsOf(d, true).includes("local"), "acknowledged: " + chipsOf(d, true).join());
+    // Phased updates beyond their list as well.
+    const p = scan("resolute-nodesource-phased");
+    const ph = p.checks.find((c) => c.check === "phased");
+    ph.packages.forEach((f) => { f.accepted = ACK; });
+    ph.more = 3;
+    ({ d } = boot({ state: p }));
+    await settle();
+    assert.deepStrictEqual(chipsOf(d, true).filter((k) => k === "phased"), []);
+    assert.ok(chipsOf(d, false).includes("phased"));
+});
+
+test("acknowledging firmware updates and what the automatic updates leave out: open, acknowledged, ended, changed", async () => {
+    const state = () => {
+        const s = scan("noble-held-accepted");
+        const by = Object.fromEntries(s.checks.map((c) => [c.check, c]));
+        Object.assign(by.firmware, {
+            state: "found", machine: "metal", reason: undefined, tool: undefined, source: ["fwupdmgr get-updates --json"],
+            findings: [
+                { kind: "update", device: "UEFI <b>dbx</b>", vendor: "Linux Foundation", version: "371", new: "377", urgency: "high",
+                  issues: [], ref: "firmware-111111111111" },
+                { kind: "update", device: "Dock", version: "1.0", new: "1.2", ref: "firmware-222222222222",
+                  accepted: { until: "2026-11-01", reason: "<i>after</i> the window", at: "2026-10-19T08:00:00Z" } },
+                { kind: "update", device: "NVMe", version: "2", new: "3", ref: "firmware-333333333333",
+                  accepted: { until: "2026-10-18", reason: "", at: "2026-10-01T08:00:00Z", expired: true } },
+                { kind: "update", device: "TPM", version: "7", new: "9", ref: "firmware-444444444444",
+                  accepted: { until: "2026-11-01", reason: "", at: "2026-10-01T08:00:00Z", changed: true } },
+                { kind: "refresh-off", timer: "disabled", ref: "firmware-555555555555" },
+            ],
+        });
+        by.auto.findings.push({ kind: "blacklist", pattern: "linux-<x>", packages: ["linux-generic"], more: 2, ref: "auto-666666666666" });
+        by.auto.findings.find((f) => f.kind === "held").accepted = { until: "2026-11-01", reason: "Docker waits", at: "2026-10-19T08:00:00Z" };
+        return s;
+    };
+    let { d, calls } = boot({ state: state() });
+    await settle();
+    const fw = d.getElementById("ug-card-firmware");
+    const rows = [...fw.querySelectorAll("tbody tr")];
+    assert.strictEqual(rows.length, 4);
+    const btn = (el) => [...el.querySelectorAll(".ug-ack-btn")].map((b) => b.textContent);
+    assert.deepStrictEqual(rows.map(btn), [["Acknowledge"], ["Take back"], ["Acknowledge"], ["Acknowledge"]]);
+    assert.match(text(rows[1]), /Dock acknowledged until 1 Nov 2026: <i>after<\/i> the window/);
+    assert.match(text(rows[2]), /NVMe acknowledgement ended on 18 Oct 2026/);
+    assert.match(text(rows[3]), /TPM acknowledgement no longer holds: the finding changed/);
+    assert.ok(!fw.querySelector("tbody b, tbody i"), "the device and the reason are escaped");
+    assert.strictEqual(rows[0].querySelector("[data-accept]").dataset.accept, "firmware-111111111111");
+    assert.strictEqual(rows[1].querySelector("[data-unaccept]").dataset.unaccept, "firmware-222222222222");
+    assert.deepStrictEqual(btn(fw.querySelector(".ug-plain-list")), ["Acknowledge"], "the other findings as before");
+    const auto = d.getElementById("ug-card-auto");
+    const bl = [...auto.querySelectorAll(".ug-plain-list li")].find((li) => /linux-<x>/.test(li.textContent));
+    assert.ok(bl, "the blacklist line");
+    assert.match(text(bl), /linux-<x> keeps out: linux-generic \+2 more/);
+    assert.deepStrictEqual(btn(bl), ["Acknowledge"]);
+    assert.strictEqual(bl.querySelector("[data-accept]").dataset.accept, "auto-666666666666");
+    assert.ok(!auto.querySelector("x"), "the pattern is escaped");
+    const heldLine = [...auto.querySelectorAll("p")].find((p) => p.querySelector(".ug-pkgs") && /docker-ce/.test(p.textContent));
+    assert.match(text(heldLine), /acknowledged until 1 Nov 2026: Docker waits/);
+    assert.deepStrictEqual(btn(heldLine), ["Take back"]);
+    assert.ok(!GERMAN.test(text(d.body)), "no German on the English page: " + (text(d.body).match(GERMAN) || [])[0]);
+
+    // Acknowledge the firmware update through the dialog: its device, escaped, and its ref.
+    rows[0].querySelector("[data-accept]").click();
+    await settle();
+    assert.match(text(d.getElementById("ug-dialog-desc")), /^“UEFI <b>dbx<\/b>” no longer counts/);
+    assert.ok(!d.querySelector("#ug-dialog-desc b"));
+    d.getElementById("ug-dialog-confirm").click();
+    await settle();
+    const run = calls.spawn.find((c) => c.argv[1] === "accept");
+    assert.strictEqual(JSON.stringify(run.argv.slice(1)), JSON.stringify(["accept", "firmware-111111111111", "2026-11-18"]));
+
+    // Without administrative access: what is acknowledged or ended is shown, no button.
+    ({ d } = boot({ state: state(), status: Object.assign({}, STATUS, { root: false }) }));
+    await settle();
+    for (const id of ["ug-card-firmware", "ug-card-auto"]) {
+        assert.strictEqual(d.querySelectorAll(`#${id} .ug-ack-btn`).length, 0, id);
+    }
+    assert.strictEqual(d.querySelectorAll("#ug-card-firmware .ug-ack-mark").length, 1);
+    assert.strictEqual(d.querySelectorAll("#ug-card-firmware .ug-ack-lapsed").length, 2);
+    assert.strictEqual(d.querySelectorAll("#ug-card-auto .ug-ack-mark").length, 1);
+
+    // German
+    ({ d } = boot({ state: state(), language: "de" }));
+    await settle();
+    const de = [...d.querySelectorAll("#ug-card-firmware tbody tr")];
+    assert.deepStrictEqual(de.map(btn), [["Quittieren"], ["Aufheben"], ["Quittieren"], ["Quittieren"]]);
+    assert.match(text(de[1]), /quittiert bis 01\.11\.2026: <i>after<\/i> the window/);
+    assert.match(text(de[2]), /Quittung endete am 18\.10\.2026/);
+    assert.match(text(de[3]), /Quittung gilt nicht mehr: Der Befund hat sich geändert/);
+    assert.match(text(d.getElementById("ug-card-auto")), /quittiert bis 01\.11\.2026: Docker waits/);
+});
+
+test("signing keys: the keys Signed-By selects, keys in a sources file, a selection nothing matches", async () => {
+    const s = scan("noble-held-upkeep");
+    const keys = s.checks.find((c) => c.check === "keys");
+    const A = "A1".repeat(20), B = "B2".repeat(20), F = "F6ECB3762474EDA9D21B7022871920D1991BC93C";
+    keys.findings = [
+        { kind: "expired", file: "/etc/apt/keyrings/docker.gpg", select: [A], sources: ["https://download.docker.com/linux/ubuntu"],
+          expires: "2026-09-01T00:00:00Z", ref: "keys-111111111111" },
+        { kind: "expired", file: "/etc/apt/sources.list.d/x.sources", inline: true, fingerprints: [B],
+          sources: ["https://x.example/apt"], expires: "2026-09-01T00:00:00Z", ref: "keys-222222222222" },
+        { kind: "expires", file: "/etc/apt/trusted.gpg.d/ubuntu-keyring-2018-archive.gpg", default: true, select: [F + "!"],
+          sources: ["https://y.example/"], expires: "2026-11-01T00:00:00Z", days: 12, ref: "keys-333333333333" },
+    ];
+    keys.unchecked = [{ file: "/etc/apt/trusted.gpg.d", reason: "no-selected-key", select: ["<E5>"] }];
+    let { d } = boot({ state: s });
+    await settle();
+    const rows = [...d.querySelectorAll("#ug-card-keys tbody tr")].map(text);
+    assert.match(rows[0], /\/etc\/apt\/keyrings\/docker\.gpg only key A1A1A1A1A1A1A1A1 \(Signed-By\)/);
+    assert.match(rows[1], /\/etc\/apt\/sources\.list\.d\/x\.sources key B2B2B2B2B2B2B2B2 in the sources file \(Signed-By\)/);
+    assert.match(rows[2], /ubuntu-keyring-2018-archive\.gpg apt's trusted keyrings, only key 871920D1991BC93C! \(Signed-By\)/);
+    assert.match(text(d.getElementById("ug-card-keys")),
+        /Not checked: \/etc\/apt\/trusted\.gpg\.d \(no signing key that Signed-By selects: <E5>\)\./);
+    assert.ok(!d.querySelector("#ug-card-keys E5"), "escaped");
+    // The dialog names the key, not only the file.
+    d.querySelector("#ug-card-keys tbody tr:nth-child(2) [data-accept]").click();
+    await settle();
+    assert.match(text(d.getElementById("ug-dialog-desc")), /^“\/etc\/apt\/sources\.list\.d\/x\.sources \(B2B2B2B2B2B2B2B2\)”/);
+    // German
+    ({ d } = boot({ state: s, language: "de" }));
+    await settle();
+    const de = [...d.querySelectorAll("#ug-card-keys tbody tr")].map(text);
+    assert.match(de[0], /nur Schlüssel A1A1A1A1A1A1A1A1 \(Signed-By\)/);
+    assert.match(de[1], /Schlüssel B2B2B2B2B2B2B2B2 in der Quelldatei \(Signed-By\)/);
+    assert.match(de[2], /vertrauenswürdige Schlüsselbunde von apt, nur Schlüssel 871920D1991BC93C! \(Signed-By\)/);
+    assert.match(text(d.getElementById("ug-card-keys")), /kein Signaturschlüssel, den Signed-By auswählt: <E5>/);
+});
+
 test("texts: every key in both languages, same plural shape, no em dash", () => {
     global.window = {};
     require(path.join(PLUGIN, "i18n.js"));

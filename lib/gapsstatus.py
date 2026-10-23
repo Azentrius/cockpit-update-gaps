@@ -103,6 +103,8 @@ T = {
         "dpkg.title": "Packages left half done",
         "dpkg.interrupted": "a run of dpkg was interrupted",
         "dpkg.packages": {"one": "{n} package left half done: {names}", "other": "{n} packages left half done: {names}"},
+        "dpkg.unlisted": {"one": "{n} more package left half done, not listed",
+                          "other": "{n} more packages left half done, not listed"},
         "boot.title": "Room in /boot",
         "boot.space": "{free} free, the next kernel update needs about {need}",
         "boot.old": {"one": "{n} old kernel", "other": "{n} old kernels"},
@@ -184,6 +186,8 @@ T = {
         "dpkg.title": "Halb fertige Pakete",
         "dpkg.interrupted": "ein Lauf von dpkg wurde unterbrochen",
         "dpkg.packages": {"one": "{n} Paket halb fertig: {names}", "other": "{n} Pakete halb fertig: {names}"},
+        "dpkg.unlisted": {"one": "{n} weiteres Paket halb fertig, nicht aufgeführt",
+                          "other": "{n} weitere Pakete halb fertig, nicht aufgeführt"},
         "boot.title": "Platz in /boot",
         "boot.space": "{free} frei, das nächste Kernel-Update braucht etwa {need}",
         "boot.old": {"one": "{n} alter Kernel", "other": "{n} alte Kernel"},
@@ -246,9 +250,10 @@ def overall(items):
     return "ok" if any(i.get("state") == "ok" for i in items) else "none"
 
 
-def _names(names, n=MAX_NAMES):
+def _names(names, n=MAX_NAMES, unlisted=0):
+    """Names, at most n, then "(+k)" for the others, `unlisted` (not in the list) among them."""
     names = [str(x) for x in names]
-    more = len(names) - n
+    more = len(names) - n + unlisted if len(names) > n else unlisted
     return ", ".join(names[:n]) + (f" (+{more})" if more > 0 else "")
 
 
@@ -271,9 +276,17 @@ def is_acked(f):
     return isinstance(a, dict) and not a.get("expired") and not a.get("changed")
 
 
+def unlisted(c):
+    """How many findings a check found beyond the ones it lists (`more`, at
+    most 300 are listed): none of them can be acknowledged, so they count."""
+    n = c.get("more") if isinstance(c, dict) else None
+    return n if isinstance(n, int) and not isinstance(n, bool) and n > 0 else 0
+
+
 def without_acked(c):
     """A check with its acknowledged findings left out, and how many those
-    were. They do not count for the status; the page still shows them."""
+    were. They do not count for the status; the page still shows them. The
+    findings beyond the list (`more`) still do."""
     f = c.get("findings")
     if not isinstance(f, list):
         return c, 0
@@ -281,7 +294,7 @@ def without_acked(c):
     if len(open_) == len(f):
         return c, 0
     c = dict(c, findings=open_)
-    if not open_ and c.get("state") == "found" and c.get("check") in ACK_ONLY:
+    if not open_ and not unlisted(c) and c.get("state") == "found" and c.get("check") in ACK_ONLY:
         c["state"] = "none"
     return c, len(f) - len(open_)
 
@@ -459,10 +472,13 @@ def items_of(doc, lang):
     def dpkg(c):
         f = c.get("findings") or []
         pk = [x.get("package") for x in f if x.get("kind") == "package"]
-        n = len(pk) + int(c.get("more") or 0)
+        rest = unlisted(c)          # beyond the list: packages too (the interrupted run comes first)
+        n = len(pk) + rest
         parts = [t(lang, "dpkg.interrupted")] if any(x.get("kind") == "interrupted" for x in f) else []
         if pk:
-            parts.append(t(lang, "dpkg.packages", n=n, names=_names(pk)))
+            parts.append(t(lang, "dpkg.packages", n=n, names=_names(pk, unlisted=rest)))
+        elif rest:          # every listed one acknowledged
+            parts.append(t(lang, "dpkg.unlisted", n=rest))
         return item("dpkg", "warning", n, "; ".join(parts))
 
     def boot(c):

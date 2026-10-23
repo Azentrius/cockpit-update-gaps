@@ -99,6 +99,23 @@ uid:e::::1725540228::8112F49127753770F34E73A49614E0AFC050A705::GitHub CLI <opens
 sub:e:4096:1:E5FAF19590714157:1662463626:1788612228:::::e::::::23:
 """
 
+# Test keys as gpg shows them with their fingerprints (the fpr record after each key): A signs and
+# expired on 2026-09-01, B signs without end; P only certifies, its subkey S signs until
+# 2027-01-15 (1800000000).
+FPR_A, FPR_B, FPR_P, FPR_S = ("A1" * 20, "B2" * 20, "C3" * 20, "D4" * 20)
+TWO_KEYS = f"""pub:e:4096:1:{FPR_A[-16:]}:1662463626:1788220800::-:::sc::::::23::0:
+fpr:::::::::{FPR_A}:
+uid:e::::1662463626::0000000000000000000000000000000000000000::Old key <old@example.invalid>::::::::::0:
+pub:-:4096:1:{FPR_B[-16:]}:1775559160:::-:::scSC::::::23::0:
+fpr:::::::::{FPR_B}:
+uid:-::::1775559160::1111111111111111111111111111111111111111::New key <new@example.invalid>::::::::::0:
+"""
+WITH_SUBKEY = f"""pub:-:4096:1:{FPR_P[-16:]}:1700000000:::-:::cSC::::::23::0:
+fpr:::::::::{FPR_P}:
+sub:-:4096:1:{FPR_S[-16:]}:1700000000:1800000000:::::s::::::23:
+fpr:::::::::{FPR_S}:
+"""
+
 
 def upkeep(scenario="noble-held"):
     """Keyword arguments for FakeSystem: noble-held as described above."""
@@ -230,6 +247,10 @@ class FakeSystem:
         self.unprivileged = getattr(self, "unprivileged", []) + [argv[0]]
         if stdin is not None:
             self.stdin = getattr(self, "stdin", []) + [stdin]
+        answer = self.results.get(self._key(argv))
+        if callable(answer):        # an answer that depends on the input (keys from a sources file)
+            self.calls.append(self._key(argv))
+            return answer(stdin)
         return self.run(argv, limit)
 
     # -- files

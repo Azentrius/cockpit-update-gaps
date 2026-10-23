@@ -531,39 +531,91 @@ def parse_dpkg_query(text):
 FOREVER = datetime.max.replace(tzinfo=timezone.utc)
 
 
-def keyring_expiry(colons):
-    """`gpg --show-keys --with-colons` of a keyring -> until when it can
-    verify signatures: "never" (a signing key without expiry), the latest
-    expiry of its signing keys (aware datetime, in the past when all have
-    expired) or None (no signing key). A subkey lives no longer than its
-    primary key; revoked keys do not count."""
-    best, primary = None, None      # primary: the expiry of the current primary key, None when revoked
+def keyring_keys(colons):
+    """`gpg --show-keys --with-colons` of a keyring -> its keys, primary keys
+    and subkeys in gpg's order: [{"fpr" (from the fpr record after the key,
+    None without one), "primary" (the fingerprint of its primary key), "until"
+    (aware datetime, FOREVER without expiry), "sign" (it may sign), "revoked"
+    (it or its primary key)}]. A subkey lives no longer than its primary key;
+    one without a primary key is left out."""
+    keys, primary = [], None
     for line in (colons or "").splitlines():
         f = line.split(":")
+        if f[0] == "fpr" and len(f) > 9 and keys and keys[-1]["fpr"] is None:
+            keys[-1]["fpr"] = f[9].upper()
+            continue
         if len(f) < 12 or f[0] not in ("pub", "sub"):
             continue
         until = datetime.fromtimestamp(int(f[6]), timezone.utc) if f[6].isdigit() else FOREVER
+        key = {"fpr": None, "of": None, "until": until, "sign": "s" in f[11], "revoked": f[1] == "r"}
         if f[0] == "pub":
-            primary = None if f[1] == "r" else until
-        elif primary is not None:
-            until = min(until, primary)
-        if f[1] == "r" or primary is None or "s" not in f[11]:
+            primary = key
+        elif primary is None:
             continue
-        best = until if best is None or until > best else best
+        else:
+            key.update(of=primary, until=min(until, primary["until"]), revoked=key["revoked"] or primary["revoked"])
+        keys.append(key)
+    return [{"fpr": k["fpr"], "primary": (k["of"] or k)["fpr"], "until": k["until"], "sign": k["sign"],
+             "revoked": k["revoked"]} for k in keys]
+
+
+FPR_RE = re.compile(r"^[0-9A-F]{40}!?$")
+
+
+def select_keys(keys, select):
+    """The keys of keyring_keys() that Signed-By's fingerprints select, as
+    apt does (sources.list(5), apt's methods/gpgv.cc): a fingerprint selects
+    that key and every subkey of it; one with "!" that key alone. Without a
+    fingerprint every key counts. apt takes only 40 hex digits (upper case,
+    "!" after them) and refuses the whole value for anything else
+    (NormalizeSignedBy): then nothing is selected."""
+    if not select:
+        return list(keys)
+    if not all(isinstance(s, str) and FPR_RE.match(s) for s in select):
+        return []
+    exact = {s[:-1] for s in select if s.endswith("!")}
+    whole = {s for s in select if not s.endswith("!")}
+    return [k for k in keys if k["fpr"] and (k["fpr"] in exact or k["fpr"] in whole or k["primary"] in whole)]
+
+
+def keys_expiry(keys):
+    """Until when keys can verify signatures: "never" (a signing key without
+    expiry), the latest expiry of the signing keys (aware datetime, in the
+    past when all have expired) or None (no signing key). Revoked keys do not
+    count."""
+    best = None
+    for k in keys:
+        if k["sign"] and not k["revoked"] and (best is None or k["until"] > best):
+            best = k["until"]
     if best is None:
         return None
     return "never" if best == FOREVER else best
+
+
+def keyring_expiry(colons, select=None):
+    """`gpg --show-keys --with-colons` of a keyring -> until when it can
+    verify signatures (keys_expiry), with only the keys `select` (Signed-By's
+    fingerprints, select_keys) when given."""
+    return keys_expiry(select_keys(keyring_keys(colons), select))
 
 
 def _option_values(value):
     return [v for v in re.split(r"[\s,]+", value or "") if v]
 
 
+def _signed_by(value):
+    """Signed-By's values -> (files, fingerprints). apt splits them at commas
+    and whitespace in both formats and makes fingerprints upper case."""
+    vals = _option_values(value)
+    return [v for v in vals if v.startswith("/")], [v.upper() for v in vals if not v.startswith("/")]
+
+
 def sources_keyrings(text, deb822):
-    """A sources file -> [{"uris", "keyrings" (files of Signed-By),
-    "inline" (an armored key in Signed-By, deb822 only)}] of its enabled
-    entries. Entries without either use apt's trusted keyrings. Fingerprints
-    in Signed-By only pick keys from those files and are left out."""
+    """A sources file -> [{"uris", "keyrings" (files of Signed-By), "select"
+    (its fingerprints, which pick the keys from those files, or from apt's
+    trusted keyrings without a file), "inline" (an armored key in Signed-By,
+    deb822 only)}] of its enabled entries. Entries without a file or a key
+    use apt's trusted keyrings."""
     out = []
     if deb822:
         for rec in parse_deb822("\n".join(ln for ln in (text or "").splitlines() if not ln.startswith("#"))):
@@ -574,17 +626,24 @@ def sources_keyrings(text, deb822):
             if "BEGIN PGP PUBLIC KEY BLOCK" in sb:
                 inline = "\n".join("" if ln == "." else ln for ln in sb.split("\n")).strip() + "\n"
                 sb = ""
-            out.append({"uris": _option_values(rec["URIs"]), "inline": inline,
-                        "keyrings": [v for v in _option_values(sb) if v.startswith("/")]})
+            files, select = _signed_by(sb)
+            out.append({"uris": _option_values(rec["URIs"]), "inline": inline, "keyrings": files, "select": select})
         return out
     for line in (text or "").splitlines():
         m = re.match(r"^\s*deb(?:-src)?\s+(?:\[([^\]]*)\]\s+)?(\S+)", line)
         if not m:
             continue
         opts = dict(o.split("=", 1) for o in (m.group(1) or "").split() if "=" in o)
-        out.append({"uris": [m.group(2)], "inline": None,
-                    "keyrings": [v for v in _option_values(opts.get("signed-by")) if v.startswith("/")]})
+        files, select = _signed_by(opts.get("signed-by"))
+        out.append({"uris": [m.group(2)], "inline": None, "keyrings": files, "select": select})
     return out
+
+
+def short_key(fpr):
+    """A fingerprint of Signed-By as a key ID (its last 16 digits), "!" kept."""
+    s = str(fpr)
+    bang = s.endswith("!")
+    return s.rstrip("!")[-16:] + ("!" if bang else "")
 
 
 UU_TIME_RE = re.compile(r"^(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)(?:,\d+)? (\w+) (.*)$")
@@ -936,6 +995,10 @@ FINDING_KEYS = {
     "auto": ("findings", ("kind", "what", "site", "o", "a", "pattern")), "uu": ("findings", ("kind",)),
     "backports": ("findings", ("source",)),
 }
+# Fields that name a finding as well when it has them (newer than 0.7.0), so one without them keeps
+# its ref of 0.7.0: the keys Signed-By selects from a keyring (sources may share a keyring file and
+# select from it differently), the fingerprints of a key in a sources file (one file may hold several).
+FINDING_MORE_KEYS = {"keys": ("select", "fingerprints")}
 # The fields whose change makes an acknowledged finding count again: what it was acknowledged for
 # is no longer what it is (a held package now has a fix from a security source, a CPU vulnerability
 # moved from the provider to this server, firmware has a newer release).
@@ -952,7 +1015,8 @@ ACK_MAX = 500           # acknowledgements in the file
 
 def finding_key(check, f):
     """What names a finding of `check` from one scan to the next (JSON text)."""
-    return json.dumps([f.get(k) for k in FINDING_KEYS[check][1]])
+    more = [[k, f[k]] for k in FINDING_MORE_KEYS.get(check, ()) if f.get(k) is not None]
+    return json.dumps([f.get(k) for k in FINDING_KEYS[check][1]] + more)
 
 
 def finding_ref(check, f):
@@ -968,12 +1032,13 @@ def finding_pin(check, f):
 
 
 def finding_label(f):
-    """A short name for a finding, for the acknowledgements file."""
-    for k in LABEL_FIELDS:
-        v = f.get(k)
-        if isinstance(v, str) and v:
-            return clean_text(v, 120)
-    return ""
+    """A short name for a finding, for the acknowledgements file; a keyring
+    with the keys that tell it apart (fingerprints as key IDs)."""
+    label = next((v for v in (f.get(k) for k in LABEL_FIELDS) if isinstance(v, str) and v), "")
+    keys = f.get("fingerprints") or f.get("select")
+    if label and isinstance(keys, list) and keys:
+        label += " (" + ", ".join(short_key(x) for x in keys[:3]) + ")"
+    return clean_text(label, 120)
 
 
 def clean_reason(text):

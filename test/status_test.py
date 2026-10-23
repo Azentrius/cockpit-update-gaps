@@ -331,6 +331,41 @@ class Contract(unittest.TestCase):
         self.assertIn("dpkg", ids)
         self.assertEqual(gapsstatus.problems(gapsstatus.status_file(doc, "0.1.0")), [])
 
+    def test_findings_beyond_the_list_count_when_the_list_is_acknowledged(self):
+        """A check lists at most 300 findings, the rest in `more`; those cannot be acknowledged on
+        the page and keep counting."""
+        doc = fixture("scan-noble-held-upkeep.json")
+        dpkg = next(c for c in doc["checks"] if c["check"] == "dpkg")
+        ack = {"until": "2026-11-01", "reason": "", "at": "2026-10-19T08:00:00Z"}
+        dpkg["findings"] = [{"kind": "package", "package": f"pkg-{n:03d}", "version": "1.0-1", "state": "half-configured",
+                             "accepted": ack} for n in range(300)]
+        dpkg["more"] = 1
+        i = self.item(doc, "dpkg")
+        self.assertEqual((i["state"], i["value"], i["detail"]) if i else None,
+                         ("warning", "1", "1 more package left half done, not listed; 300 acknowledged"))
+        self.assertEqual(self.item(doc, "dpkg", "de")["detail"], "1 weiteres Paket halb fertig, nicht aufgeführt; 300 quittiert")
+        self.assertIn("Packages left half done", gapsstatus.document(doc, "en", "0.1.0")["summary"])
+        # Two of the listed ones open as well: all counted, the names shown and the rest after them.
+        for f in dpkg["findings"][:2]:
+            del f["accepted"]
+        dpkg["more"] = 5
+        i = self.item(doc, "dpkg")
+        self.assertEqual((i["state"], i["value"], i["detail"]),
+                         ("warning", "7", "7 packages left half done: pkg-000, pkg-001 (+5); 298 acknowledged"))
+        # Nothing beyond the list: every finding acknowledged, no item, as before.
+        for f in dpkg["findings"]:
+            f["accepted"] = ack
+        del dpkg["more"]
+        self.assertIsNone(self.item(doc, "dpkg"))
+        # Without acknowledgements the rest is in the count as it was, and in the names' "(+n)".
+        for f in dpkg["findings"]:
+            del f["accepted"]
+        dpkg["more"] = 1
+        i = self.item(doc, "dpkg")
+        self.assertEqual((i["value"], i["detail"]),
+                         ("301", "301 packages left half done: pkg-000, pkg-001, pkg-002, pkg-003, pkg-004, pkg-005 (+295)"))
+        self.assertEqual(gapsstatus.problems(gapsstatus.status_file(doc, "0.1.0")), [])
+
     def test_old_kernels_and_keys_that_expire_are_info(self):
         doc = fixture("scan-noble-held-upkeep.json")
         checks = {c["check"]: c for c in doc["checks"]}

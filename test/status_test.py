@@ -2,7 +2,8 @@
 # SPDX-License-Identifier: Apache-2.0
 """The status of the add-on (status contract of the Azentrius add-ons,
 schema 1): gapsstatus.py against the recorded hosts, and gaps-status.py, the
-verb the Status Board calls. Offline, no root needed."""
+verb the Status Board calls; and the manifest's menu entry. Offline, no root
+needed."""
 
 import importlib.util
 import io
@@ -487,6 +488,19 @@ class Scan(unittest.TestCase):
             self.assertEqual(st["checked_at"], doc["generated"])
             with redirect_stderr(io.StringIO()), self.assertRaises(SystemExit):
                 mod.main(["--status", status])
+
+
+class Manifest(unittest.TestCase):
+    def test_menu_entry_with_the_other_add_ons(self):
+        """One block at the end of System, after Services (100): Status Board 101 to
+        Host Settings 106. The menu search finds them all by "azentrius", and Cockpit's
+        Help menu links the README under the product name, which is not translated."""
+        with open(os.path.join(HERE, "..", "plugin", "manifest.json"), encoding="utf-8") as f:
+            entry = json.load(f)["menu"]["index"]
+        self.assertEqual(entry["order"], 103)
+        self.assertTrue(any("azentrius" in k["matches"] for k in entry["keywords"]))
+        self.assertEqual(entry["docs"], [{"label": "Update Gaps",
+                                          "url": "https://github.com/Azentrius/cockpit-update-gaps#readme"}])
 
 
 if __name__ == "__main__":

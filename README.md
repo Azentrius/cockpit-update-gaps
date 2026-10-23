@@ -302,8 +302,9 @@ systemctl list-timers update-gaps-scan.timer            # the regular check
 
 The page is in English and German: the texts live in `plugin/i18n.js` (`I18N.en` and `I18N.de`, the
 German addressing the user as “Sie”), and the page takes German when Cockpit uses German, English
-otherwise. The menu entry is the product name, which is not translated, so `plugin/po.manifest.de.js`,
-Cockpit's translation file for the manifest, has no entries. The messages of `lib/gaps-ctl.sh`
+otherwise. The menu entry and the link to this README in Cockpit's Help menu are the product name,
+which is not translated, so `plugin/po.manifest.de.js`, Cockpit's translation file for the manifest,
+has no entries. The messages of `lib/gaps-ctl.sh`
 (`msg de en`) and the status for the Status Board (`gaps-status.py status --lang de|en`; any other
 language gets English) come in the same two languages. Another language needs a block of its own in
 `plugin/i18n.js` and a change where `plugin/gaps.js` and `plugin/menu-status.js` pick the language.

@@ -29,7 +29,7 @@ jobs:
         run: make check
       - name: Packages (.deb, .rpm) with valid AppStream data, built twice to the same bytes
         run: |
-          sudo apt-get update -qq
+          sudo sh tools/apt-update.sh
           sudo apt-get install -y -qq --no-install-recommends rpm appstream > /dev/null
           appstreamcli validate --no-net packaging/*.metainfo.xml
           make packages
@@ -147,7 +147,7 @@ jobs:
           persist-credentials: false
       - name: Packages
         run: |
-          sudo apt-get update -qq
+          sudo sh tools/apt-update.sh
           sudo apt-get install -y -qq --no-install-recommends rpm > /dev/null
           make packages
       - name: Install, check and remove on ${{ matrix.image }}
@@ -210,7 +210,7 @@ jobs:
           python-version: "3.12"
       - name: Cockpit and the packages of this build
         run: |
-          sudo apt-get update -qq
+          sudo sh tools/apt-update.sh
           sudo apt-get install -y -qq --no-install-recommends cockpit-ws cockpit-system cockpit-bridge rpm > /dev/null
           sudo systemctl start cockpit.socket
           make packages

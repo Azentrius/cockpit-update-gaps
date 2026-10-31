@@ -344,8 +344,8 @@ class Phased(unittest.TestCase):
 
 
 VULN = gapscheck.CPU_VULN
-# vpn-host on 2026-10-20 (Intel Xeon Skylake, Hetzner vServer), as the kernel reported it.
-VPN_HOST_VULN = {
+# A virtual machine on Intel Xeon Skylake, as its kernel reported it on 2026-10-20.
+SKYLAKE_VM_VULN = {
     "gather_data_sampling": "Unknown: Dependent on hypervisor status",
     "itlb_multihit": "KVM: Mitigation: VMX unsupported",
     "l1tf": "Mitigation: PTE Inversion",
@@ -392,7 +392,7 @@ class Cpu(unittest.TestCase):
         self.assertFalse(c["microcode_pending"], "needrestart: the microcode is current")
 
     def test_intel_vm(self):
-        fs = with_vulns(FakeSystem("resolute-nodesource"), VPN_HOST_VULN)
+        fs = with_vulns(FakeSystem("resolute-nodesource"), SKYLAKE_VM_VULN)
         c = {x["check"]: x for x in gapscheck.scan(fs, only={"cpu"})["checks"]}["cpu"]
         got = {f["name"]: (f["kind"], f["fix"]) for f in c["findings"]}
         self.assertEqual(got, {"gather_data_sampling": ("unknown", "provider"),
@@ -612,7 +612,7 @@ class Boot(unittest.TestCase):
         c = {sc: scan(sc)[1]["boot"] for sc in RECORDED}
         for sc, b in c.items():
             self.assertEqual((b["state"], len(b["kernels"])), ("none", 2), sc)
-        # build-host keeps /boot on a RAID partition of 1 GB; its initramfs is 121 MB (a physical server).
+        # resolute-stale-lists keeps /boot on a RAID partition of 1 GB; its initramfs is 121 MB (a physical server).
         b = c["resolute-stale-lists"]
         self.assertEqual((b["free"], b["size"], b["need"]), (670838784, 1036726272, int((17320328 + 121217463) * 1.5)))
 

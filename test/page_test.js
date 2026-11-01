@@ -615,7 +615,7 @@ test("cards open and close through their title; the browser keeps which are clos
 });
 
 test("CPU, firmware, snaps: a VM, a physical server, and what the hosts do not have", async () => {
-    // public-host (noble-held): a VM where the kernel reports tsa without microcode.
+    // noble-held: a VM where the kernel reports tsa without microcode.
     let { d } = boot();
     await settle();
     const cpu = text(d.getElementById("ug-card-cpu"));
@@ -628,7 +628,7 @@ test("CPU, firmware, snaps: a VM, a physical server, and what the hosts do not h
         /Firmware: fwupd is not installed; in a virtual machine the provider looks after the firmware\./);
     assert.match(text(d.getElementById("ug-clean-list")), /Snaps: no snaps installed/);
     assert.doesNotMatch(text(d.getElementById("ug-unchecked-list")), /Snaps/);
-    // build-host (resolute-stale-lists): a physical server, nothing vulnerable.
+    // resolute-stale-lists: a physical server, nothing vulnerable.
     ({ d } = boot({ state: scan("resolute-stale-lists") }));
     await settle();
     assert.ok(!d.getElementById("ug-card-cpu"));

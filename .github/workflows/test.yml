@@ -129,6 +129,8 @@ jobs:
   # systems below the minimums, which must refuse the package: Ubuntu 20.04 (Cockpit 215) and
   # Rocky Linux 8 (python3 is 3.6). On Fedora and Rocky the page says that it checks nothing there.
   # Releases carry no .rpm yet: the page checks only apt systems so far.
+  # dnf runs through tools/dnf.sh, with time limits and three tries: on AlmaLinux the first dnf
+  # install of a job once took almost 14 minutes, and once ran until the job's time limit.
   install:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
@@ -160,11 +162,11 @@ jobs:
           IMAGE: ${{ matrix.image }}
           KIND: ${{ matrix.kind }}
         run: |
-          docker run --rm -e KIND -v "$PWD/dist:/dist:ro" "$IMAGE" sh -ec '
+          docker run --rm -e KIND -v "$PWD/dist:/dist:ro" -v "$PWD/tools/dnf.sh:/dnf.sh:ro" "$IMAGE" sh -ec '
             case "$KIND" in
               deb) apt-get update -qq; DEBIAN_FRONTEND=noninteractive apt-get install -y -qq /dist/*.deb > /dev/null
                    dpkg-query -W cockpit-bridge python3 ;;
-              rpm) dnf install -y -q /dist/*.rpm
+              rpm) sh /dnf.sh install -y -q /dist/*.rpm
                    rpm -q cockpit-bridge python3 ;;
             esac
             python3 --version
@@ -184,11 +186,12 @@ jobs:
           KIND: ${{ matrix.kind }}
           REFUSED: ${{ matrix.refused }}
         run: |
-          docker run --rm -e KIND -e REFUSED -v "$PWD/dist:/dist:ro" "$IMAGE" sh -c '
+          docker run --rm -e KIND -e REFUSED -v "$PWD/dist:/dist:ro" -v "$PWD/tools/dnf.sh:/dnf.sh:ro" "$IMAGE" sh -c '
             case "$KIND" in
               deb) apt-get update -qq
                    DEBIAN_FRONTEND=noninteractive apt-get install -y /dist/*.deb > /tmp/out 2>&1 ;;
-              rpm) dnf install -y -q /dist/*.rpm > /tmp/out 2>&1 ;;
+              rpm) sh /dnf.sh makecache || exit 1
+                   dnf install -y -q /dist/*.rpm > /tmp/out 2>&1 ;;
             esac
             rc=$?
             cat /tmp/out

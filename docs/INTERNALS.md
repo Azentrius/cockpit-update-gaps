@@ -671,6 +671,7 @@ public state and logs below `$XDG_CACHE_HOME`. `gpg --show-keys` for the keyring
 | `tools/check-units.sh` | `systemd-analyze verify`, and `systemd-analyze security` exposure at most 5.0 |
 | `tools/check-version.sh`, `tools/check-design-files.sh` | version, changelog, shared design files |
 | `tools/apt-update.sh` | `apt-get update` on a CI runner with time limits and three tries, so that a mirror that hangs costs minutes instead of the job (the same file as in Cron Jobs) |
+| `tools/dnf.sh` | dnf in the CI containers (job `install`) with time limits and three tries, the repository data first; dnf leaves a mirror slower than 100 kB/s, so that a slow or hung mirror costs minutes instead of the job (the same file as in Cron Jobs) |
 
 Fixtures: `test/fixtures/capture.sh` records the commands' output on a host (read only);
 `test/fixtures/import_capture.py` turns it into a scenario without host names and with neutral names

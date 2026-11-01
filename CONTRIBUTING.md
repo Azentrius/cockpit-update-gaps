@@ -32,7 +32,7 @@ The offline tests need no root and no network: the helpers run against fake `apt
 (`test/fakesys.py`) and recorded files of `/sys`, `/proc` and `/boot` (with its free room,
 `statvfs`) and the log of unattended-upgrades from real systems (`test/fixtures/`), and the radar
 against a stub instead of the network services. The `test` workflow runs the lint, the tests and the
-package build on every push and pull request; its job `test` has to be green before a merge. Its
+package build on every pull request and every push to `main`; its job `test` has to be green before a merge. Its
 other jobs: `python-min` runs the helper tests on Python 3.8, `scenarios` runs the helpers on Debian
 12 and 13 and Ubuntu 22.04, 24.04 and 26.04 in throw-away containers, and `install` installs and
 removes the packages on more distributions and checks that Ubuntu 20.04 and Rocky Linux 8 refuse

@@ -1,5 +1,26 @@
 # Changelog
 
+## 0.7.2 – 2026-11-01
+
+The menu entry joins the other Azentrius add-ons at the end of System, and the texts say what the
+add-on covers and what it does not.
+
+**Upgrading:** nothing to do. The menu entry moves from its place among Cockpit's own pages to the
+end of System, after Services. To put it elsewhere, set another `order` in a manifest override,
+`/etc/cockpit/update-gaps.override.json` (or `~/.config/cockpit/` for one user).
+
+- **Menu:** all Azentrius add-ons now stand together at the end of System (Update Gaps at `order`
+  103, before 36). Cockpit's menu search finds all of them by "azentrius", and Cockpit's Help menu
+  links this README (`docs` in the manifest). The label is the product name and is not translated.
+- **What it covers:** the README, the AppStream data and the package description say that the
+  add-on works from apt and dpkg on Debian and Ubuntu, that its network data look up security
+  issues for a fixed selection of packages only, and that it is no complete inventory of the
+  security issues of the system or its applications. Known limits name what is not matched against
+  CVEs: other packages, software outside apt and applications in containers.
+- **README:** a section on translations (where the English and German texts live, how the page
+  picks the language, what another language would need), and the security model names the
+  exposure limit of the units that CI checks (5.0) instead of single measured values.
+
 ## 0.7.1 – 2026-10-23
 
 Signing keys are judged by the keys a source accepts, and acknowledging findings no longer hides

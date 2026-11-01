@@ -1,13 +1,17 @@
 # Update Gaps
 
-A [Cockpit](https://cockpit-project.org/) add-on that shows, per server, where updates are missing
-although Cockpit's “Software Updates” lists none. For every finding it says what is missing, where
-the information comes from, why “Software Updates” does not show it and what you can do. An empty
-section never means “safe”: the page always says what it did not check and how old its data is.
+A [Cockpit](https://cockpit-project.org/) add-on for Debian and Ubuntu that shows, per server, where
+updates are missing although Cockpit's “Software Updates” lists none. It works from apt and dpkg and
+the state of the system around them. For every finding it says what is missing, where the
+information comes from, why “Software Updates” does not show it and what you can do. An empty
+section never means “safe”: the page always says what it did not check and how old its data is. It
+is no complete inventory of security issues: it does not match every package of the system, or
+applications outside apt, against known CVEs.
 
 The add-on only reads. A local service without network access checks the server and writes the
-state; the page shows it. Network data (security issues Ubuntu has not fixed yet, upstream
-releases) come from a separate unprivileged service, only once set up. The only changes the page
+state; the page shows it. Network data (security issues Ubuntu has not fixed yet and upstream
+releases, for a fixed selection of packages) come from a separate unprivileged service, only once
+set up. The only changes the page
 can make are to switch the add-on's own regular check and its network data on or off, and to
 acknowledge a finding for a while, each after showing what that does.
 
@@ -351,6 +355,10 @@ wrong. Besides the job `test`, CI runs the helper tests on Python 3.8
 
 - Only apt systems (Debian, Ubuntu) are checked. The network data cover Ubuntu; on Debian only the
   upstream releases are asked.
+- No complete inventory of security issues: the network data look up unfixed security issues and
+  upstream releases for a fixed selection of packages only ([docs/INTERNALS.md](docs/INTERNALS.md));
+  the other packages, software outside apt and applications in containers are not matched against
+  CVEs.
 - Whether a newer version of a held package from a third-party source fixes security issues is not
   known locally: the page says where to look, and with the network data it names the fixes in the
   releases of a fixed list of projects.

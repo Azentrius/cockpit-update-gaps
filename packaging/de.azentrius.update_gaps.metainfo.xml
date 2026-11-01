@@ -10,8 +10,8 @@
   <summary xml:lang="de">Die Updates, die einem Server fehlen, obwohl Software-Updates nichts meldet</summary>
   <description>
     <p>
-      The page shows where updates are missing although Cockpit's Software Updates lists none:
-      held packages, fixes that only come with Ubuntu Pro, pending restarts, packages dpkg left
+      On Debian and Ubuntu servers with apt and dpkg, the page shows where updates are missing
+      although Cockpit's Software Updates lists none: held packages, fixes that only come with Ubuntu Pro, pending restarts, packages dpkg left
       half done, too little room in /boot for the next kernel, CPU vulnerabilities the kernel
       reports, firmware updates (with fwupd), snaps that are not refreshed, missing or old package
       lists, expired signing keys of the sources, packages without a source, sources the automatic
@@ -24,12 +24,13 @@
     </p>
     <p>
       Once set up, network data add security issues Ubuntu has not fixed yet, fixes released
-      upstream and newer versions elsewhere in Ubuntu, fetched once a day by an unprivileged
-      service.
+      upstream and newer versions elsewhere in Ubuntu for a fixed selection of packages, fetched
+      once a day by an unprivileged service. The page is no complete inventory of the security
+      issues of the system or its applications.
     </p>
     <p xml:lang="de">
-      Die Seite zeigt, wo Updates fehlen, obwohl Software-Updates in Cockpit nichts meldet:
-      gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, Pakete, die dpkg halb
+      Auf Debian- und Ubuntu-Servern mit apt und dpkg zeigt die Seite, wo Updates fehlen, obwohl
+      Software-Updates in Cockpit nichts meldet: gehaltene Pakete, Fixes nur mit Ubuntu Pro, ausstehende Neustarts, Pakete, die dpkg halb
       fertig liegen ließ, zu wenig Platz in /boot für den nächsten Kernel, CPU-Schwachstellen laut
       Kernel, Firmware-Updates (mit fwupd), Snaps, die nicht aktualisiert werden, fehlende oder
       alte Paketlisten, abgelaufene Signaturschlüssel der Paketquellen, Pakete ohne Paketquelle,
@@ -42,9 +43,11 @@
       weiter, der Status zählt ihn nicht mehr. Sonst liest sie nur.
     </p>
     <p xml:lang="de">
-      Einmal eingerichtet, kommen Netzdaten hinzu: Sicherheitslücken, die Ubuntu noch nicht
-      behoben hat, Fixes bei Upstream und neuere Versionen anderswo in Ubuntu, einmal am Tag von
-      einem unprivilegierten Dienst geholt.
+      Einmal eingerichtet, kommen für eine feste Auswahl von Paketen Netzdaten hinzu:
+      Sicherheitslücken, die Ubuntu noch nicht behoben hat, Fixes bei Upstream und neuere
+      Versionen anderswo in Ubuntu, einmal am Tag von einem unprivilegierten Dienst geholt. Ein
+      vollständiges Verzeichnis der Sicherheitslücken des Systems oder seiner Anwendungen ist die
+      Seite nicht.
     </p>
   </description>
   <extends>org.cockpit_project.cockpit</extends>
